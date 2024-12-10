@@ -1,0 +1,27 @@
+# Node modules
+**/node_modules/
+
+# Logs
+**/logs/
+*.log
+
+# TypeScript
+*.tsbuildinfo
+
+# dotenv environment variables file
+.env
+
+# Temporary files
+**/tmp/
+**/temp/
+
+# Next.js build output
+**/.next/
+
+# VS Code settings
+.vscode/
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/jsconfig.json
+.vscode/extensions.json
