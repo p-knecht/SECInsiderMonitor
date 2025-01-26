@@ -18,6 +18,11 @@
 # Next.js build output
 **/.next/
 
+# typescript build output
+*.js
+*.js.map
+*.d.ts
+
 # VS Code settings
 .vscode/
 .vscode/settings.json
