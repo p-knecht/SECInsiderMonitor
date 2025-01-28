@@ -1,0 +1,257 @@
+generator datafetcher {
+  provider = "prisma-client-js"
+  output   = "../data-fetcher/node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DB_SIM_URL")
+}
+
+// =================================================================================================
+// =================================================================================================
+// ||||                                     Filings Schema                                      ||||
+// =================================================================================================
+// =================================================================================================
+model OwnershipFiling {
+  id                          String                   @id @default(auto()) @map("_id") @db.ObjectId
+  filingId                    String                   @unique
+  formType                    String
+  dateFiled                   DateTime
+  dateAdded                   DateTime                 @default(now())
+  embeddedDocuments           EmbeddedDocument[]
+  formData                    OwnershipFilingFormData?
+}
+
+// Embedded Document Types/Enums
+type EmbeddedDocument {
+  type                        String?
+  sequence                    Int?
+  description                 String?
+  fileName                    String?
+  format                      EmbeddedDocumentFormat
+  rawContent                  String
+  size                        Int
+}
+enum EmbeddedDocumentFormat {
+  xml
+  html
+  pdf
+  other
+}
+
+// EDGAR Form Data Types (derived from ownership form xsd specifications from https://www.sec.gov/submit-filings/technical-specifications)
+type OwnershipFilingFormData {
+  schemaVersion               String?
+  documentType                String
+  periodOfReport              DateTime
+  noSecuritiesOwned           Boolean?                      // only applicable to Form 3
+  notSubjectToSection16       Boolean?                      // only applicable to Form 4 and 5
+  form3HoldingsReported       Boolean?                      // only applicable to Form 5
+  form4TransactionsReported   Boolean?                      // only applicable to Form 5
+  issuer                      Issuer
+  reportingOwner              ReportingOwner[]
+  aff10b5One                  Boolean?                      // only on Form 3 not mandatory
+  nonDerivativeTable          NonderivativeTable?
+  derivativeTable             DerivativeTable?
+  footnotes                   FootnoteGroup?
+  remarks                     String?
+  ownerSignature              Signature[]
+}
+
+// Issuer Type
+type Issuer {
+  issuerCik                   String
+  issuerName                  String?
+  issuerTradingSymbol         String
+}
+
+// Reporting Owner Types
+type ReportingOwner {
+  reportingOwnerId            ReportingId
+  reportingOwnerAddress       ReportingAddress?
+  reportingOwnerRelationship  ReportingRelationship
+}
+type ReportingId {
+  rptOwnerCik                 String
+  rptOwnerCcc                 String?
+  rptOwnerName                String?
+}
+type ReportingAddress {
+  rptOwnerStreet1             String?
+  rptOwnerStreet2             String?
+  rptOwnerCity                String?
+  rptOwnerState               String?
+  rptOwnerZipCode             String?
+  rptOwnerStateDescription    String?
+  rptOwnerGoodAddress         Boolean?
+}
+type ReportingRelationship {
+  isDirector                  Boolean?
+  isOfficer                   Boolean?
+  isTenPercentOwner           Boolean?
+  isOther                     Boolean?
+  officerTitle                String?
+  otherText                   String?
+}
+
+// Nonderivative Types
+type NonderivativeTable {
+  nonDerivativeTransaction    NonderivativeTransaction[]    // only applicable to Form 4 and 5
+  nonDerivativeHolding        NonderivativeHolding[]
+}
+type NonderivativeTransaction {
+  securityTitle               SecurityTitle
+  transactionDate             DateWithFootnote
+  deemedExecutionDate         DateAndOrFootnote?
+  transactionCoding           TransactionCoding?
+  transactionTimeliness       TransactionTimeliness?
+  transactionAmounts          NonderivTransactAmounts
+  postTransactionAmounts      PostTransactionAmounts
+  ownershipNature             OwnershipNature
+}
+type NonderivativeHolding {
+  securityTitle               SecurityTitle
+  transactionCoding           TransactionCodeForHolding?    // only applicable to Form 5
+  postTransactionAmounts      PostTransactionAmounts
+  ownershipNature             OwnershipNature
+}
+
+// Derivative Types
+type DerivativeTable {
+  derivativeTransaction       DerivativeTransaction[]       // only applicable to Form 4 and 5
+  derivativeHolding           DerivativeHolding[]
+}
+type DerivativeTransaction {
+  securityTitle               SecurityTitle
+  conversionOrExercisePrice   OptNumberWithFootnote
+  transactionDate             DateWithFootnote
+  deemedExecutionDate         DateAndOrFootnote?
+  transactionCoding           TransactionCoding?
+  transactionTimeliness       TransactionTimeliness?
+  transactionAmounts          DerivTransactNoFoot
+  exerciseDate                OptDateWithFootnote
+  expirationDate              OptDateWithFootnote  
+  underlyingSecurity          UnderlyingSecurity
+  postTransactionAmounts      PostTransactionAmounts
+  ownershipNature             OwnershipNature
+}
+type DerivativeHolding {
+  securityTitle               SecurityTitle
+  conversionOrExercisePrice   OptNumberWithFootnote
+  transactionCoding           TransactionCodeForHolding?    // only applicable to Form 5
+  exerciseDate                OptDateWithFootnote
+  expirationDate              OptDateWithFootnote 
+  underlyingSecurity          UnderlyingSecurity
+  postTransactionAmounts      PostTransactionAmounts?       // only applicable to Forms 4 and 5
+  ownershipNature             OwnershipNature
+}
+
+// Footnote Types
+type FootnoteGroup {
+  footnote                    Footnote[]
+}
+type Footnote {
+  id                          FootnoteId
+  text                        String
+}
+type FootnoteId {
+  id                          String                        // type xs:IDREF (pattern: F[1-9][0-9]?)
+}
+
+// Signature Type
+type Signature {
+  signatureName               String
+  signatureDate               DateTime
+}
+
+// Generic/Common EDGAR Types
+//   - Security Types
+type SecurityTitle {
+  value                       String
+  footnoteId                  FootnoteId[]
+}
+type UnderlyingSecurity {
+  underlyingSecurityTitle     SecurityTitle
+  underlyingSecurityShares    OptNumberWithFootnote?
+  underlyingSecurityValue     OptNumberWithFootnote?
+}
+
+//   - Date Types
+type DateWithFootnote {
+  value                       DateTime
+  footnoteId                  FootnoteId[]
+}
+type DateAndOrFootnote {
+  value                       DateTime?
+  footnoteId                  FootnoteId[]
+}
+type OptDateWithFootnote {
+  value                       DateTime?
+  footnoteId                  FootnoteId[]
+}
+
+//   - Number Types
+type NumberWithFootnote {
+  value                       Float
+  footnoteId                  FootnoteId[]
+}
+type OptNumberWithFootnote {
+  value                       Float?
+  footnoteId                  FootnoteId[]
+}
+
+//  - Transaction Types
+type TransactionCoding {
+  transactionFormType         String
+  transactionCode             String 
+  equitySwapInvolved          Boolean
+  footnoteId                  FootnoteId[]
+}
+type TransactionTimeliness {
+  value                       String?
+  footnoteId                  FootnoteId[]
+}
+type TransactionCodeForHolding {
+  transactionFormType         String?
+  footnoteId                  FootnoteId[]
+}
+type DerivTransactNoFoot {
+  transactionShares           NumberWithFootnote?
+  transactionTotalValue       NumberWithFootnote?
+  transactionPricePerShare    OptNumberWithFootnote
+  transactionAcquiredDisposedCode AcqDispNoFoot
+}
+type NonderivTransactAmounts {
+  transactionShares           NumberWithFootnote
+  transactionPricePerShare    OptNumberWithFootnote
+  transactionAcquiredDisposedCode AcqDispCode
+}
+type PostTransactionAmounts {
+  sharesOwnedFollowingTransaction NumberWithFootnote?
+  valueOwnedFollowingTransaction NumberWithFootnote?
+}
+
+//  - Acquired/Disposed Code Types
+type AcqDispCode {
+  value                       String
+  footnoteId                  FootnoteId[]
+}
+type AcqDispNoFoot {
+  value                     String
+}
+
+//   - Ownership Types
+type OwnershipNature {
+  directOrIndirectOwnership   OwnershipType
+  natureOfOwnership           IndirectNature?
+}
+type OwnershipType {
+  value                       String
+  footnoteId                  FootnoteId[]
+}
+type IndirectNature {
+  value                       String
+  footnoteId                  FootnoteId[]
+}
+

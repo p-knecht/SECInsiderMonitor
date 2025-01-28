@@ -1,0 +1,60 @@
+name: secinsidermonitor
+services:
+  database:
+    image: mongo
+    container_name: sim-database
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      SIM_DB: ${DB_SIM_DB}
+      SIM_USER: ${DB_SIM_USERNAME}
+      SIM_PASSWORD: ${DB_SIM_PASSWORD}
+
+    command: ['mongod', '--replSet', 'rs0', '--keyFile', '/data/db/mongo-keyfile']
+    entrypoint:
+      - bash
+      - -c
+      - |
+        if [ -f /data/db/initiate-replica-set.sh ]; then
+        mv /data/db/initiate-replica-set.sh /data/db/initiate-replica-set.sh_executed
+        /data/db/initiate-replica-set.sh_executed &
+        fi
+        exec docker-entrypoint.sh $$@
+    volumes:
+      - database:/data/db
+      - ./sim-database-init.sh:/docker-entrypoint-initdb.d/init.sh:ro
+    ports:
+      - 27017:27017
+
+  reverseproxy:
+    image: traefik
+    container_name: sim-reverseproxy
+    restart: always
+    command:
+      # only expose explicitly defined docker containers
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+
+      # catch :80/HTTP requests and redirect to :443/HTTPS
+      - --entryPoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entryPoints.web.http.redirections.entrypoint.scheme=https
+
+      # define HTTPS entrypoint with automatic letsencrypt certifcate request/renewal
+      - --entryPoints.websecure.address=:443
+      - --entrypoints.websecure.asDefault=true
+      - --entrypoints.websecure.http.tls.certresolver=resolver
+      - --certificatesresolvers.resolver.acme.email=${SERVER_ACME_MAIL}
+      - --certificatesresolvers.resolver.acme.tlschallenge=true
+      - --certificatesresolvers.resolver.acme.storage=/letsencrypt/acme.json
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - certificateStore:/letsencrypt
+
+volumes:
+  database:
+  certificateStore:
