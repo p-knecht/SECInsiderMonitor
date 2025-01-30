@@ -152,7 +152,7 @@ type FootnoteGroup {
   footnote                    Footnote[]
 }
 type Footnote {
-  id                          FootnoteId
+  id                          String
   text                        String
 }
 type FootnoteId {
@@ -251,7 +251,7 @@ type OwnershipType {
   footnoteId                  FootnoteId[]
 }
 type IndirectNature {
-  value                       String
+  value                       String?
   footnoteId                  FootnoteId[]
 }
 

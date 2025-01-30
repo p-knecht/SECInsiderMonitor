@@ -1,8 +1,5 @@
 import * as path from 'path';
-import * as os from 'os';
-import * as fs from 'fs';
 import pThrottle from 'p-throttle';
-import { XMLParser } from 'fast-xml-parser';
 import {
   EdgarDailySummaryApiResponse,
   EdgarDailySummaryDirectoryItem,
@@ -11,17 +8,20 @@ import {
 } from './types.js';
 import logger from './logger.js';
 import dbconnector from './dbconnector.js';
-
-const TMP_DIRECTORY: string = path.join(os.tmpdir(), 'SecFormsFetcher');
+import { parseOwnershipForm } from './parser.js';
 
 const EDGAR_BASE_URL: string = 'https://www.sec.gov/Archives';
 const RELEVANT_FORM_TYPES: Array<string> = ['3', '4', '5']; // Form types to be fetched from the SEC database
 
 // User agent and rate limits for HTTP requests to edgar database (conforming to SEC's guideline -> https://www.sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data)
-const USER_AGENT: string =
-  'Pascal Knecht (student at Swiss Distance University of Applied Sciences) pascal.knecht@students.ffhs.ch';
+const USER_AGENT: string | undefined = process.env.USER_AGENT;
+if (!USER_AGENT)
+  throw new Error(
+    'USER_AGENT environment variable not set. Please set it to a valid user agent string to comply with SEC terms of use.',
+  );
+
 const EDGAR_RATE_LIMITS = {
-  limit: 3, // max 10 queries per time interval, but limitting to 3 to be on the safe side
+  limit: 8, // max 10 queries per time interval, but limitting to 8 to be on the safe side
   interval: 1000, // set time interval to 1 second --> 10 queries per second
 };
 
@@ -248,6 +248,11 @@ async function parseIdxFile(ipxFile: string | Blob, separator: string = '|') {
   return entries;
 }
 
+/**
+ *  Handles the fetching, parsing and storing of a single filing.
+ * @param entry - The EdgarIdxFileEntry representing the filing to handle.
+ * @returns {Promise<boolean>} A promise that resolves to true if the filing was successfully handled, otherwise false.
+ */
 async function handleFiling(entry: EdgarIdxFileEntry) {
   // fetch filing
   const filingResponse: Response = await queryEdgarData(entry.filename);
@@ -267,59 +272,60 @@ async function handleFiling(entry: EdgarIdxFileEntry) {
     `Extracted ${embeddedDocuments.length} embedded document(s) from filing ${entry.filename}`,
   );
 
-  // find primary filing document
+  // find primary document
+  let parsedFilingData: null | object = null;
   const primaryDocument: EdgarEmbeddedDocument | undefined = embeddedDocuments.find(
     (doc) => doc.format == 'xml' && doc.type == entry.formType,
   );
-  if (primaryDocument === undefined)
-    throw new Error(
-      `No primary document found in filing ${entry.filename}. Causing filing: ${filingContent}`,
-    );
-
-  // parse primary document
-  const parser: XMLParser = new XMLParser({
-    ignoreAttributes: false,
-    attributeNamePrefix: '',
-    textNodeName: 'text',
-  });
-  const parsedFilingData: { ownershipDocument: object } = parser.parse(primaryDocument.rawContent);
-
-  // store filing in database
-  try {
-    if (entry.action === 'create') {
-      await dbconnector.ownershipFiling.create({
-        data: {
-          filingId: entry.filingId,
-          formType: entry.formType,
-          dateFiled: entry.dateFiled,
-          embeddedDocuments: embeddedDocuments,
-          formData: null, //parsedFilingData['ownershipDocument']
-        },
-      });
-      logger.info(`Successfully stored filing ${entry.filename} in database`);
-    } else if (entry.action === 'update') {
-      await dbconnector.ownershipFiling.update({
-        where: { filingId: entry.filingId },
-        data: {
-          formType: entry.formType,
-          dateFiled: entry.dateFiled,
-          embeddedDocuments: embeddedDocuments,
-          formData: null, //parsedFilingData['ownershipDocument']
-        },
-      });
-      logger.info(`Successfully updated filing ${entry.filename} in database`);
-    } else {
-      logger.warn(
-        `Skipping filing ${entry.filename}, as entry.action is not set to 'create' or 'update'`,
-      );
-      return false;
+  if (!primaryDocument) {
+    logger.warn(`No primary document found in filing ${entry.filename}. Skip parsing.`);
+  } else {
+    // parse primary document
+    try {
+      parsedFilingData = parseOwnershipForm(primaryDocument.rawContent);
+    } catch (error) {
+      logger.warn(`Error while parsing primary document of filing ${entry.filename}: ${error}`);
     }
-  } catch (error) {
-    logger.debug(JSON.stringify(parsedFilingData, null, 2));
-    logger.error(`Error while storing filing ${entry.filename} in database: ${error}`);
-    throw error; // rethrow error to stop further processing
   }
-  return true;
+
+  // store filing in database --> if parsedFilingData is null, only try once, otherwise try twice (second time without parsed data)
+  const attempts: number = parsedFilingData ? 2 : 1;
+  for (let i = 0; i < attempts; i++) {
+    const ownershipFilingData = {
+      filingId: entry.filingId,
+      formType: entry.formType,
+      dateFiled: entry.dateFiled,
+      embeddedDocuments: embeddedDocuments,
+      formData: parsedFilingData,
+    };
+    try {
+      if (entry.action === 'create') {
+        await dbconnector.ownershipFiling.create({ data: ownershipFilingData });
+      } else if (entry.action === 'update') {
+        await dbconnector.ownershipFiling.update({
+          where: { filingId: entry.filingId },
+          data: ownershipFilingData,
+        });
+      } else {
+        logger.warn(
+          `Skipping filing ${entry.filename}, as entry.action is not set to 'create' or 'update'`,
+        );
+        return false;
+      }
+      logger.info(`Successfully stored filing ${entry.filename} in database`);
+      return true;
+    } catch (error) {
+      logger.error(`Error while storing filing ${entry.filename} in database: ${error}`);
+      if (parsedFilingData === null) {
+        throw error; // rethrow error
+      } else {
+        // setting parsedFilingData to null to retry one last time without parsed data
+        parsedFilingData = null;
+        logger.info('Retrying without parsed form data...');
+      }
+    }
+  }
+  return false;
 }
 
 /**
@@ -396,12 +402,10 @@ async function extractEmbeddedDocument(documentSequence: string) {
   return embeddedDocument;
 }
 
-// Main function to fetch SEC forms
+/**
+ * Fetches missed SEC filings since the last fetched filing date, parses them and stores them in the database.
+ */
 async function fetchSecForms() {
-  // Clear or create tmp directory
-  if (fs.existsSync(TMP_DIRECTORY)) await fs.promises.rm(TMP_DIRECTORY, { recursive: true });
-  await fs.promises.mkdir(TMP_DIRECTORY);
-
   // get last filing date from database (or use yesterday as default if there are no filings yet)
   const lastFilingDate: Date = await dbconnector.ownershipFiling
     .findFirst({
