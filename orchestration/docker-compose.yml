@@ -2,7 +2,7 @@ name: secinsidermonitor
 services:
   database:
     image: mongo
-    container_name: sim-database
+    container_name: sim-database # note: when changing this name, it must be also changed in the sim-database-init.sh script and DATABASE_URL in datafetcher service
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${DB_ROOT_USERNAME}
@@ -24,8 +24,14 @@ services:
     volumes:
       - database:/data/db
       - ./sim-database-init.sh:/docker-entrypoint-initdb.d/init.sh:ro
-    ports:
-      - 27017:27017
+
+  datafetcher:
+    image: p89u7/secinsidermonitor:datafetcher-latest
+    container_name: sim-datafetcher
+    restart: always
+    environment:
+      DATABASE_URL: mongodb://${DB_SIM_USERNAME}:${DB_SIM_PASSWORD}@sim-database:27017/${DB_SIM_DB}?authSource=admin
+      USER_AGENT: ${DATAFETCHER_USER_AGENT}
 
   reverseproxy:
     image: traefik

@@ -16,7 +16,7 @@ db.auth('$MONGO_INITDB_ROOT_USERNAME', '$MONGO_INITDB_ROOT_PASSWORD')
 rs.initiate({
   _id: "rs0",
   members: [
-    { _id: 0, host: "127.0.0.1:27017" }
+    { _id: 0, host: "sim-database:27017" }
   ]
 })
 IEOF

@@ -1,6 +1,6 @@
 {
   "name": "sim-datafetcher",
-  "version": "1.0.0",
+  "version": "0.1",
   "description": "data fetcher component for SECInsiderMonitor",
   "homepage": "https://github.com/p-knecht/SECInsiderMonitor#readme",
   "bugs": {
@@ -10,31 +10,31 @@
     "type": "git",
     "url": "git+https://github.com/p-knecht/SECInsiderMonitor.git"
   },
-  "license": "ISC",
+  "license": "Apache-2.0",
   "author": "Pascal Knecht",
   "type": "module",
-  "main": "scheduler.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "prisma:generate": "prisma generate --generator datafetcher --schema=../db-schema/schema.prisma",
-    "prisma:migrate": "prisma migrate dev --schema=../db-schema/schema.prisma",
+    "start:scheduled": "node scheduler",
+    "start:once": "node fetcher",
+    "debug:parsing": "node utility/parseIncompleteEntries",
+    "build": "tsc",
+    "prisma:generate": "prisma generate --schema=../db-schema/schema.prisma",
+    "prisma:push": "prisma db push --skip-generate --schema=../db-schema/schema.prisma",
     "prisma:studio": "prisma studio --schema=../db-schema/schema.prisma"
   },
   "devDependencies": {
-    "@types/node": "^22.10.10",
+    "@types/node": "^22.12.0",
     "@types/node-cron": "^3.0.11",
-    "@types/winston": "^2.4.4",
-    "node-cron": "^3.0.3",
-    "prisma": "^6.2.1",
+    "ts-node": "^10.9.2",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.3",
-    "winston": "^3.17.0"
+    "typescript": "^5.7.3"
   },
   "dependencies": {
-    "@prisma/client": "^6.2.1",
-    "@types/p-throttle": "^1.1.0",
-    "@types/xml2js": "^0.4.14",
+    "@prisma/client": "^6.3.0",
     "fast-xml-parser": "^4.5.1",
-    "p-throttle": "^7.0.0"
+    "node-cron": "^3.0.3",
+    "p-throttle": "^7.0.0",
+    "prisma": "^6.3.0",
+    "winston": "^3.17.0"
   }
 }

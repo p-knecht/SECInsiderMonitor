@@ -1,11 +1,10 @@
-generator datafetcher {
+generator client {
   provider = "prisma-client-js"
-  output   = "../data-fetcher/node_modules/.prisma/client"
 }
 
 datasource db {
   provider = "mongodb"
-  url      = env("DB_SIM_URL")
+  url      = env("DATABASE_URL")
 }
 
 // =================================================================================================

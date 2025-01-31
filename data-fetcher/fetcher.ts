@@ -412,7 +412,9 @@ async function fetchSecForms() {
       select: { dateFiled: true },
       orderBy: { dateFiled: 'desc' },
     })
-    .then((filing) => filing?.dateFiled || new Date(Date.now() - 86400000));
+    .then(
+      (filing: { dateFiled: Date } | null) => filing?.dateFiled || new Date(Date.now() - 86400000),
+    );
 
   // get missed daily summaries since last filing date
   const relevantDailySummaries: string[] = await getRelevantDailySummaries(lastFilingDate);

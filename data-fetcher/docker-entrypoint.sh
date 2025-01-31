@@ -1,0 +1,24 @@
+#!/bin/sh
+set -e  
+
+echo "Waiting for MongoDB to become available..."
+attempt_counter=0
+until nc -z sim-database 27017; do
+    if [ $attempt_counter -eq 6 ]; then
+        echo "MongoDB is not available after 1 minute! Exiting..."
+        exit 1
+    fi
+    echo "MongoDB is not available yet. Retrying in 10 seconds..."
+    sleep 10
+    attempt_counter=$(($attempt_counter+1))
+done
+echo "MongoDB is ready..."
+
+echo "Running Prisma db push..."
+if ! npm run prisma:push; then
+    echo "Prisma db push failed! Exiting..."
+    exit 2
+fi
+
+echo "Starting sim-datafetcher application..."
+exec "$@"

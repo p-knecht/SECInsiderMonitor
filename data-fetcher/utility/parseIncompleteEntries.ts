@@ -7,7 +7,7 @@ const data = await dbconnector.ownershipFiling.findMany({
   },
 });
 
-console.info(`Found ${data.length} filings to parse`);
+console.info(`Found ${data.length} incomplete filings`);
 for (const entry of data) {
   const xmlData = entry.embeddedDocuments[0].rawContent;
   console.log(`Unparsed data: ${xmlData}`);
@@ -21,5 +21,5 @@ for (const entry of data) {
       formData: parsedFilingData,
     },
   });
-  console.log('Updated');
+  console.log('Updated previously incomplete entry');
 }
