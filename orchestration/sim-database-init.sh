@@ -9,8 +9,8 @@ do
   sleep 1
 done
 
-echo "Initiating replica set..."  >> /tmp/init-log
-mongosh >> /tmp/init-log 2>&1 <<IEOF
+echo "Initiating replica set..."
+mongosh <<IEOF
 use admin
 db.auth('$MONGO_INITDB_ROOT_USERNAME', '$MONGO_INITDB_ROOT_PASSWORD')
 rs.initiate({
@@ -41,6 +41,7 @@ db.createUser({
     db: '$SIM_DB'
   }]
 })
+exit
 EOF
 
 echo "Restarting mongod..."  >> /tmp/init-log

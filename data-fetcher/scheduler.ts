@@ -50,7 +50,8 @@ cron.schedule(
   { scheduled: true, timezone: CRON_TIMEZONE },
 );
 
-logger.debug(`Fetcher cronjob scheduled with the following configuration:
+logger.info('Fetcher cronjob scheduled successfully.');
+logger.debug(`Used scheduling configuration:
     Schedule: ${CRON_SCHEDULE}
     Timezone: ${CRON_TIMEZONE}
     Retries: ${RETRIES}

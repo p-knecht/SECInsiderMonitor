@@ -19,13 +19,12 @@ if (!USER_AGENT)
   throw new Error(
     'USER_AGENT environment variable not set. Please set it to a valid user agent string to comply with SEC terms of use.',
   );
-
 const EDGAR_RATE_LIMITS = {
-  limit: 8, // max 10 queries per time interval, but limitting to 8 to be on the safe side
-  interval: 1000, // set time interval to 1 second --> 10 queries per second
+  limit: 5, // max 10 queries per time interval, but limitting to 5 to be on the safe side
+  interval: 1000, // set time interval to 1 second --> 5 queries per second
 };
 
-// Check if the script was started directly or by another script
+// Check if the script was started directly or by another script (e.g. scheduler)
 if (process.argv[1].endsWith('fetcher')) {
   logger.info(`${path.basename(new URL('', import.meta.url).pathname)} was started directly.`);
   fetchSecForms(); // Start fetching SEC forms if script was started directly
@@ -259,15 +258,11 @@ async function handleFiling(entry: EdgarIdxFileEntry) {
   const filingContent: string = await filingResponse.text();
   logger.debug(`Successfully fetched filing ${entry.filename}`);
 
-  // Extract document sequences from filing content
+  // Extract document sequences from filing content and parse them
   const documentSequences = filingContent.match(/<DOCUMENT>[\s\S]*?<\/DOCUMENT>/g);
-  if (documentSequences === null)
-    throw new Error(`No document sequences found in filing ${entry.filename}.`);
-
-  // parse all embedded documents
-  const embeddedDocuments: EdgarEmbeddedDocument[] = await Promise.all(
-    documentSequences.map(extractEmbeddedDocument),
-  );
+  const embeddedDocuments: EdgarEmbeddedDocument[] = documentSequences
+    ? await Promise.all(documentSequences.map(extractEmbeddedDocument))
+    : [];
   logger.debug(
     `Extracted ${embeddedDocuments.length} embedded document(s) from filing ${entry.filename}`,
   );
@@ -387,9 +382,10 @@ async function extractEmbeddedDocument(documentSequence: string) {
     if (match && match[1]) {
       embeddedDocument.rawContent = match[1];
     } else {
-      throw new Error(
-        'No <TEXT> tag found in document sequence. Causing document sequence: ' + documentSequence,
+      logger.warn(
+        'No <TEXT> tag found in document sequence. Using full document sequence as raw content.',
       );
+      embeddedDocument.rawContent = documentSequence;
     }
   }
 
@@ -422,7 +418,7 @@ async function fetchSecForms() {
 
   // fetch missed daily summaries, parse them and filter relevant filings
   const relevantFilings: EdgarIdxFileEntry[] = await getRelevantFilings(relevantDailySummaries);
-  for (const entry of relevantFilings.splice(0, 1)) {
+  for (const entry of relevantFilings) {
     await handleFiling(entry);
   }
 }
