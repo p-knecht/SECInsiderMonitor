@@ -3,7 +3,7 @@ FROM node:22-alpine AS build
 WORKDIR /usr/src/app/data-fetcher
 
 # Install dependencies
-COPY data-fetcher/package*.json .
+COPY data-fetcher/*.json .
 RUN npm install
 
 COPY *.json .. 
