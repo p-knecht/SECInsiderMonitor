@@ -38,7 +38,7 @@ services:
       - ME_CONFIG_SITE_BASEURL=/dbmgr
     labels:
       - traefik.enable=true
-      - traefik.http.routers.mongoexpress.rule=Host(`sim.knecht.online`) && PathPrefix(`/dbmgr`)
+      - traefik.http.routers.mongoexpress.rule=Host(`${SERVER_FQDN}`) && PathPrefix(`/dbmgr`)
       - traefik.http.routers.mongoexpress.entrypoints=websecure
       - traefik.http.services.mongoexpress.loadbalancer.server.port=8081
 
@@ -49,6 +49,16 @@ services:
     environment:
       DATABASE_URL: mongodb://${DB_SIM_USERNAME}:${DB_SIM_PASSWORD}@sim-database:27017/${DB_SIM_DB}?authSource=admin
       USER_AGENT: ${DATAFETCHER_USER_AGENT}
+
+  appserver:
+    image: p89u7/secinsidermonitor:appserver-latest
+    container_name: sim-appserver
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.appserver.rule=Host(`${SERVER_FQDN}`)
+      - traefik.http.routers.appserver.entrypoints=websecure
+      - traefik.http.services.appserver.loadbalancer.server.port=3000
 
   reverseproxy:
     image: traefik
