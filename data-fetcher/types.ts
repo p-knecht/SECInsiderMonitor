@@ -34,7 +34,7 @@ export interface EdgarEmbeddedDocument {
   sequence: number | null;
   description: string | null;
   fileName: string | null;
-  format: 'xml' | 'html' | 'pdf' | 'other';
+  format: 'xml' | 'pdf' | 'xrbl' | 'other';
   rawContent: string;
   size: number;
 }

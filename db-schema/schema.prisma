@@ -34,8 +34,8 @@ type EmbeddedDocument {
 }
 enum EmbeddedDocumentFormat {
   xml
-  html
   pdf
+  xrbl
   other
 }
 

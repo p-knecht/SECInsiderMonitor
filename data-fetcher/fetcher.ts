@@ -351,28 +351,14 @@ async function extractEmbeddedDocument(documentSequence: string) {
   // extract content
   embeddedDocument.format = 'other'; // default to 'other' format
 
-  // check if embedded document is in XML format
-  match = documentSequence.match(/<XML>([\s\S]*?)<\/XML>/);
-  if (match && match[1]) {
-    embeddedDocument.rawContent = match[1];
-    embeddedDocument.format = 'xml';
-  }
-
-  // check if embedded document is in HTML format
-  if (embeddedDocument.format == 'other') {
-    match = documentSequence.match(/<HTML>([\s\S]*?)<\/HTML>/);
-    if (match && match[1]) {
+  // extract raw content for known formats as specified in EDGAR Public Dissemination Subsystem Technical Specification
+  const formats = ['XML', 'PDF', 'XRBL'];
+  for (const format of formats) {
+    const match = documentSequence.match(new RegExp(`<${format}>([\\s\\S]*?)</${format}>`));
+    if (match) {
       embeddedDocument.rawContent = match[1];
-      embeddedDocument.format = 'html';
-    }
-  }
-
-  // check if embedded document is in PDF format
-  if (embeddedDocument.format == 'other') {
-    match = documentSequence.match(/<PDF>([\s\S]*?)<\/PDF>/);
-    if (match && match[1]) {
-      embeddedDocument.rawContent = match[1];
-      embeddedDocument.format = 'pdf';
+      embeddedDocument.format = format.toLowerCase() as 'xml' | 'pdf' | 'xrbl';
+      break;
     }
   }
 
