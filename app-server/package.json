@@ -1,6 +1,6 @@
 {
   "name": "sim-appserver",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "application server component for SECInsiderMonitor",
   "homepage": "https://github.com/p-knecht/SECInsiderMonitor#readme",
   "bugs": {
@@ -22,14 +22,14 @@
     "@tailwindcss/cli": "^4.0.4",
     "@tailwindcss/postcss": "^4.0.4",
     "autoprefixer": "^10.4.20",
-    "next": "15.1.6",
+    "next": "^15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwindcss": "^4.0.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@types/node": "^20.17.17",
+    "@types/node": "^22.13.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9.19.0",
