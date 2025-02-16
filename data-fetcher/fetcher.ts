@@ -1,4 +1,3 @@
-import * as path from 'path';
 import pThrottle from 'p-throttle';
 import {
   EdgarDailySummaryApiResponse,
@@ -26,7 +25,7 @@ const EDGAR_RATE_LIMITS = {
 
 // Check if the script was started directly or by another script (e.g. scheduler)
 if (process.argv[1].endsWith('fetcher')) {
-  logger.info(`${path.basename(new URL('', import.meta.url).pathname)} was started directly.`);
+  logger.info(`Fetcher script was started directly.`);
   fetchSecForms(); // Start fetching SEC forms if script was started directly
 }
 

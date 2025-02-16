@@ -1,8 +1,7 @@
-import { OwnershipFiling } from '@prisma/client';
 import dbconnector from './dbconnector.js';
 import { parseOwnershipForm } from './parser.js';
 
-const data: OwnershipFiling[] = await dbconnector.ownershipFiling.findMany({
+const data: Record<string, any>[] = await dbconnector.ownershipFiling.findMany({
   where: {
     formData: null,
   },
