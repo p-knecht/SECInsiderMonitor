@@ -29,7 +29,9 @@ async function runFetcherScript(currentAttempt: number = 0): Promise<void> {
 
   // try to fetch SEC forms and retry if it fails
   try {
+    logger.info('Starting scheduled run of fetcher script');
     await fetcher();
+    logger.info('Scheduled run of fetcher script successfully completed');
     isRunning = false;
   } catch (error) {
     logger.error(`Error fetching SEC forms with fetcher.js: ${error}`);
@@ -47,7 +49,7 @@ cron.schedule(
   CRON_SCHEDULE,
   () => {
     if (isRunning) {
-      logger.info('A cronjob execution is already execution. Skipping this new cronjob execution.');
+      logger.warn('A cronjob execution is already execution. Skipping this new cronjob execution.');
       return;
     }
     isRunning = true;

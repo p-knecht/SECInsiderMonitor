@@ -25,8 +25,9 @@ const EDGAR_RATE_LIMITS = {
 
 // Check if the script was started directly or by another script (e.g. scheduler)
 if (process.argv[1].endsWith('fetcher')) {
-  logger.info(`Fetcher script was started directly.`);
+  logger.info(`Fetcher script was started directly, causing a on demand one-time fetch.`);
   fetchSecForms(); // Start fetching SEC forms if script was started directly
+  logger.info(`Execution of on demand one-time fetch successfully completed.`);
 }
 
 /**
