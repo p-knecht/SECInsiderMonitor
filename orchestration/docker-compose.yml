@@ -49,7 +49,9 @@ services:
     restart: always
     environment:
       DATABASE_URL: mongodb://${DB_SIM_USERNAME}:${DB_SIM_PASSWORD}@sim-database:27017/${DB_SIM_DB}?authSource=admin
-      USER_AGENT: ${DATAFETCHER_USER_AGENT}
+      USER_AGENT: ${USER_AGENT}
+    volumes:
+      - logs: /usr/src/app/data-fetcher/logs
 
   appserver:
     image: p89u7/secinsidermonitor:appserver-latest
@@ -93,3 +95,4 @@ volumes:
   database:
   database-config:
   certificateStore:
+  logs:
