@@ -11,6 +11,12 @@ const RETRY_INTERVAL: number = 60; // retry interval in minutes after failed att
 // flag to prevent multiple executions of the fetcher script at the same time
 let isRunning: boolean = false;
 
+/**
+ * Run the fetcher script asynchronously and retry if it fails
+ *
+ * @param {number} [currentAttempt=0] - defines the current attempt number. Default is 0.
+ * @returns {Promise<void>} promise that resolves when the fetcher script is done
+ */
 async function runFetcherScript(currentAttempt: number = 0): Promise<void> {
   // stop if maximum number of retries is reached
   if (currentAttempt >= RETRIES) {

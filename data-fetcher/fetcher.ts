@@ -34,7 +34,7 @@ if (process.argv[1].endsWith('fetcher')) {
  * Queries the EDGAR database in rate-limited manner and returns the response.
  *
  * @param {string} query - The query string to append to the EDGAR base URL.
- * @returns {Promise<Response>} - The response from the EDGAR database.
+ * @returns {Promise<Response>} The response from the EDGAR database.
  * @throws {Error} - If the HTTP response status is not OK.
  */
 const queryEdgarData: (_query: string) => Promise<Response> = pThrottle(EDGAR_RATE_LIMITS)(async (
@@ -249,7 +249,8 @@ async function parseIdxFile(ipxFile: string | Blob, separator: string = '|') {
 
 /**
  *  Handles the fetching, parsing and storing of a single filing.
- * @param entry - The EdgarIdxFileEntry representing the filing to handle.
+ *
+ * @param {EdgarIdxFileEntry} entry - The EdgarIdxFileEntry representing the filing to handle.
  * @returns {Promise<boolean>} A promise that resolves to true if the filing was successfully handled, otherwise false.
  */
 async function handleFiling(entry: EdgarIdxFileEntry) {
@@ -268,7 +269,7 @@ async function handleFiling(entry: EdgarIdxFileEntry) {
   );
 
   // find primary document
-  let parsedFilingData: null | object = null;
+  let parsedFilingData: null | Record<string, any> = null;
   const primaryDocument: EdgarEmbeddedDocument | undefined = embeddedDocuments.find(
     (doc) => doc.format == 'xml' && doc.type == entry.formType,
   );
@@ -386,6 +387,8 @@ async function extractEmbeddedDocument(documentSequence: string) {
 
 /**
  * Fetches missed SEC filings since the last fetched filing date, parses them and stores them in the database.
+ *
+ * @returns {Promise<void>} A promise that resolves when all missed filings have been fetched, parsed and stored.
  */
 async function fetchSecForms() {
   // get last filing date from database (or use yesterday as default if there are no filings yet)

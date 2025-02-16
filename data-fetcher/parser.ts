@@ -2,11 +2,12 @@ import { XMLParser } from 'fast-xml-parser';
 
 /**
  *  Recursively replaces empty strings with null in an object.
- * @param obj - object to replace empty strings in
- * @returns object with empty strings replaced with null
+ *
+ * @param {Record<string, any>} obj - object to replace empty strings in
+ * @returns {Record<string, any>} object with empty strings replaced with null
  */
-function replaceEmptyStrings(obj: object): object {
-  if (typeof obj !== 'object' || obj === null) return obj;
+function replaceEmptyStrings(obj: Record<string, any>): Record<string, any> {
+  if (obj === null || typeof obj !== 'object') return obj;
   if (Array.isArray(obj)) return obj.map(replaceEmptyStrings);
   return Object.fromEntries(
     Object.entries(obj).map(([key, value]) => [
@@ -86,11 +87,14 @@ const parser: XMLParser = new XMLParser({
 
 /**
  *  Parses an ownership form XML string into a valid, prisma ready ownership form JSON object.
- * @param xmlData - XML string to parse
- * @returns parsed ownership form JSON object
+ *
+ * @param {string} xmlData - the XML string containing the ownership form data.
+ * @returns {Record<string,any>} parsed ownership form JSON object
  */
-function parseOwnershipForm(xmlData: string): object {
-  const parsedFilingData: object = replaceEmptyStrings(parser.parse(xmlData)['ownershipDocument']);
+function parseOwnershipForm(xmlData: string): Record<string, any> {
+  const parsedFilingData: Record<string, any> = replaceEmptyStrings(
+    parser.parse(xmlData)['ownershipDocument'],
+  );
   return parsedFilingData;
 }
 

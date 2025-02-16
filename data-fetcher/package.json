@@ -1,6 +1,6 @@
 {
   "name": "sim-datafetcher",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "data fetcher component for SECInsiderMonitor",
   "homepage": "https://github.com/p-knecht/SECInsiderMonitor#readme",
   "bugs": {
@@ -16,7 +16,7 @@
   "scripts": {
     "start:scheduled": "node scheduler",
     "start:once": "node fetcher",
-    "debug:parsing": "node utility/parseIncompleteEntries",
+    "debug:parsing": "node parsingDebugger",
     "build": "tsc",
     "prisma:generate": "prisma generate --schema=../db-schema/schema.prisma",
     "prisma:push": "prisma db push --skip-generate --schema=../db-schema/schema.prisma",

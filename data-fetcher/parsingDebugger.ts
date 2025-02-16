@@ -1,18 +1,22 @@
-import dbconnector from '../dbconnector.js';
-import { parseOwnershipForm } from '../parser.js';
+import { OwnershipFiling } from '@prisma/client';
+import dbconnector from './dbconnector.js';
+import { parseOwnershipForm } from './parser.js';
 
-const data = await dbconnector.ownershipFiling.findMany({
+const data: OwnershipFiling[] = await dbconnector.ownershipFiling.findMany({
   where: {
     formData: null,
   },
 });
 
 console.info(`Found ${data.length} incomplete filings`);
+
 for (const entry of data) {
-  const xmlData = entry.embeddedDocuments[0].rawContent;
+  const xmlData: string = entry.embeddedDocuments[0].rawContent;
   console.log(`Unparsed data: ${xmlData}`);
-  const parsedFilingData = parseOwnershipForm(xmlData);
+
+  const parsedFilingData: Record<string, any> = parseOwnershipForm(xmlData);
   console.log(`Parsed data: ${JSON.stringify(parsedFilingData, null, 2)}`);
+
   await dbconnector.ownershipFiling.update({
     where: {
       id: entry.id,
@@ -21,5 +25,6 @@ for (const entry of data) {
       formData: parsedFilingData,
     },
   });
+
   console.log('Updated previously incomplete entry');
 }
