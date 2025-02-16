@@ -11,8 +11,8 @@ COPY db-schema ../db-schema
 COPY data-fetcher/*.ts .
 
 # Build the app
-RUN npm run build
 RUN npm run prisma:generate
+RUN npm run build
 
 # Stage 2: Production Image
 FROM node:22-alpine AS production
