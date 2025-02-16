@@ -9,7 +9,6 @@ RUN npm install
 COPY *.json .. 
 COPY db-schema ../db-schema
 COPY data-fetcher/*.ts .
-COPY data-fetcher/utility/*.ts ./utility/
 
 # Build the app
 RUN npm run build
@@ -22,7 +21,6 @@ WORKDIR /usr/src/app/data-fetcher
 # copy the files from the build stage
 COPY --from=build /usr/src/app/data-fetcher/node_modules ./node_modules
 COPY --from=build /usr/src/app/data-fetcher/*.js .
-COPY --from=build /usr/src/app/data-fetcher/utility/*.js ./utility/
 COPY --from=build /usr/src/app/data-fetcher/package*.json ./
 COPY --from=build /usr/src/app/db-schema ../db-schema
 
