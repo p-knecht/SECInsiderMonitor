@@ -23,6 +23,7 @@
     "prisma:studio": "prisma studio --schema=../db-schema/schema.prisma"
   },
   "devDependencies": {
+    "@tsconfig/node22": "^22.0.0",
     "@types/node": "^22.13.1",
     "@types/node-cron": "^3.0.11",
     "ts-node": "^10.9.2",
