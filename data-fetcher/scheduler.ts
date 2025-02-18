@@ -3,8 +3,8 @@ import logger from './logger.js';
 import fetcher from './fetcher.js';
 
 // basic configuration
-const CRON_SCHEDULE: string = '0 0 6 * * *'; // Run every day at 6 AM
-const CRON_TIMEZONE: string = 'Europe/Zurich'; // Timezone for cron schedule
+const CRON_SCHEDULE: string = '0 0 0 * * *'; // Run every day at midnight
+const CRON_TIMEZONE: string = 'America/New_York'; // Timezone for cron schedule
 const RETRIES: number = 3; // number of retries if fetching script fails
 const RETRY_INTERVAL: number = 60; // retry interval in minutes after failed attempts
 
