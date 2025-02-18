@@ -5,7 +5,7 @@ import fetcher from './fetcher.js';
 // basic configuration
 const CRON_SCHEDULE: string = '0 0 0 * * *'; // Run every day at midnight
 const CRON_TIMEZONE: string = 'America/New_York'; // Timezone for cron schedule
-const RETRIES: number = 3; // number of retries if fetching script fails
+const MAX_ATTEMPTS: number = 3; // number of attempts if fetching script fails
 const RETRY_INTERVAL: number = 60; // retry interval in minutes after failed attempts
 
 // flag to prevent multiple executions of the fetcher script at the same time
@@ -18,10 +18,10 @@ let isRunning: boolean = false;
  * @returns {Promise<void>} promise that resolves when the fetcher script is done
  */
 async function runFetcherScript(currentAttempt: number = 0): Promise<void> {
-  // stop if maximum number of retries is reached
-  if (currentAttempt >= RETRIES) {
+  // stop if maximum number of attempts is reached
+  if (currentAttempt >= MAX_ATTEMPTS) {
     logger.error(
-      `Fetching SEC forms with fetcher.js finally failed after ${RETRIES} retries. Waiting for next cronjob execution...`,
+      `Fetching SEC forms with fetcher.js finally failed after ${MAX_ATTEMPTS} attempts. Waiting for next cronjob execution...`,
     );
     isRunning = false;
     return;
@@ -62,6 +62,6 @@ logger.info('Fetcher cronjob scheduled successfully.');
 logger.debug(`Used scheduling configuration:
     Schedule: ${CRON_SCHEDULE}
     Timezone: ${CRON_TIMEZONE}
-    Retries: ${RETRIES}
+    Max. Attempts: ${MAX_ATTEMPTS}
     Retry Interval: ${RETRY_INTERVAL} minutes
 `);
