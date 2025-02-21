@@ -214,18 +214,18 @@ async function getRelevantFilings(relevantDailySummaries: string[]) {
 }
 
 /**
- * Parses an IPX file and converts it into a dataset.
+ * Parses an IDX file and converts it into a dataset.
  *
- * @param {Blob|string} ipxFile - The IPX file to parse. Can be a Blob or a string.
+ * @param {Blob|string} idxFile - The IDX file to parse. Can be a Blob or a string.
  * @param {string} [separator='|'] - The separator used to split the file into columns. Defaults to '|'.
  * @returns {Promise<EdgarIdxFileEntry[]>} A promise that resolves to an array of EdgarIdxFileEntry representing the parsed data.
  */
-async function parseIdxFile(ipxFile: string | Blob, separator: string = '|') {
-  if (ipxFile instanceof Blob) ipxFile = await ipxFile.text(); // convert Blob to string
+async function parseIdxFile(idxFile: string | Blob, separator: string = '|') {
+  if (idxFile instanceof Blob) idxFile = await idxFile.text(); // convert Blob to string
 
   const entries: EdgarIdxFileEntry[] = [];
 
-  const lines: string[] = ipxFile.split('\n');
+  const lines: string[] = idxFile.split('\n');
 
   let headerPassed: boolean = false; // flag to indicate that the header of the idx file has been passed
   for (const line of lines) {
