@@ -16,25 +16,51 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prisma:generate": "prisma generate --schema=../db-schema/schema.prisma",
+    "prisma:push": "prisma db push --skip-generate --schema=../db-schema/schema.prisma",
+    "prisma:studio": "prisma studio --schema=../db-schema/schema.prisma"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.7.4",
+    "@hookform/resolvers": "^4.1.1",
+    "@prisma/client": "^6.4.1",
+    "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-slot": "^1.1.2",
     "@tailwindcss/cli": "^4.0.4",
     "@tailwindcss/postcss": "^4.0.4",
     "autoprefixer": "^10.4.20",
+    "bcryptjs": "^3.0.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "log4js": "^6.9.1",
+    "lucide-react": "^0.475.0",
     "next": "^15.1.7",
+    "next-auth": "^5.0.0-beta.25",
+    "nodemailer": "^6.10.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "tailwindcss": "^4.0.4"
+    "react-hook-form": "^7.54.2",
+    "react-password-strength-bar": "^0.4.1",
+    "react-spinners": "^0.15.0",
+    "tailwind-merge": "^3.0.1",
+    "tailwindcss": "^4.0.4",
+    "tailwindcss-animate": "^1.0.7",
+    "uuid": "^11.1.0",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.13.4",
+    "@types/nodemailer": "^6.4.17",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/uuid": "^10.0.0",
     "eslint": "^9.19.0",
     "eslint-config-next": "^15.1.6",
     "postcss": "^8.5.1",
+    "prisma": "^6.4.1",
     "typescript": "^5.7.3"
   }
 }
