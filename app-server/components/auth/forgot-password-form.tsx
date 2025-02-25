@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { ForgotPasswordSchema } from '@/schemas';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
-import { requestPasswortResetMail } from '@/actions/forgotPassword';
+import { requestPasswortResetMail } from '@/actions/auth/forgot-password';
 
 export const ForgotPasswordForm = () => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>('');

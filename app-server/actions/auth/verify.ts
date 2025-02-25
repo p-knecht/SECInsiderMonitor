@@ -2,7 +2,7 @@
 
 import { dbconnector } from '@/lib/dbconnector';
 import { getUserByEmail } from '@/data/user';
-import { getEmailVerificationTokenByToken } from '@/data/emailVerificationToken';
+import { getEmailVerificationTokenByToken } from '@/data/email-verification-token';
 import { z } from 'zod';
 
 export const verifyToken = async (token: string) => {

@@ -7,7 +7,7 @@ import { useCallback, useEffect } from 'react';
 
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
-import { verifyToken } from '@/actions/verify';
+import { verifyToken } from '@/actions/auth/verify';
 
 export const VerifyForm = () => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>('');

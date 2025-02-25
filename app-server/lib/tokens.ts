@@ -1,5 +1,5 @@
-import { getEmailVerificationTokenByEmail } from '@/data/emailVerificationToken';
-import { getPasswordResetTokenByEmail } from '@/data/passwordResetToken';
+import { getEmailVerificationTokenByEmail } from '@/data/email-verification-token';
+import { getPasswordResetTokenByEmail } from '@/data/password-reset-token';
 import { v4 as uuidv4 } from 'uuid';
 import { dbconnector } from './dbconnector';
 

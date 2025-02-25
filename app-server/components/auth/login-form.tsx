@@ -20,7 +20,7 @@ import Link from 'next/link';
 import { LoginFormSchema } from '@/schemas';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
-import { login } from '@/actions/login';
+import { login } from '@/actions/auth/login';
 
 export const LoginForm = () => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>('');

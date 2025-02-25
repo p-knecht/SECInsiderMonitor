@@ -20,7 +20,7 @@ import { ResetPasswordSchema } from '@/schemas';
 import { useSearchParams } from 'next/navigation';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
-import { resetPassword } from '@/actions/resetPassword';
+import { resetPassword } from '@/actions/auth/reset-password';
 
 export const ResetPasswordForm = () => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>('');

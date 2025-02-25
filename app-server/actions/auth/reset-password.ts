@@ -5,7 +5,7 @@ import bcryptjs from 'bcryptjs';
 import { dbconnector } from '@/lib/dbconnector';
 
 import { ResetPasswordSchema } from '@/schemas';
-import { getPasswordResetTokenByToken } from '@/data/passwordResetToken';
+import { getPasswordResetTokenByToken } from '@/data/password-reset-token';
 import { getUserByEmail } from '@/data/user';
 
 export const resetPassword = async (data: z.infer<typeof ResetPasswordSchema>) => {

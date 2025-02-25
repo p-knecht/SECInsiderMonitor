@@ -1,5 +1,5 @@
 'use client';
-import { logout } from '@/actions/logout';
+import { logout } from '@/actions/auth/logout';
 import { PulseLoader } from 'react-spinners';
 
 export const LogoutForm = () => {
