@@ -9,4 +9,4 @@ export const authRoutes = [
 
 export const apiAuthPrefix = '/api/auth';
 
-export const DEFAULT_LOGGED_IN_URL = '/auth/test';
+export const DEFAULT_LOGGED_IN_URL = '/dashboard';
