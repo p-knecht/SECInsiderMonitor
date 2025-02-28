@@ -10,7 +10,7 @@ interface SidebarEntryProps {
 
 export function SidebarEntry({ label, icon: Icon, href }: SidebarEntryProps) {
   return (
-    <SidebarMenuItem key={label}>
+    <SidebarMenuItem>
       <Link href={href}>
         <SidebarMenuButton tooltip={label} className="cursor-pointer">
           <Icon />

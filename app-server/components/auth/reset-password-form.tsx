@@ -51,7 +51,7 @@ export const ResetPasswordForm = () => {
     setSuccessMessage('');
 
     startTransition(() => {
-      // send login request
+      // send password reset request
       resetPassword(data).then((data) => {
         // handle response and update fields
         setErrorMessage(data.error);

@@ -47,14 +47,14 @@ export function AppSidebar({ entries, ...props }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarGroup>
             {entries.mainEntries.map((entry) => (
-              <SidebarEntry {...entry} />
+              <SidebarEntry {...entry} key={entry.href} />
             ))}
           </SidebarGroup>
 
           <SidebarGroup>
             <SidebarGroupLabel>Administration</SidebarGroupLabel>
             {entries.adminEntries.map((entry) => (
-              <SidebarEntry {...entry} />
+              <SidebarEntry {...entry} key={entry.href} />
             ))}
           </SidebarGroup>
         </SidebarMenu>
@@ -62,8 +62,10 @@ export function AppSidebar({ entries, ...props }: AppSidebarProps) {
 
       <SidebarFooter>
         <SidebarMenu>
-          {entries.footerEntries &&
-            entries.footerEntries.map((entry) => <SidebarEntry {...entry} />)}
+          <SidebarGroup>
+            {entries.footerEntries &&
+              entries.footerEntries.map((entry) => <SidebarEntry {...entry} key={entry.href} />)}
+          </SidebarGroup>
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
