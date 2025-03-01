@@ -12,6 +12,8 @@ import {
 import Image from 'next/image';
 import { LucideIcon } from 'lucide-react';
 import { SidebarEntry } from './sidebar-entry';
+import { currentRole } from '@/lib/auth';
+import { UserRole } from '@prisma/client';
 
 interface SidebarEntry {
   label: string;
@@ -29,7 +31,8 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   entries: SidebarEntries;
 }
 
-export function AppSidebar({ entries, ...props }: AppSidebarProps) {
+export async function AppSidebar({ entries, ...props }: AppSidebarProps) {
+  const userRole = await currentRole();
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -45,27 +48,27 @@ export function AppSidebar({ entries, ...props }: AppSidebarProps) {
 
       <SidebarContent>
         <SidebarMenu>
-          <SidebarGroup>
+          <SidebarGroup className="gap-2">
             {entries.mainEntries.map((entry) => (
               <SidebarEntry {...entry} key={entry.href} />
             ))}
           </SidebarGroup>
 
-          <SidebarGroup>
-            <SidebarGroupLabel>Administration</SidebarGroupLabel>
-            {entries.adminEntries.map((entry) => (
-              <SidebarEntry {...entry} key={entry.href} />
-            ))}
-          </SidebarGroup>
+          {userRole === UserRole.admin && (
+            <SidebarGroup className="gap-2">
+              <SidebarGroupLabel>Administration</SidebarGroupLabel>
+              {entries.adminEntries.map((entry) => (
+                <SidebarEntry {...entry} key={entry.href} />
+              ))}
+            </SidebarGroup>
+          )}
         </SidebarMenu>
       </SidebarContent>
 
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarGroup>
-            {entries.footerEntries &&
-              entries.footerEntries.map((entry) => <SidebarEntry {...entry} key={entry.href} />)}
-          </SidebarGroup>
+          {entries.footerEntries &&
+            entries.footerEntries.map((entry) => <SidebarEntry {...entry} key={entry.href} />)}
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

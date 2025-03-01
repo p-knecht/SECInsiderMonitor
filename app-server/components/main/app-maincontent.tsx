@@ -5,7 +5,7 @@ import { AppHeader } from '@/components/main/app-header';
 
 interface AppMainContentProps {
   children: React.ReactNode;
-  pathComponents?: { title: string; path: string }[];
+  pathComponents?: { title: string; path?: string }[];
 }
 
 export function AppMainContent({ children, pathComponents }: AppMainContentProps) {
