@@ -1,5 +1,6 @@
 import { CardWrapper } from '@/components/auth/card-wrapper';
 import { ResetPasswordForm } from '@/components/auth/reset-password-form';
+import { Suspense } from 'react';
 
 export default function ResetPasswordPage() {
   return (
@@ -9,7 +10,9 @@ export default function ResetPasswordPage() {
       footerLinkLabel="Zurück zur Anmeldung"
       footerLinkHref="/auth/login"
     >
-      <ResetPasswordForm />
+      <Suspense>
+        <ResetPasswordForm />
+      </Suspense>
     </CardWrapper>
   );
 }

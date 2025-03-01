@@ -1,5 +1,6 @@
 import { CardWrapper } from '@/components/auth/card-wrapper';
 import { VerifyForm } from '@/components/auth/verify-form';
+import { Suspense } from 'react';
 
 export default function VerifyPage() {
   return (
@@ -9,7 +10,9 @@ export default function VerifyPage() {
       footerLinkLabel="Zur Anmeldung"
       footerLinkHref="/auth/login"
     >
-      <VerifyForm />
+      <Suspense>
+        <VerifyForm />
+      </Suspense>
     </CardWrapper>
   );
 }
