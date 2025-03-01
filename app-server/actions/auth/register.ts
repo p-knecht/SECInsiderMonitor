@@ -7,6 +7,7 @@ import { dbconnector } from '@/lib/dbconnector';
 import { RegisterFormSchema } from '@/schemas';
 import { generateVerificationToken } from '@/lib/tokens';
 import { sendTokenVerificationMail } from '@/lib/mailer';
+import { UserRole } from '@prisma/client';
 
 export const register = async (data: z.infer<typeof RegisterFormSchema>) => {
   // check if registration is disabled
@@ -34,11 +35,15 @@ export const register = async (data: z.infer<typeof RegisterFormSchema>) => {
     return { error: 'Benutzer existiert bereits!' };
   }
 
+  // check if this is the first user
+  const firstUser = (await dbconnector.user.count()) === 0;
+
   // create user in database
   await dbconnector.user.create({
     data: {
       email: validatedData.data.email,
       password: hashedPassword,
+      role: firstUser ? UserRole.admin : UserRole.user, // first user is always admin
     },
   });
 
