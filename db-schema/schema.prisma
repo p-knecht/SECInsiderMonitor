@@ -270,6 +270,7 @@ model User {
   role          UserRole        @default(user)
  
   createdAt DateTime @default(now())
+  lastLogin DateTime?
   updatedAt DateTime @updatedAt
 }
 

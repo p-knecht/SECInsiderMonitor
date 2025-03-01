@@ -3,7 +3,8 @@ import bcryptjs from 'bcryptjs';
 import Credentials from 'next-auth/providers/credentials';
 
 import { LoginFormSchema } from '@/schemas';
-import { getUserByEmail } from './data/user';
+import { getUserByEmail } from '@/data/user';
+import { dbconnector } from '@/lib/dbconnector';
 
 export default {
   providers: [
@@ -22,7 +23,14 @@ export default {
         if (!user || !user.password) return null;
 
         // pass if the provided password is correct for the user
-        if (await bcryptjs.compare(validatedData.data.password, user.password)) return user;
+        if (await bcryptjs.compare(validatedData.data.password, user.password)) {
+          // update last login date
+          await dbconnector.user.update({
+            where: { id: user.id },
+            data: { lastLogin: new Date() },
+          });
+          return user;
+        }
 
         // fail otherwise
         return null;
