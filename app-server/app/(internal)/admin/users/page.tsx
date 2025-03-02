@@ -6,15 +6,19 @@ import { columns, UserColumn } from './columns';
 import { dbconnector } from '@/lib/dbconnector';
 import { buildUserTableFilter } from '@/lib/tablefilter';
 import { currentRole } from '@/lib/auth';
+import { FormError } from '@/components/form-error';
+import { userTableParamatersSchema } from '@/schemas';
+
+interface UsersPageSearchParams {
+  page?: string;
+  pageSize?: string;
+  sort?: string;
+  order?: string;
+  [key: string]: string | string[] | undefined;
+}
 
 interface UsersPageProps {
-  searchParams: Promise<{
-    page?: string;
-    pageSize?: string;
-    sort?: string;
-    order?: string;
-    [key: string]: string | string[] | undefined;
-  }>;
+  searchParams: Promise<UsersPageSearchParams>;
 }
 
 export default async function UsersPage({ searchParams: searchParams }: UsersPageProps) {
@@ -23,22 +27,42 @@ export default async function UsersPage({ searchParams: searchParams }: UsersPag
   let page = 1;
   let pageSize = 10;
   let users: UserColumn[] = [];
+  let parsingError = '';
 
   // only process request if user is admin
   if ((await currentRole()) == UserRole.admin) {
-    const retrievedSearchParams = await searchParams;
+    // Parse search parameters to prevent malicious input
+    const parsedParams = userTableParamatersSchema.safeParse(await searchParams);
+    let validParams: UsersPageSearchParams = {};
+    if (parsedParams.success) {
+      validParams = parsedParams.data;
+    } else {
+      parsingError =
+        'Ungültige Parameter wurden entfernt. Detaillierter Fehlerbeschrieb: ' +
+        JSON.stringify(parsedParams.error.format(), null, 2);
+
+      // only copy successfully parsed parameters to validParams
+      validParams = Object.fromEntries(
+        Object.entries(await searchParams).filter(
+          ([key]) =>
+            (parsedParams.error.format() as Record<string, any>)[key] === undefined &&
+            key in userTableParamatersSchema.shape,
+        ),
+      );
+    }
+
     // Handle pagination parameters
-    if (retrievedSearchParams?.page && !isNaN(parseInt(retrievedSearchParams.page, 10)))
-      page = parseInt(retrievedSearchParams.page, 10);
-    if (retrievedSearchParams?.pageSize && !isNaN(parseInt(retrievedSearchParams.pageSize, 10)))
-      pageSize = parseInt(retrievedSearchParams.pageSize, 10);
+    if (validParams.page && !isNaN(parseInt(validParams.page, 10)))
+      page = parseInt(validParams.page, 10);
+    if (validParams.pageSize && !isNaN(parseInt(validParams.pageSize, 10)))
+      pageSize = parseInt(validParams.pageSize, 10);
 
     // Handle sorting parameters
-    const sortColumn = retrievedSearchParams?.sort || 'createdAt'; // Default to sorting by createdAt
-    const sortOrder = retrievedSearchParams?.order || 'asc'; // Default to ascending order
+    const sortColumn = validParams.sort || 'createdAt'; // Default to sorting by createdAt
+    const sortOrder = validParams.order || 'asc'; // Default to ascending order
 
     // Handle filtering parameters
-    const filter = buildUserTableFilter(retrievedSearchParams);
+    const filter = buildUserTableFilter(validParams);
 
     totalCount = await dbconnector.user.count({ where: filter });
 
@@ -65,7 +89,6 @@ export default async function UsersPage({ searchParams: searchParams }: UsersPag
           [sortColumn]: sortOrder, // only sort by one column to reduce complexity
         },
       });
-      console.log(users);
     }
   }
 
@@ -77,6 +100,7 @@ export default async function UsersPage({ searchParams: searchParams }: UsersPag
       ]}
     >
       <RoleGate roles={[UserRole.admin]}>
+        <FormError message={parsingError} />
         <div className="flex justify-center">
           <DataTable
             columns={columns}

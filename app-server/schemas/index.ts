@@ -1,4 +1,6 @@
 import * as z from 'zod';
+import { UserColumn } from '@/app/(internal)/admin/users/columns';
+import { UserRole } from '@prisma/client';
 
 export const DeleteAccountSchema = z.object({
   password: z.string().min(1, 'Bitte aktuelles Passwort eingeben'),
@@ -54,3 +56,39 @@ export const RegisterFormSchema = z
     message: 'Die Passwörter stimmen nicht überein',
     path: ['confirmPassword'],
   });
+
+// simplified date regex (days) for table filter
+const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+// get all keys of UserColumn interface for usage in zod schema
+const userColumnKeys = Object.keys({} as UserColumn) as (keyof UserColumn)[];
+
+export const userTableParamatersSchema = z
+  .object({
+    page: z.string().regex(/^\d+$/, 'Page muss eine Zahl sein').optional(),
+    pageSize: z.string().regex(/^\d+$/, 'PageSize muss eine Zahl sein').optional(),
+    sort: z.enum(userColumnKeys as [string, ...string[]]).optional(),
+    order: z.enum(['asc', 'desc']).optional(),
+    'filter[email]': z.union([z.string(), z.array(z.string())]).optional(),
+    'filter[emailVerified]': z
+      .union([z.enum(['true', 'false']), z.array(z.enum(['true', 'false']))])
+      .optional(),
+    'filter[createdAt][from]': z
+      .string()
+      .regex(dateRegex, 'Datum muss im Format YYYY-MM-DD sein')
+      .optional(),
+    'filter[createdAt][to]': z
+      .string()
+      .regex(dateRegex, 'Datum muss im Format YYYY-MM-DD sein')
+      .optional(),
+    'filter[lastLogin][from]': z
+      .string()
+      .regex(dateRegex, 'Datum muss im Format YYYY-MM-DD sein')
+      .optional(),
+    'filter[lastLogin][to]': z
+      .string()
+      .regex(dateRegex, 'Datum muss im Format YYYY-MM-DD sein')
+      .optional(),
+    'filter[role]': z.union([z.nativeEnum(UserRole), z.array(z.nativeEnum(UserRole))]).optional(),
+  })
+  .strict();
