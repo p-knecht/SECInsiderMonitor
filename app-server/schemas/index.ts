@@ -1,5 +1,4 @@
 import * as z from 'zod';
-import { UserColumn } from '@/app/(internal)/admin/users/columns';
 import { UserRole } from '@prisma/client';
 
 export const DeleteAccountSchema = z.object({
@@ -60,14 +59,11 @@ export const RegisterFormSchema = z
 // simplified date regex (days) for table filter
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
-// get all keys of UserColumn interface for usage in zod schema
-const userColumnKeys = Object.keys({} as UserColumn) as (keyof UserColumn)[];
-
 export const userTableParamatersSchema = z
   .object({
     page: z.string().regex(/^\d+$/, 'Page muss eine Zahl sein').optional(),
     pageSize: z.string().regex(/^\d+$/, 'PageSize muss eine Zahl sein').optional(),
-    sort: z.enum(userColumnKeys as [string, ...string[]]).optional(),
+    sort: z.enum(['email', 'emailVerified', 'createdAt', 'lastLogin', 'role']).optional(),
     order: z.enum(['asc', 'desc']).optional(),
     'filter[email]': z.union([z.string(), z.array(z.string())]).optional(),
     'filter[emailVerified]': z
