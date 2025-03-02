@@ -26,6 +26,15 @@ export const deleteAccount = async (data: z.infer<typeof DeleteAccountSchema>) =
     return { error: 'Benutzer existiert nicht' };
   }
 
+  // check if user is an admin and prevent deletion if it is the only admin
+  if (user.role === 'admin') {
+    if ((await dbconnector.user.count({ where: { role: 'admin' } })) === 1) {
+      return {
+        error: 'Konto kann nicht gelöscht werden, da es das letzte verbleibende Admin-Konto ist',
+      };
+    }
+  }
+
   // check if old password was entered correctly
   if (!user.password || !(await bcryptjs.compare(validatedData.data.password, user.password)))
     return { error: 'Aktuelles Passwort ist falsch' };
