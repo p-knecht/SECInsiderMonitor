@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/sidebar';
 import Image from 'next/image';
 import { LucideIcon } from 'lucide-react';
-import { SidebarEntry } from './sidebar-entry';
+import { SidebarEntry } from '@/components/main/sidebar-entry';
 import { currentRole } from '@/lib/auth';
 import { UserRole } from '@prisma/client';
 

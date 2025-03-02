@@ -4,7 +4,7 @@ import { UserRole } from '@prisma/client';
 
 import authConfig from '@/auth.config';
 import { dbconnector } from '@/lib/dbconnector';
-import { getUserById } from './data/user';
+import { getUserById } from '@/data/user';
 
 // add role attribute to the session object
 declare module 'next-auth' {

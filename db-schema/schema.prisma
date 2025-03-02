@@ -264,7 +264,7 @@ type IndirectNature {
 model User {
   id            String          @id @default(auto()) @map("_id") @db.ObjectId
   email         String?         @unique
-  emailVerified DateTime?
+  emailVerified Boolean         @default(false)      
   password      String?
   accounts      Account[]
   role          UserRole        @default(user)

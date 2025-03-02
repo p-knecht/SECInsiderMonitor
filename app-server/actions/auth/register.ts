@@ -44,6 +44,7 @@ export const register = async (data: z.infer<typeof RegisterFormSchema>) => {
       email: validatedData.data.email,
       password: hashedPassword,
       role: firstUser ? UserRole.admin : UserRole.user, // first user is always admin
+      lastLogin: null,
     },
   });
 

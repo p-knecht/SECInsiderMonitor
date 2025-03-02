@@ -32,7 +32,7 @@ export const verifyToken = async (token: string) => {
   }
 
   // update user verification status and remove token
-  await dbconnector.user.update({ where: { id: user.id }, data: { emailVerified: new Date() } });
+  await dbconnector.user.update({ where: { id: user.id }, data: { emailVerified: true } });
   await dbconnector.emailVerificationToken.delete({ where: { id: tokenObject.id } });
 
   return { success: 'Konto wurde erfolgreich verifiziert' };

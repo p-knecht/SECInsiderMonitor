@@ -1,7 +1,7 @@
 import { getEmailVerificationTokenByEmail } from '@/data/email-verification-token';
 import { getPasswordResetTokenByEmail } from '@/data/password-reset-token';
 import { v4 as uuidv4 } from 'uuid';
-import { dbconnector } from './dbconnector';
+import { dbconnector } from '@/lib/dbconnector';
 
 export const generatePasswordResetToken = async (email: string) => {
   // Check if there is already a token for this email and remove it (as there should be only one valid token per email at a time)
