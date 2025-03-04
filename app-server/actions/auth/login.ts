@@ -4,7 +4,6 @@ import * as z from 'zod';
 
 import { LoginFormSchema } from '@/schemas';
 import { signIn } from '@/auth';
-import { DEFAULT_LOGGED_IN_URL } from '@/routes';
 import { AuthError } from 'next-auth';
 import { getUserByEmail } from '@/data/user';
 import { generateVerificationToken } from '@/lib/tokens';
@@ -32,7 +31,6 @@ export const login = async (data: z.infer<typeof LoginFormSchema>) => {
     await signIn('credentials', {
       email: validatedData.data.email,
       password: validatedData.data.password,
-      redirectTo: DEFAULT_LOGGED_IN_URL,
     });
     return { success: 'Erfolgreich!' };
   } catch (error) {
