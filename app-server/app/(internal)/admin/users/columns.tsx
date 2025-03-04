@@ -3,7 +3,7 @@
 import { Badge } from '@/components/ui/badge';
 import { UserRole } from '@prisma/client';
 import { ColumnDef } from '@tanstack/react-table';
-import { CircleCheckIcon, CircleXIcon, PencilIcon } from 'lucide-react';
+import { CircleCheckIcon, CircleXIcon } from 'lucide-react';
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header';
 import EditUserButton from '@/components/main/admin/users/edit-user-button';
 
