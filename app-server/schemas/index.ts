@@ -109,3 +109,8 @@ export const userTableParamatersSchema = z
     'filter[role]': z.union([z.nativeEnum(UserRole), z.array(z.nativeEnum(UserRole))]).optional(),
   })
   .strict();
+
+export const LogfileSchema = z
+  .string()
+  .trim()
+  .regex(/^datafetcher-\d{4}-\d{2}-\d{2}\.log$/, 'Ungültiges Logfile-Format');

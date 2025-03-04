@@ -21,7 +21,7 @@ const sidebarEntries = {
   ],
   adminEntries: [
     { label: 'Benutzerverwaltung', icon: UsersIcon, href: '/admin/users' },
-    { label: 'Datenbezug', icon: ScrollIcon, href: '/admin/datafetcher' },
+    { label: 'Datafetcher-Logs', icon: ScrollIcon, href: '/admin/datafetcher' },
   ],
   footerEntries: [
     { label: 'Benachrichtigungen', icon: BellIcon, href: '/notifications' },
