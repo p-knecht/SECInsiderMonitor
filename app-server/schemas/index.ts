@@ -12,6 +12,27 @@ export const ForgotPasswordSchema = z.object({
     .transform((email) => email.toLowerCase()),
 });
 
+export const SetUserPasswordSchema = z
+  .object({
+    userId: z.string(),
+    password: z.string().min(8, 'Passwort muss mindestens 8 Zeichen lang sein'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Die Passwörter stimmen nicht überein',
+    path: ['confirmPassword'],
+  });
+
+export const SetUserRoleSchema = z.object({
+  userId: z.string(),
+  role: z.nativeEnum(UserRole, {
+    required_error: 'Bitte eine gültige Benutzerrolle auswählen',
+  }),
+});
+export const DeleteUserSchema = z.object({
+  userId: z.string(),
+});
+
 export const ChangePasswordSchema = z
   .object({
     oldPassword: z.string().min(1, 'Bitte aktuelles Passwort eingeben'),

@@ -60,7 +60,7 @@ export const DeleteAccountForm = () => {
     setSuccessMessage('');
 
     startTransition(() => {
-      // send password change request
+      // send account deletion request
       deleteAccount(data).then((data) => {
         // handle response and update fields
         setErrorMessage(data.error);

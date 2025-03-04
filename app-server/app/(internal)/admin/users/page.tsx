@@ -8,6 +8,7 @@ import { buildUserTableFilter } from '@/lib/tablefilter';
 import { currentRole } from '@/lib/auth';
 import { FormError } from '@/components/form-error';
 import { userTableParamatersSchema } from '@/schemas';
+import { SessionProvider } from 'next-auth/react';
 
 interface UsersPageSearchParams {
   page?: string;
@@ -77,7 +78,8 @@ export default async function UsersPage({ searchParams: searchParams }: UsersPag
         skip: (page - 1) * pageSize,
         take: pageSize,
         select: {
-          // Select only the fields that are needed as table columns
+          // Select only the fields that are needed as table columns (e.g. no password hash)
+          id: true,
           email: true,
           emailVerified: true,
           createdAt: true,
@@ -102,13 +104,15 @@ export default async function UsersPage({ searchParams: searchParams }: UsersPag
       <RoleGate roles={[UserRole.admin]}>
         <FormError message={parsingError} />
         <div className="flex justify-center">
-          <DataTable
-            columns={columns}
-            data={users}
-            totalCount={totalCount}
-            currentPage={page}
-            pageSize={pageSize}
-          />
+          <SessionProvider>
+            <DataTable
+              columns={columns}
+              data={users}
+              totalCount={totalCount}
+              currentPage={page}
+              pageSize={pageSize}
+            />
+          </SessionProvider>
         </div>
       </RoleGate>
     </AppMainContent>

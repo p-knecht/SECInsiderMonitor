@@ -5,7 +5,7 @@ import { UserRole } from '@prisma/client';
 import { ColumnDef } from '@tanstack/react-table';
 import { CircleCheckIcon, CircleXIcon, PencilIcon } from 'lucide-react';
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header';
-import { Button } from '@/components/ui/button';
+import EditUserButton from '@/components/main/admin/users/edit-user-button';
 
 export interface UserColumn {
   // not using User from prisma/client as only a subset of fields is needed
@@ -14,6 +14,7 @@ export interface UserColumn {
   emailVerified: Boolean | null;
   role: UserRole;
   lastLogin: Date | null;
+  id: string;
 }
 
 export const columns: ColumnDef<UserColumn>[] = [
@@ -118,10 +119,6 @@ export const columns: ColumnDef<UserColumn>[] = [
   },
   {
     id: 'actions',
-    cell: ({ row }) => (
-      <Button variant="ghost" className="cursor-pointer h-6 w-6 hover:bg-gray-200">
-        <PencilIcon className="h-4 w-4 text-gray-600" />
-      </Button>
-    ),
+    cell: ({ row }) => <EditUserButton userId={row.original.id} userEmail={row.original.email} />,
   },
 ];
