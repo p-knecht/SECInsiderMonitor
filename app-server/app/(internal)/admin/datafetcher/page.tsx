@@ -30,7 +30,8 @@ export default async function datafetcherPage() {
   }
 
   let logfiles: Logfile[] = [];
-  if ((await currentUser())?.role === UserRole.admin) {
+  // only show logfiles when the user is an admin and the log directory exists
+  if ((await currentUser())?.role === UserRole.admin && fs.existsSync(LOG_DIR)) {
     // Load all logfiles and sort them by date (only when the user is an admin)
     logfiles = fs
       .readdirSync(LOG_DIR)
