@@ -4,11 +4,12 @@ import { DataTableColumnHeaderSorter } from '@/components/data-table/data-table-
 import { DataTableColumnHeaderFilterText } from '@/components/data-table/data-table-column-header-filter-text';
 import { DataTableColumnHeaderFilterSelect } from '@/components/data-table/data-table-column-header-filter-select';
 import { DataTableColumnHeaderFilterDate } from '@/components/data-table/data-table-column-header-filter-date';
+import { DataTableColumnHeaderFilterCik } from '@/components/data-table//data-table-column-header-filter-cik';
 
 interface DataTableColumnHeaderProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElement> {
   column: Column<TData, TValue>;
   title: string;
-  filterType?: 'text' | 'select' | 'date';
+  filterType?: 'text' | 'select' | 'date' | 'cik';
   selectData?: { value: string; label: React.ReactNode }[];
 }
 
@@ -28,6 +29,7 @@ export function DataTableColumnHeader<TData, TValue>({
         {filterType === 'select' && (
           <DataTableColumnHeaderFilterSelect columnId={column.id} selectData={selectData || []} />
         )}
+        {filterType === 'cik' && <DataTableColumnHeaderFilterCik columnId={column.id} />}
         {filterType === 'date' && <DataTableColumnHeaderFilterDate columnId={column.id} />}
       </div>
     </div>

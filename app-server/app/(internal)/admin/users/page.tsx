@@ -4,7 +4,7 @@ import { UserRole } from '@prisma/client';
 import { DataTable } from '@/components/data-table/data-table';
 import { columns, UserColumn } from './columns';
 import { dbconnector } from '@/lib/dbconnector';
-import { buildUserTableFilter } from '@/lib/tablefilter';
+import { buildFilter } from '@/lib/tablefilter';
 import { currentRole } from '@/lib/auth';
 import { FormError } from '@/components/form-error';
 import { userTableParamatersSchema } from '@/schemas';
@@ -63,7 +63,7 @@ export default async function UsersPage({ searchParams: searchParams }: UsersPag
     const sortOrder = validParams.order || 'asc'; // Default to ascending order
 
     // Handle filtering parameters
-    const filter = buildUserTableFilter(validParams);
+    const filter = buildFilter(validParams, 'user', false);
 
     totalCount = await dbconnector.user.count({ where: filter });
 
