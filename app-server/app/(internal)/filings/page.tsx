@@ -84,7 +84,12 @@ export default async function FilingsPage({ searchParams: searchParams }: Filing
     const rawFilings = await dbconnector.ownershipFiling.aggregateRaw({
       pipeline: [
         { $match: filter },
-        { $sort: { [sortColumn]: sortOrder === 'asc' ? 1 : -1 } },
+        {
+          $sort: {
+            [sortColumn]: sortOrder === 'asc' ? 1 : -1,
+            filingId: sortOrder === 'asc' ? 1 : -1, // always sort by filingId as a secondary sort key to ensure consistent ordering
+          },
+        },
         { $skip: (page - 1) * pageSize },
         { $limit: pageSize },
       ],
