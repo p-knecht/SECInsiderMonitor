@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 // use cache to store queried CIK data for faster badge rendering
 const cikCache = new Map<string, CikObject>();
 
-const calculateCikBadgeStyle = (cik: string) => {
+export const calculateCikBadgeStyle = (cik: string) => {
   let hash = 0;
   // calculate a numeric hash from the CIK (no secure hashing needed here, as we only need it for consistent and fast (!) color deviation; based on https://stackoverflow.com/a/7616484)
   for (let i = 0; i < cik.length; i++) {
@@ -76,7 +76,7 @@ export const CikBadge = ({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Badge style={{ backgroundColor, color: textColor }}>
+        <Badge style={{ backgroundColor, color: textColor }} className="whitespace-pre-wrap">
           {fullCikObject ? (
             fullCikObject.cikTicker ? (
               <>
