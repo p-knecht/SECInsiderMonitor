@@ -9,6 +9,9 @@ export const parseIssuer = (filing: any): CikObject | null => {
     return null;
   }
 
+  if (filing.formData.issuer.issuerTradingSymbol.toLocaleLowerCase() === 'none')
+    filing.formData.issuer.issuerTradingSymbol = undefined;
+
   return {
     cik: filing.formData.issuer.issuerCik ?? 'unknown CIK',
     cikName: filing.formData.issuer.issuerName.replace(/&amp;/g, '&') ?? 'unknown name',

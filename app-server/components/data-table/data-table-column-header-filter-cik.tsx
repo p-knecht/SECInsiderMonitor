@@ -149,7 +149,7 @@ export const DataTableColumnHeaderFilterCik = ({
                     }}
                   >
                     {highlightMatch(
-                      result.cikTicker
+                      result.cikTicker && result.cikTicker.toLocaleLowerCase() !== 'none'
                         ? `${result.cikTicker} (${result.cikName})`
                         : `${result.cikName}`,
                     )}
