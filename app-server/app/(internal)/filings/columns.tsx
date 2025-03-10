@@ -5,6 +5,7 @@ import { DataTableColumnHeader } from '@/components/data-table/data-table-column
 import { CikObject } from '@/data/cik';
 import { CikBadge } from '@/components/data-table/cik-badge';
 import { FormtypeBadge } from '@/components/data-table/formtype-badge';
+import ShowFilingButton from '@/components/main/filings/show-filing-button';
 
 export interface OwnershipFilingColumn {
   // not using OwnershipFiling from prisma/client as only a subset of fields is needed
@@ -81,5 +82,9 @@ export const columns: ColumnDef<OwnershipFilingColumn>[] = [
     cell: ({ row }) => (
       <>{row.original.dateFiled ? row.original.dateFiled.toLocaleDateString() : 'N/A'}</>
     ),
+  },
+  {
+    id: 'actions',
+    cell: ({ row }) => <ShowFilingButton filingId={row.original.filingId} />,
   },
 ];

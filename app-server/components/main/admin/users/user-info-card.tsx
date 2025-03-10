@@ -33,7 +33,7 @@ export default function UserInfoCard({ user }: { user: User }) {
         {infoItems.map(({ label, value }) => (
           <div key={label} className="flex items-center gap-4">
             <span className="w-32 font-medium text-gray-400">{label}</span>
-            <span className="text-gray-900 break-all min-w-0">{value}</span>
+            <span className="text-gray-900 break-words min-w-0">{value}</span>
           </div>
         ))}
       </CardContent>
