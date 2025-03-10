@@ -7,14 +7,8 @@ import { currentUser } from '@/lib/auth';
 import { User, UserRole } from '@prisma/client';
 import UserInfoCard from '@/components/main/admin/users/user-info-card';
 
-interface UserPageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default async function EditUserPage({ params }: UserPageProps) {
-  const userId = (await params).id;
+export default async function EditUserPage(props: { params: Promise<{ id: string }> }) {
+  const userId = (await props.params).id;
 
   let user: User | null = null;
   const requestingUser = await currentUser();
