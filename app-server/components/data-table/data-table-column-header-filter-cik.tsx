@@ -66,6 +66,7 @@ export const DataTableColumnHeaderFilterCik = ({
   }, [textFilter]);
 
   const performSearch = async (query: string) => {
+    query = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').trim(); // escape regex special characters to prevent side effects
     setIsLoading(true);
     setSearchResults(await searchCiks({ searchString: query, limit: 10 }));
     setIsLoading(false);
@@ -91,7 +92,7 @@ export const DataTableColumnHeaderFilterCik = ({
   // Highlight matching text in search results
   const highlightMatch = (text: string) => {
     if (!textFilter) return text;
-    const escapedQuery = textFilter.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'); // escape regex special characters to prevent side effects
+    const escapedQuery = textFilter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // escape regex special characters to prevent side effects
     const regex = new RegExp(`(${escapedQuery.trim()})`, 'gi');
     return text.split(regex).map((part, index) =>
       regex.test(part) ? (

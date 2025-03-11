@@ -33,7 +33,7 @@ export default function FilingContentDetails({
               Filing Header
             </AccordionTrigger>
             <AccordionContent>
-              <FilingHeader filingData={filingData} type={type} />
+              <FilingHeader filingData={filingData} />
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="non-derivatives">

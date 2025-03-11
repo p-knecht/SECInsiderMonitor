@@ -1,17 +1,14 @@
 'use client';
 
 import { OwnershipFiling, ReportingRelationship } from '@prisma/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckIcon, XIcon } from 'lucide-react';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
+import { Building2, CheckIcon, Network, XIcon } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useRouter } from 'next/navigation';
 
-export default function FilingHeader({
-  filingData,
-  type,
-}: {
-  filingData: OwnershipFiling;
-  type: 'page' | 'sheet';
-}) {
+export default function FilingHeader({ filingData }: { filingData: OwnershipFiling }) {
   const { formData } = filingData;
+  const router = useRouter();
 
   const renderBoolean = (value?: boolean | null) => (
     <span className="flex items-center gap-1">
@@ -36,12 +33,51 @@ export default function FilingHeader({
       .filter(Boolean)
       .join('; ');
 
+  // calculate dates for usage in links for analysis pages
+  const fromDate = new Date(new Date().setFullYear(new Date().getFullYear() - 1))
+    .toISOString()
+    .split('T')[0];
+  const toDate = new Date().toISOString().split('T')[0];
+
   const items = [
     {
       title: 'Issuer Information',
       data: [
         { label: 'Issuer Name:', value: formData?.issuer?.issuerName },
-        { label: 'Issuer CIK:', value: formData?.issuer?.issuerCik },
+        {
+          label: 'Issuer CIK:',
+          value: (
+            <span className="flex items-center gap-2">
+              {formData?.issuer?.issuerCik}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Building2
+                    className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-800"
+                    onClick={() =>
+                      router.push(
+                        `/company-analysis?cik=${formData?.issuer?.issuerCik}&from=${fromDate}&to=${toDate}`,
+                      )
+                    }
+                  />
+                </TooltipTrigger>
+                <TooltipContent>Unternehmensanalyse öffnen</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Network
+                    className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-800"
+                    onClick={() =>
+                      router.push(
+                        `/network-analysis?cik=${formData?.issuer?.issuerCik}&from=${fromDate}&to=${toDate}&depth=3`,
+                      )
+                    }
+                  />
+                </TooltipTrigger>
+                <TooltipContent>Netzwerkanalyse öffnen</TooltipContent>
+              </Tooltip>
+            </span>
+          ),
+        },
         { label: 'Trading Symbol:', value: formData?.issuer?.issuerTradingSymbol },
       ],
     },
@@ -110,7 +146,22 @@ export default function FilingHeader({
               <div key={index} className="border rounded-md p-1 px-2 bg-gray-50">
                 <p className="text-sm text-gray-900">{owner.reportingOwnerId.rptOwnerName}</p>
                 <p className="text-sm text-gray-900">
-                  (CIK: {owner.reportingOwnerId.rptOwnerCik || 'N/A'})
+                  <span className="flex items-center gap-2">
+                    CIK: ({owner.reportingOwnerId.rptOwnerCik})
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Network
+                          className="w-4 h-4 text-gray-500 cursor-pointer hover:text-gray-800"
+                          onClick={() =>
+                            router.push(
+                              `/network-analysis?cik=${owner.reportingOwnerId.rptOwnerCik}&from=${fromDate}&to=${toDate}&depth=3`,
+                            )
+                          }
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent>Netzwerkanalyse öffnen</TooltipContent>
+                    </Tooltip>
+                  </span>
                 </p>
 
                 {owner.reportingOwnerAddress && (

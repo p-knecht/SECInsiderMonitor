@@ -153,6 +153,21 @@ export const LookupCikSchema = z.object({
   cik: z.string().regex(/^\d{10}$/, 'Ungültiges CIK-Format'),
 });
 
+export const AnalysisSchema = z
+  .object({
+    cik: z.string().regex(/^\d{10}$/, 'Ungültiges CIK-Format'),
+    depth: z.coerce
+      .number()
+      .int('Ungültige Zahl')
+      .positive('Ungültige Zahl')
+      .max(5, 'Maximum: 5')
+      .min(1, 'Minimum: 1')
+      .optional(),
+    from: z.string().regex(dateRegex, 'Ungültiges Datumsformat'),
+    to: z.string().regex(dateRegex, 'Ungültiges Datumsformat'),
+  })
+  .strict();
+
 export const GetFilingSchema = z.object({
   filingId: z.string().regex(/^\d{10}-\d{2}-\d{6}$/, 'Ungültige filingId'),
 });

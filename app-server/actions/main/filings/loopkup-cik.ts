@@ -59,7 +59,7 @@ export const lookupCik = async (
       }
     }
   } catch (error) {
-    console.log(`Error in lookupCik for ${validatedData.data.cik}: ${error}`);
+    console.error(`Error in lookupCik for ${validatedData.data.cik}: ${error}`);
   }
   return null; // return null if an error occurs or no cik was found
 };
