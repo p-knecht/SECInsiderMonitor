@@ -2,13 +2,11 @@
 
 import * as z from 'zod';
 import { dbconnector } from '@/lib/dbconnector';
-import { auth } from '@/auth';
 import { AnalysisSchema } from '@/schemas';
 import { lookupCik } from '../filings/loopkup-cik';
+import { authenticateAndHandleInputs, AuthenticatedAnalysisResult } from './utils';
 
 export interface NetworkAnalysisData {
-  title?: string;
-  subtitle?: string;
   error?: string;
   nodes?: {
     cik: string;
@@ -27,7 +25,7 @@ export interface NetworkAnalysisData {
   }[];
   queryParams?: {
     cik: string;
-    depth: number;
+    depth?: number;
     from: string;
     to: string;
   };
@@ -50,7 +48,7 @@ const buildNodeTree = async (
   if (existingNode) {
     // if stratum of existing node is lower, update it -->  get always highest stratum
     if (existingNode.stratum < stratum) existingNode.stratum = stratum;
-    return; // node already fetched
+    return; // node already fetched -> skip further processing
   }
 
   // get node information
@@ -70,7 +68,7 @@ const buildNodeTree = async (
     stratum,
   });
 
-  // get all edges for this node (run both queries in parallel)
+  // get all edges for this node (run both queries (issuer, reporting owner) in parallel)
   const [filingsAsIssuer, filingsAsReportingOwner] = await Promise.all([
     // find all filings where the cik is the issuer
     dbconnector.ownershipFiling.aggregateRaw({
@@ -143,7 +141,7 @@ const buildNodeTree = async (
   const discoveredCiks: Set<string> = new Set<string>();
 
   for (const filing of allRelevantFilings) {
-    // add involved ciks to discoveredCiks
+    // add involved ciks to discoveredCiks set
     discoveredCiks.add(filing.issuerCik);
     discoveredCiks.add(filing.reportingOwnerCik);
 
@@ -153,7 +151,7 @@ const buildNodeTree = async (
     );
 
     // if existing edge is older than filing, remove it
-    // (this should not happen on consistent data/queries, as the result should be same from issuer and owner perspective)
+    // (this should in general not happen on consistent data/query results, as the result should be same from issuer and owner perspective)
     if (existingEdge && existingEdge.latestDateFiled < filing.dateFiled) {
       returnData.edges = returnData.edges?.filter(
         (edge) => edge.issuerCik !== filing.issuerCik && edge.ownerCik !== filing.reportingOwnerCik,
@@ -185,54 +183,33 @@ const buildNodeTree = async (
     await buildNodeTree(discoveredCik, stratum - 1, returnData, fromDate, toDate);
 };
 
-export const doNetworkAnalysis = async (
+export const analyseNetwork = async (
   data: z.infer<typeof AnalysisSchema>,
 ): Promise<NetworkAnalysisData> => {
-  // revalidate received (unsafe) values from client
-  const validatedData = AnalysisSchema.safeParse(data);
-  if (!validatedData.success || !validatedData.data.depth) return { error: 'Ungültige Anfrage' };
+  const preparedInputs: AuthenticatedAnalysisResult = await authenticateAndHandleInputs(data, true);
+  if (preparedInputs.error) return { error: preparedInputs.error }; // repropagate error if any occured
 
-  // check if user is authenticated
-  const session = await auth();
-  if (!session?.user.id) return { error: 'Nicht authentifiziert' };
-
-  // verify analysis time frame
-  const fromDate = new Date(validatedData.data.from);
-  const toDate = new Date(validatedData.data.to);
-  if (fromDate > toDate) return { error: 'Startdatum muss vor Enddatum liegen' };
-  if (toDate > new Date()) return { error: 'Enddatum darf nicht in der Zukunft liegen' };
-  if ((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24) > 365.25 * 5)
-    return { error: 'Der Analyse-Zeitraum darf maximal 5 Jahre betragen' };
-
-  // verify cik and build cikDisplayName for title
-  const cikInfo = await lookupCik({ cik: validatedData.data.cik });
-  if (!cikInfo) return { error: 'CIK nicht gefunden' };
-
+  // initialize returnData
   const returnData: NetworkAnalysisData = {
-    queryCikInfo: {
-      cikName: cikInfo.cikName,
-      cikTicker:
-        cikInfo.cikTicker && cikInfo.cikTicker.toUpperCase() != 'NONE'
-          ? cikInfo.cikTicker
-          : undefined,
-    },
-    queryParams: {
-      ...validatedData.data,
-      depth: validatedData.data.depth ?? 3, // default depth
-    },
+    queryParams: preparedInputs.queryParams,
+    queryCikInfo: preparedInputs.queryCikInfo,
     nodes: [],
     edges: [],
   };
 
+  // initialize arrays in returnData
+  returnData.edges = [];
+  returnData.nodes = [];
+
   try {
     // Phase 1: Build tree
     await buildNodeTree(
-      validatedData.data.cik,
-      validatedData.data.depth,
+      preparedInputs.queryParams?.cik!,
+      preparedInputs.queryParams?.depth!,
       returnData,
-      fromDate,
-      toDate,
-    );
+      preparedInputs.fromDate!,
+      preparedInputs.toDate!,
+    ); // using non-null assertion operator (!) as the values are validated/assured in authenticateAndHandleInputs
 
     // Phase 2: Prune dongeling edges
     returnData.edges = returnData.edges?.filter((edge) => {

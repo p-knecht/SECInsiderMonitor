@@ -147,6 +147,7 @@ export const filingsTableParamatersSchema = z
 export const SearchCiksSchema = z.object({
   searchString: z.string(),
   limit: z.number().int().positive(),
+  limitType: z.enum(['issuer', 'reportingOwner']).optional(),
 });
 
 export const LookupCikSchema = z.object({

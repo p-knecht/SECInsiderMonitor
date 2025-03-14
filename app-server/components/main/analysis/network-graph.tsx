@@ -1,8 +1,8 @@
 import CytoscapeComponent from 'react-cytoscapejs';
 import cytoscape from 'cytoscape';
 import fcose from 'cytoscape-fcose';
-import { NetworkAnalysisData } from '@/actions/main/network-analysis/do-network-analysis';
-import { useRef, useState } from 'react';
+import { NetworkAnalysisData } from '@/actions/main/analysis/analyse-network';
+import { useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 cytoscape.use(fcose);
@@ -157,7 +157,7 @@ export default function NetworkGraph({ data }: { data: NetworkAnalysisData }) {
           : node.cikInfo.cikName,
         nodeType: node.cik == data.queryParams?.cik ? 'queryNode' : 'normalNode',
         stratum: node.stratum,
-        nodeSize: 30 + 20 * (node.stratum / data.queryParams!.depth), // set node size between 50 and 30 depending on stratum
+        nodeSize: 30 + 20 * (node.stratum / data.queryParams?.depth!), // set node size between 50 and 30 depending on stratum
         fullObject: node,
       },
     })),
@@ -207,7 +207,7 @@ export default function NetworkGraph({ data }: { data: NetworkAnalysisData }) {
                 params.set('cik', item.id());
                 params.set('from', data.queryParams?.from!);
                 params.set('to', data.queryParams?.to!);
-                params.set('depth', data.queryParams?.depth.toString()!);
+                params.set('depth', data.queryParams?.depth?.toString()!);
                 router.push(`?${params.toString()}`);
               }
             } else {

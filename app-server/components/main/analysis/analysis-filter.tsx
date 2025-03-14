@@ -75,7 +75,13 @@ export function AnalysisFilter({ type }: { type: 'network' | 'company' }): React
   const performSearch = async (query: string) => {
     query = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').trim(); // escape regex special characters to prevent side effects
     setIsLoading(true);
-    setSearchResults(await searchCiks({ searchString: query, limit: 10 }));
+    setSearchResults(
+      await searchCiks({
+        searchString: query,
+        limit: 10,
+        limitType: type == 'company' ? 'issuer' : undefined,
+      }),
+    );
     setIsLoading(false);
   };
 

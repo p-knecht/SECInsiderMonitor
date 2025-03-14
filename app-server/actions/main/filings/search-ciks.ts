@@ -15,125 +15,135 @@ export const searchCiks = async (data: z.infer<typeof SearchCiksSchema>) => {
   const session = await auth();
   if (!session?.user.id) return [];
 
-  const { searchString, limit } = validatedData.data;
+  const { searchString, limit, limitType } = validatedData.data;
 
   try {
-    // parallel search for issuer and reporting owner
     // using raw queries instead of Prisma native query as nested queries are not supported by Prisma at the moment
-    const [issuerResults, reportingOwnerResults] = await Promise.all([
-      dbconnector.ownershipFiling.aggregateRaw({
-        // ISSUER
-        pipeline: [
-          {
-            $match: {
-              // search for string in issuer CIK, name and ticker
-              $or: [
-                { 'formData.issuer.issuerCik': { $regex: searchString, $options: 'i' } },
-                { 'formData.issuer.issuerName': { $regex: searchString, $options: 'i' } },
-                {
-                  $and: [
-                    // search for issuer ticker only if it is not 'NONE' to avoid false positives
-                    {
-                      'formData.issuer.issuerTradingSymbol': {
-                        $ne: 'NONE',
-                      },
-                    },
-                    {
-                      'formData.issuer.issuerTradingSymbol': {
-                        $regex: searchString,
-                        $options: 'i',
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-          },
-          { $sort: { 'formData.periodOfReport': -1 } }, // get latest filings first (as they are most current)
-          {
-            $group: {
-              // group the results by CIK to avoid duplicates
-              _id: '$formData.issuer.issuerCik',
-              cikName: { $first: '$formData.issuer.issuerName' },
-              cikTicker: { $first: '$formData.issuer.issuerTradingSymbol' },
-            },
-          },
-          {
-            $project: {
-              // only return the necessary fields
-              _id: 0,
-              cik: '$_id',
-              cikName: 1,
-              cikTicker: 1,
-            },
-          },
-          { $limit: limit }, // limit the results to the requested amount
-        ],
-      }),
 
-      dbconnector.ownershipFiling.aggregateRaw({
-        // REPORTING OWNER
-        pipeline: [
-          {
-            $match: {
-              // search for string in reporting owner CIK and name
-              $or: [
-                {
-                  'formData.reportingOwner.reportingOwnerId.rptOwnerCik': {
-                    $regex: searchString,
-                    $options: 'i',
+    // prepare array of promises for parallel search of issuer and reporting owner
+    const queries: Promise<any>[] = [];
+
+    if (!limitType || limitType === 'issuer') {
+      queries.push(
+        dbconnector.ownershipFiling.aggregateRaw({
+          pipeline: [
+            {
+              $match: {
+                // search for string in issuer CIK, name and ticker
+                $or: [
+                  { 'formData.issuer.issuerCik': { $regex: searchString, $options: 'i' } },
+                  { 'formData.issuer.issuerName': { $regex: searchString, $options: 'i' } },
+                  {
+                    $and: [
+                      // search for issuer ticker only if it is not 'NONE' to avoid false positives
+                      {
+                        'formData.issuer.issuerTradingSymbol': {
+                          $ne: 'NONE',
+                        },
+                      },
+                      {
+                        'formData.issuer.issuerTradingSymbol': {
+                          $regex: searchString,
+                          $options: 'i',
+                        },
+                      },
+                    ],
                   },
-                },
-                {
-                  'formData.reportingOwner.reportingOwnerId.rptOwnerName': {
-                    $regex: searchString,
-                    $options: 'i',
+                ],
+              },
+            },
+            { $sort: { 'formData.periodOfReport': -1 } }, // get latest filings first (as they are most current)
+            {
+              $group: {
+                // group the results by CIK to avoid duplicates
+                _id: '$formData.issuer.issuerCik',
+                cikName: { $first: '$formData.issuer.issuerName' },
+                cikTicker: { $first: '$formData.issuer.issuerTradingSymbol' },
+              },
+            },
+            {
+              $project: {
+                // only return the necessary fields
+                _id: 0,
+                cik: '$_id',
+                cikName: 1,
+                cikTicker: 1,
+              },
+            },
+            { $limit: limit }, // limit the results to the requested amount
+          ],
+        }),
+      );
+    }
+
+    if (!limitType || limitType === 'reportingOwner') {
+      queries.push(
+        dbconnector.ownershipFiling.aggregateRaw({
+          pipeline: [
+            {
+              $match: {
+                // search for string in reporting owner CIK and name
+                $or: [
+                  {
+                    'formData.reportingOwner.reportingOwnerId.rptOwnerCik': {
+                      $regex: searchString,
+                      $options: 'i',
+                    },
                   },
-                },
-              ],
-            },
-          },
-          { $sort: { 'formData.periodOfReport': -1 } }, // get latest filings first (as they are most current)
-          { $unwind: '$formData.reportingOwner' }, // unwind the reporting owner array as we need to access the owner's name
-          {
-            $match: {
-              // re-match the reporting owner data in unwinded objects to get the correct name for the CIK
-              $or: [
-                {
-                  'formData.reportingOwner.reportingOwnerId.rptOwnerCik': {
-                    $regex: searchString,
-                    $options: 'i',
+                  {
+                    'formData.reportingOwner.reportingOwnerId.rptOwnerName': {
+                      $regex: searchString,
+                      $options: 'i',
+                    },
                   },
-                },
-                {
-                  'formData.reportingOwner.reportingOwnerId.rptOwnerName': {
-                    $regex: searchString,
-                    $options: 'i',
+                ],
+              },
+            },
+            { $sort: { 'formData.periodOfReport': -1 } }, // get latest filings first (as they are most current)
+            { $unwind: '$formData.reportingOwner' }, // unwind the reporting owner array as we need to access the owner's name
+            {
+              $match: {
+                // re-match the reporting owner data in unwinded objects to get the correct name for the CIK
+                $or: [
+                  {
+                    'formData.reportingOwner.reportingOwnerId.rptOwnerCik': {
+                      $regex: searchString,
+                      $options: 'i',
+                    },
                   },
-                },
-              ],
+                  {
+                    'formData.reportingOwner.reportingOwnerId.rptOwnerName': {
+                      $regex: searchString,
+                      $options: 'i',
+                    },
+                  },
+                ],
+              },
             },
-          },
-          {
-            // group the results by CIK to avoid duplicates
-            $group: {
-              _id: '$formData.reportingOwner.reportingOwnerId.rptOwnerCik',
-              cikName: { $first: '$formData.reportingOwner.reportingOwnerId.rptOwnerName' },
+            {
+              // group the results by CIK to avoid duplicates
+              $group: {
+                _id: '$formData.reportingOwner.reportingOwnerId.rptOwnerCik',
+                cikName: { $first: '$formData.reportingOwner.reportingOwnerId.rptOwnerName' },
+              },
             },
-          },
-          {
-            // only return the necessary fields
-            $project: {
-              _id: 0,
-              cik: '$_id',
-              cikName: 1,
-              cikTicker: null, // reporting owner does not have a ticker
+            {
+              // only return the necessary fields
+              $project: {
+                _id: 0,
+                cik: '$_id',
+                cikName: 1,
+                cikTicker: null, // reporting owner does not have a ticker
+              },
             },
-          },
-          { $limit: limit }, // limit the results to the requested amount
-        ],
-      }),
-    ]);
+            { $limit: limit }, // limit the results to the requested amount
+          ],
+        }),
+      );
+    }
+
+    // execute all queries in parallel
+    const [issuerResults, reportingOwnerResults] = await Promise.all(queries);
 
     // merge results from issuer and reporting owner
     const results = new Map<string, CikObject>();

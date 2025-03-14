@@ -58,8 +58,9 @@ function createCodedElement(code: string, dictionary: Record<string, string>): R
 // utility function to build the content of a field/cell
 export function buildFieldContent(
   obj: any,
-  footnotes: { id: string; text: string }[],
+  footnotes: { id: string; text: string }[] = [],
   customType: string | null = null,
+  unnumberFootnotes: boolean = false,
 ): ReactNode {
   // if object does not exist or is empty, set it to '-'
   if (obj == undefined || obj == null || obj === '') obj = '-';
@@ -86,20 +87,20 @@ export function buildFieldContent(
           <p className="text-gray-500 mb-1">
             Shares:
             <br />
-            {buildFieldContent(obj.transactionShares, footnotes)}
+            {buildFieldContent(obj.transactionShares, footnotes, null, unnumberFootnotes)}
           </p>
           {obj.transactionTotalValue && (
             <p className="text-gray-500 mb-1">
               Total Value:
               <br />
-              {buildFieldContent('USD', footnotes)}{' '}
-              {buildFieldContent(obj.transactionTotalValue, footnotes)}
+              {buildFieldContent('USD', footnotes, null, unnumberFootnotes)}{' '}
+              {buildFieldContent(obj.transactionTotalValue, footnotes, null, unnumberFootnotes)}
             </p>
           )}
           <p className="text-gray-500 mb-1">
             Price Per Share:
-            <br /> {buildFieldContent('USD', footnotes)}{' '}
-            {buildFieldContent(obj.transactionPricePerShare, footnotes)}
+            <br /> {buildFieldContent('USD', footnotes, null, unnumberFootnotes)}{' '}
+            {buildFieldContent(obj.transactionPricePerShare, footnotes, null, unnumberFootnotes)}
           </p>
           <p className="text-gray-500 mb-1">
             Acquired/Disposed:
@@ -108,6 +109,7 @@ export function buildFieldContent(
               obj.transactionAcquiredDisposedCode,
               footnotes,
               'acquiredDisposedCode',
+              unnumberFootnotes,
             )}
           </p>
         </>
@@ -123,13 +125,14 @@ export function buildFieldContent(
               obj.directOrIndirectOwnership,
               footnotes,
               'directOrIndirectOwnership',
+              unnumberFootnotes,
             )}
           </p>
           {obj.directOrIndirectOwnership.value.toUpperCase() === 'I' && (
             <p className="text-gray-500 mb-1">
               Nature of Ownership:
               <br />
-              {buildFieldContent(obj.natureOfOwnership, footnotes)}
+              {buildFieldContent(obj.natureOfOwnership, footnotes, null, unnumberFootnotes)}
             </p>
           )}
         </>
@@ -141,19 +144,19 @@ export function buildFieldContent(
           <p className="text-gray-500 mb-1">
             Title:
             <br />
-            {buildFieldContent(obj.underlyingSecurityTitle, footnotes)}
+            {buildFieldContent(obj.underlyingSecurityTitle, footnotes, null, unnumberFootnotes)}
           </p>
           <p className="text-gray-500 mb-1">
             Shares:
             <br />
-            {buildFieldContent(obj.underlyingSecurityShares, footnotes)}
+            {buildFieldContent(obj.underlyingSecurityShares, footnotes, null, unnumberFootnotes)}
           </p>
           {obj.underlyingSecurityValue && (
             <p className="text-gray-500 mb-1">
               Value:
               <br />
-              {buildFieldContent('USD', footnotes)}{' '}
-              {buildFieldContent(obj.underlyingSecurityValue, footnotes)}
+              {buildFieldContent('USD', footnotes, null, unnumberFootnotes)}{' '}
+              {buildFieldContent(obj.underlyingSecurityValue, footnotes, null, unnumberFootnotes)}
             </p>
           )}
         </>
@@ -167,15 +170,25 @@ export function buildFieldContent(
               <p className="text-gray-500 mb-1">
                 Shares Owned:
                 <br />
-                {buildFieldContent(obj.sharesOwnedFollowingTransaction, footnotes)}
+                {buildFieldContent(
+                  obj.sharesOwnedFollowingTransaction,
+                  footnotes,
+                  null,
+                  unnumberFootnotes,
+                )}
               </p>
             )}{' '}
             {obj.valueOwnedFollowingTransaction && (
               <p className="text-gray-500 mb-1">
                 Value Owned:
                 <br />
-                {buildFieldContent('USD', footnotes)}{' '}
-                {buildFieldContent(obj.valueOwnedFollowingTransaction, footnotes)}
+                {buildFieldContent('USD', footnotes, null, unnumberFootnotes)}{' '}
+                {buildFieldContent(
+                  obj.valueOwnedFollowingTransaction,
+                  footnotes,
+                  null,
+                  unnumberFootnotes,
+                )}
               </p>
             )}
           </>
@@ -195,7 +208,7 @@ export function buildFieldContent(
             <p className="text-gray-500 mb-1">
               Form Type:
               <br />
-              {buildFieldContent(obj.transactionFormType, footnotes)}
+              {buildFieldContent(obj.transactionFormType, footnotes, null, unnumberFootnotes)}
             </p>
           )}
           {obj.equitySwapInvolved !== undefined && (
@@ -211,7 +224,7 @@ export function buildFieldContent(
       );
       break;
     default: // default case: return the value of the object
-      value = buildFieldContent(obj.value, footnotes);
+      value = buildFieldContent(obj.value, footnotes, null, unnumberFootnotes);
       break;
   }
 
@@ -223,11 +236,13 @@ export function buildFieldContent(
     return (
       <Tooltip key={id}>
         <TooltipTrigger asChild>
-          <sup className="ml-0.5 text-xs text-blue-600 cursor-help">[{id}]</sup>
+          <sup className="ml-0.5 text-xs text-blue-600 cursor-help">
+            [{unnumberFootnotes ? 'FN' : id}]
+          </sup>
         </TooltipTrigger>
         <TooltipContent>
           <p className="max-w-xs">
-            <span className="text-blue-300 font-bold">[{id}] </span>
+            <span className="text-blue-300 font-bold">[{unnumberFootnotes ? 'FN' : id}] </span>
             {footnoteText}
           </p>
         </TooltipContent>

@@ -34,7 +34,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 export async function AppSidebar({ entries, ...props }: AppSidebarProps) {
   const userRole = await currentRole();
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="icon" {...props} className="z-50">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem className="pointer-events-none hover:bg-transparent">
