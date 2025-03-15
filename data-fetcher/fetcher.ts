@@ -5,9 +5,11 @@ import {
   EdgarIdxFileEntry,
   EdgarEmbeddedDocument,
 } from './types.js';
+import nodemailer from 'nodemailer';
 import logger from './logger.js';
 import dbconnector from './dbconnector.js';
 import { parseOwnershipForm } from './parser.js';
+import { NotificationSubscription, OwnershipFiling } from '@prisma/client';
 
 const EDGAR_BASE_URL: string = 'https://www.sec.gov/Archives';
 const RELEVANT_FORM_TYPES: Array<string> = ['3', '4', '5']; // Form types to be fetched from the SEC database
@@ -386,9 +388,193 @@ async function extractEmbeddedDocument(documentSequence: string) {
 }
 
 /**
+ *  Verifies the configuration for mail transmission and prepares the nodemailer transporter object.
+ *
+ * @returns {Promise<nodemailer.Transporter | null>} A promise that resolves to the nodemailer transporter object if the configuration is valid, otherwise null (if configuration is invalid).
+ */
+async function prepareAndVerifyMailTransmission(): Promise<nodemailer.Transporter | null> {
+  // check mandatory environment variables
+  for (const envVar of ['SMTP_HOST', 'SMTP_FROM_NAME', 'SMTP_FROM_ADDRESS', 'SERVER_FQDN']) {
+    if (!process.env[envVar]) {
+      logger.error(`${envVar} is not set`);
+      return null;
+    }
+  }
+
+  // get optional environment variables (or use default values)
+  const SMTP_PORT = parseInt(process.env.SMTP_PORT || '25', 10);
+  const SMTP_USE_SSL = process.env.SMTP_USE_SSL?.toLowerCase() === 'true';
+  const auth =
+    process.env.SMTP_USERNAME && process.env.SMTP_PASSWORD
+      ? { user: process.env.SMTP_USERNAME, pass: process.env.SMTP_PASSWORD }
+      : undefined;
+
+  // create transporter object
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_USE_SSL,
+    auth,
+  });
+
+  // verify functionality of nodemailer transporter
+  try {
+    await transporter.verify();
+    logger.debug('SMTP transporter successfully verified');
+    return transporter;
+  } catch (error) {
+    logger.error(`SMTP transporter verification failed: ${error}`);
+    return null;
+  }
+}
+
+/**
+ *  Gets all notification subscriptions from the database and groups them by user id.
+ *
+ * @returns {Promise<Record<string, NotificationSubscription[]>>} A promise that resolves to a dictionary of notification subscription grouped by user id.
+ */
+async function getAllNotificationSubscriptionsByUser(): Promise<
+  Record<string, NotificationSubscription[]>
+> {
+  const subscriptions: NotificationSubscription[] =
+    await dbconnector.notificationSubscription.findMany();
+  return subscriptions.reduce<Record<string, NotificationSubscription[]>>((acc, entry) => {
+    if (!acc[entry.subscriber]) acc[entry.subscriber] = [];
+    acc[entry.subscriber].push(entry);
+    return acc;
+  }, {});
+}
+
+/**
+ * Loops over all notification subscriptions of a user, checks for matching filings and sends an email to the user if applicable.
+ *
+ * @param {string} userId  - The id of the user to handle notification subscriptions for
+ * @param {NotificationSubscription} userSubscriptions - The notification subscriptions of the user
+ * @param {nodemailer.Transport} transporter - The nodemailer transporter object to send emails
+ * @returns {Promise<void>} - A promise that resolves when all notification subscriptions of a user have been handled and user has been notified if applicable.
+ */
+async function handleNotificationSubscriptionsOfUser(
+  userId: string,
+  userSubscriptions: NotificationSubscription[],
+  transporter: nodemailer.Transporter,
+) {
+  // check if user exists in database
+  const user = await dbconnector.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    logger.error(`User with id ${userId} not found in database!`);
+    return;
+  }
+
+  let emailContent: string = '';
+  const lastMatchingFilingDatePerSubscription: Record<string, Date> = {};
+
+  // loop over each subscription, check if there are matching filings and add them to mail content
+  for (const subscription of userSubscriptions) {
+    const matchingFilings: OwnershipFiling[] =
+      await getMatchingFilingsForSubscription(subscription);
+    if (matchingFilings.length > 0) {
+      // if there are matching filings, add them to the email content
+      emailContent += `<h4>Benachrichtigungsabonnement '${subscription.description}'</h4><table style="border-collapse: collapse; width: 100%; border: 1px solid #ddd; font-family: Arial, sans-serif; font-size: 12px;"><thead><tr style="background-color: #f2f2f2; text-align: center;"><th>Einreichungs-ID</th><th>Formulartyp</th><th>Issuer</th><th>Reporting Owner</th><th>Einreichungsdatum</th><th>Link</th></tr></thead><tbody>`;
+      for (const filing of matchingFilings) {
+        // format issuer and owner information
+        const issuer = filing.formData?.issuer?.issuerTradingSymbol
+          ? `${filing.formData?.issuer?.issuerTradingSymbol} (${filing.formData?.issuer?.issuerName})`
+          : filing.formData?.issuer?.issuerName;
+        const owner = filing.formData?.reportingOwner
+          ?.map((owner) => owner.reportingOwnerId?.rptOwnerName)
+          .filter(Boolean)
+          .join('<br />'); // one line per owner
+        emailContent += `<tr style="border-bottom: 1px solid #ddd; text-align: center;"><td>${filing.filingId}</td><td>${filing.formType}</td><td>${issuer}</td><td>${owner}</td><td>${filing.dateFiled.toLocaleDateString()}</td><td><a href="https://${process.env.SERVER_FQDN}/filings/${filing.filingId}" target="_blank">SIM Link</a></td></tr>`;
+      }
+      emailContent += '</tbody></table>';
+
+      // set last matching filing date for this subscription (to update lastTriggered date in database after sending email)
+      lastMatchingFilingDatePerSubscription[subscription.id] =
+        matchingFilings[matchingFilings.length - 1].dateAdded;
+    }
+  }
+
+  // if email content is not empty, send email to user
+  if (emailContent != '') {
+    logger.info(
+      `Found matching filings for notification subscriptions of user ${user.email}. Sending email...`,
+    );
+    // add email header
+    emailContent = `<h3>SECInsiderMonitor: Neue SEC-Einreichungen gefunden</h3><p style='font-size: 14px'>Für die definierten Benachrichtigungsabonnements wurden folgende neuen Einreichungen wurden gefunden:</p>${emailContent}`;
+    // send email
+    await transporter.sendMail({
+      from: `${process.env.SMTP_FROM_NAME} <${process.env.SMTP_FROM_ADDRESS}>`,
+      to: user.email!,
+      subject: '[SIM] Neue SEC-Einreichungen gefunden',
+      html: emailContent,
+    });
+  } else {
+    logger.info(`No matching filings found for notification subscriptions of user ${user.email}.`);
+  }
+
+  // update last triggered date of subscriptions with matches of this user
+  for (const subscriptionId of Object.keys(lastMatchingFilingDatePerSubscription)) {
+    await dbconnector.notificationSubscription.update({
+      where: { id: subscriptionId },
+      data: { lastTriggered: lastMatchingFilingDatePerSubscription[subscriptionId] },
+    });
+  }
+}
+
+/**
+ * Gets all ownership filings that match a given notification subscription (since the last notified filing)
+ *
+ * @param {NotificationSubscription} subscription - the subscription to get matching filings for
+ * @returns {Promise<OwnershipFiling[]>} - a promise that resolves to an array of ownership filings that match the subscription
+ */
+async function getMatchingFilingsForSubscription(
+  subscription: NotificationSubscription,
+): Promise<OwnershipFiling[]> {
+  // create filter object for query
+  const filter: any = {
+    $and: [
+      {
+        // search filings added since last triggered filing or subscription creation date to make sure we don't miss any filings
+        dateAdded: { $gt: { $date: subscription.lastTriggered || subscription.createdAt } },
+      },
+    ],
+  };
+
+  // if issuer CIKs are specified, add them to the filter
+  if (subscription.issuerCiks.length > 0)
+    filter.$and.push({ 'formData.issuer.issuerCik': { $in: subscription.issuerCiks } });
+
+  // if form types are specified, add them to the filter
+  if (subscription.formTypes.length > 0)
+    filter.$and.push({ formType: { $in: subscription.formTypes } });
+
+  // if reporting owner CIKs are specified, add them to the filter
+  if (subscription.reportingOwnerCiks.length > 0)
+    filter.$and.push({
+      'formData.reportingOwner.reportingOwnerId.rptOwnerCik': {
+        $in: subscription.reportingOwnerCiks,
+      },
+    });
+
+  // query database for new filings matching the subscription since the reference date
+  // note: we have to use raw aggregation queries here, as Prisma does not support nested filtering at the moment --> can be replaced with Prisma native queries once supported
+  const rawFilings = await dbconnector.ownershipFiling.aggregateRaw({
+    pipeline: [{ $match: filter }, { $sort: { dateAdded: 1 } }],
+  });
+
+  return Array.isArray(rawFilings)
+    ? (rawFilings.map((filing) => ({
+        ...filing,
+        dateFiled: new Date(filing.dateFiled?.$date), // extract date object
+        dateAdded: new Date(filing.dateAdded?.$date), // extract date object
+      })) as OwnershipFiling[])
+    : [];
+}
+
+/**
  * Fetches missed SEC filings since the last fetched filing date, parses them and stores them in the database.
  *
- * @returns {Promise<void>} A promise that resolves when all missed filings have been fetched, parsed and stored.
+ * @returns {Promise<void>} - A promise that resolves when all missed filings have been fetched, parsed and stored.
  */
 async function fetchSecForms() {
   // get last filing date from database (or use yesterday as default if there are no filings yet)
@@ -409,6 +595,21 @@ async function fetchSecForms() {
   const relevantFilings: EdgarIdxFileEntry[] = await getRelevantFilings(relevantDailySummaries);
   for (const entry of relevantFilings) {
     await handleFiling(entry);
+  }
+
+  // check if mail transmission for sending notifications is possible
+  const transporter = await prepareAndVerifyMailTransmission();
+  if (!transporter) {
+    logger.error('Verification of mail settings failed. Skipping notification sending.');
+  } else {
+    // get and group notification subscriptions by user
+    const subscriptionsByUser = await getAllNotificationSubscriptionsByUser();
+
+    // loop over each user and send notification if there are matching filings
+    for (const [userId, userSubscriptions] of Object.entries(subscriptionsByUser))
+      await handleNotificationSubscriptionsOfUser(userId, userSubscriptions, transporter);
+
+    logger.info('Handled all notification subscriptions');
   }
 }
 
