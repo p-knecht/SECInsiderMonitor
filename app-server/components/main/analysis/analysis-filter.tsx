@@ -1,6 +1,4 @@
 'use client';
-
-import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,27 +13,12 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { SearchIcon } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { CikObject } from '@/data/cik';
-import { searchCiks } from '@/actions/main/filings/search-ciks';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { CIKSelectorFormField } from '../notifications/cikselector-formfield';
 
 export function AnalysisFilter({ type }: { type: 'network' | 'company' }): React.ReactNode {
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  const [isOpen, setIsOpen] = useState(false);
-  const [textFilter, setTextFilter] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [searchResults, setSearchResults] = useState<CikObject[]>([]);
-  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const form = useForm<z.infer<typeof AnalysisSchema>>({
     resolver: zodResolver(AnalysisSchema),
@@ -59,47 +42,6 @@ export function AnalysisFilter({ type }: { type: 'network' | 'company' }): React
     router.push(`?${params.toString()}`);
   };
 
-  // start search on text filter change (after debounce)
-  useEffect(() => {
-    setIsLoading(true);
-    if (typingTimeout) clearTimeout(typingTimeout); // clear previous timeout on every keypress if exists
-    if (textFilter.trim() !== '') {
-      const timeout = setTimeout(() => performSearch(textFilter), 500); // wait for user to stop typing before searching (debounce queries)
-      setTypingTimeout(timeout);
-    } else {
-      setSearchResults([]);
-      setIsLoading(false);
-    }
-  }, [textFilter]);
-
-  const performSearch = async (query: string) => {
-    query = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').trim(); // escape regex special characters to prevent side effects
-    setIsLoading(true);
-    setSearchResults(
-      await searchCiks({
-        searchString: query,
-        limit: 10,
-        limitType: type == 'company' ? 'issuer' : undefined,
-      }),
-    );
-    setIsLoading(false);
-  };
-
-  // Highlight matching text in search results
-  const highlightMatch = (text: string) => {
-    if (!textFilter) return text;
-    const escapedQuery = textFilter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // escape regex special characters to prevent side effects
-    const regex = new RegExp(`(${escapedQuery.trim()})`, 'gi');
-    return text.split(regex).map((part, index) =>
-      regex.test(part) ? (
-        <span className="font-bold" key={index}>
-          {part}
-        </span>
-      ) : (
-        part
-      ),
-    );
-  };
   return (
     <div className="mb-3 text-sm w-fit mx-auto">
       <Form {...form}>
@@ -143,81 +85,17 @@ export function AnalysisFilter({ type }: { type: 'network' | 'company' }): React
               />
             </div>
           </div>
-          <div className="flex flex-row gap-3">
-            <div className="w-[150px] min-h-[82px]">
+          <div className="flex flex-row gap-3 items-center">
+            <div className="min-w-[150px] min-h-[82px]">
               <FormField
                 control={form.control}
                 name="cik"
-                render={({ field, fieldState }) => (
-                  <FormItem>
-                    <div className="flex items-center">
-                      <FormLabel>Gesuchte Entität (CIK)</FormLabel>
-                    </div>
-                    <div className="relative">
-                      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-                        <DropdownMenuTrigger asChild>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                        </DropdownMenuTrigger>
-                        <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-3 h-3" />
-                        {isOpen && (
-                          <DropdownMenuContent className="w-64">
-                            <Input
-                              type="text"
-                              placeholder="Suche..."
-                              value={textFilter}
-                              onChange={(e) => setTextFilter(e.target.value)}
-                              className="flex-grow bg-transparent border-none outline-none p-2"
-                            />
-                            <DropdownMenuSeparator />
-                            {isLoading ? (
-                              <div className="text-center text-gray-500 p-2 text-sm">
-                                Suche läuft...
-                              </div>
-                            ) : searchResults.length > 0 ? (
-                              <div className="max-h-40 overflow-auto">
-                                {searchResults.map((result) => (
-                                  <Tooltip key={result.cik}>
-                                    <TooltipTrigger asChild>
-                                      <div
-                                        className="cursor-pointer p-1 hover:bg-gray-200 text-sm"
-                                        onClick={() => {
-                                          form.setValue('cik', result.cik);
-                                          setTextFilter('');
-                                          setSearchResults([]);
-                                          setIsOpen(false);
-                                        }}
-                                      >
-                                        {highlightMatch(
-                                          result.cikTicker &&
-                                            result.cikTicker.toLocaleLowerCase() !== 'none'
-                                            ? `${result.cikTicker} (${result.cikName})`
-                                            : `${result.cikName}`,
-                                        )}
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="right">
-                                      CIK: {highlightMatch(result.cik)}
-                                    </TooltipContent>
-                                  </Tooltip>
-                                ))}
-                              </div>
-                            ) : textFilter.trim() !== '' ? (
-                              <div className="text-center text-gray-500 p-2 text-sm">
-                                Keine Ergebnisse gefunden.
-                              </div>
-                            ) : (
-                              <div className="text-center text-gray-500 p-2 text-sm">
-                                Tippen, um Vorschläge zu sehen…
-                              </div>
-                            )}
-                          </DropdownMenuContent>
-                        )}
-                      </DropdownMenu>
-                    </div>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
+                render={({ field }) => (
+                  <CIKSelectorFormField
+                    field={{ ...field, value: field.value }}
+                    label="Gesuchte Entität"
+                    limitType={type == 'company' ? 'knownIssuerCik' : 'knownCik'}
+                  />
                 )}
               />
             </div>
@@ -240,7 +118,7 @@ export function AnalysisFilter({ type }: { type: 'network' | 'company' }): React
                 />
               </div>
             ) : (
-              <div className="items-center w-[150px] pt-5">
+              <div className="items-center w-[150px]">
                 <Button type="submit" variant="outline" className="w-full">
                   Analyse starten
                 </Button>

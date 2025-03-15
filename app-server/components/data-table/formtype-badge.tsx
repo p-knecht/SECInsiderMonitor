@@ -23,7 +23,13 @@ const formTypeDefinitions: Record<
   default: { description: 'Unknown Form Type', bgColor: 'bg-gray-200', fontColor: 'text-black' },
 };
 
-export const FormtypeBadge = ({ formtype }: { formtype: string }): React.ReactNode => {
+export const FormtypeBadge = ({
+  formtype,
+  tooltipLocation,
+}: {
+  formtype: string;
+  tooltipLocation?: 'left' | 'right' | 'top' | 'bottom';
+}): React.ReactNode => {
   const formTypeDefinition = formTypeDefinitions[formtype] ?? formTypeDefinitions.default;
   return (
     <Tooltip>
@@ -32,7 +38,9 @@ export const FormtypeBadge = ({ formtype }: { formtype: string }): React.ReactNo
           Form {formtype}{' '}
         </Badge>
       </TooltipTrigger>
-      <TooltipContent>{formTypeDefinition.description}</TooltipContent>
+      <TooltipContent side={tooltipLocation || 'top'}>
+        {formTypeDefinition.description}
+      </TooltipContent>
     </Tooltip>
   );
 };

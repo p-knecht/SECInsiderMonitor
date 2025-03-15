@@ -30,11 +30,13 @@ export const CikBadge = ({
   cik,
   cikName,
   cikTicker,
+  tooltipLocation,
   children,
 }: {
   cik: string;
   cikName?: string;
   cikTicker?: string;
+  tooltipLocation?: 'left' | 'right' | 'top' | 'bottom';
   children?: ReactNode;
 }): React.ReactNode => {
   const [fullCikObject, setFullCikObject] = useState<CikObject | null>(
@@ -76,7 +78,7 @@ export const CikBadge = ({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Badge style={{ backgroundColor, color: textColor }} className="whitespace-pre-wrap">
+        <Badge style={{ backgroundColor, color: textColor }}>
           {fullCikObject ? (
             fullCikObject.cikTicker ? (
               <>
@@ -92,7 +94,7 @@ export const CikBadge = ({
           {children}
         </Badge>
       </TooltipTrigger>
-      <TooltipContent side="right">
+      <TooltipContent side={tooltipLocation || 'right'}>
         CIK: <span className="font-semibold">{cik}</span>
       </TooltipContent>
     </Tooltip>

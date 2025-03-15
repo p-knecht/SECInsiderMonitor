@@ -273,6 +273,17 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
+model NotificationSubscription {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  subscriber    String
+  description   String
+  issuerCiks    String[]
+  formTypes     String[]
+  reportingOwnerCiks String[]
+  lastTriggered DateTime?
+  createdAt     DateTime        @default(now())
+}
+
 enum UserRole {
   user
   admin

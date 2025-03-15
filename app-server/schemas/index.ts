@@ -156,7 +156,7 @@ export const LookupCikSchema = z.object({
 
 export const AnalysisSchema = z
   .object({
-    cik: z.string().regex(/^\d{10}$/, 'Ungültiges CIK-Format'),
+    cik: z.string().regex(/^\d{10}$/, 'Ungültige Entität'),
     depth: z.coerce
       .number()
       .int('Ungültige Zahl')
@@ -182,3 +182,22 @@ export const LogfileSchema = z
   .string()
   .trim()
   .regex(/^datafetcher-\d{4}-\d{2}-\d{2}\.log$/, 'Ungültiges Logfile-Format');
+
+export const NotificationSubscriptionSchema = z
+  .object({
+    description: z.string().min(1, 'Bitte Beschreibung erfassen'),
+    issuerCiks: z.array(z.string().regex(/^\d{10}$/, 'Ungültige Entität')).optional(),
+    formTypes: z.array(z.enum(['3', '4', '5'])).optional(),
+    reportingOwnerCiks: z.array(z.string().regex(/^\d{10}$/, 'Ungültige Entität')).optional(),
+  })
+  .refine(
+    (data) => (data.issuerCiks?.length || 0) > 0 || (data.reportingOwnerCiks?.length || 0) > 0,
+    {
+      message: 'Mindestens ein Issuer oder ein Reporting Owner muss angegeben werden.',
+      path: ['issuerCiks'], // Hier wird der Fehler standardmäßig an `issuerCiks` gehängt
+    },
+  );
+
+export const DeleteNotificationSubscriptionSchema = z.object({
+  subscriptionId: z.string(),
+});
