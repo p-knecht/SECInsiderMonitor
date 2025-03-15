@@ -7,15 +7,16 @@ import { analyseNetwork, NetworkAnalysisData } from '@/actions/main/analysis/ana
 import { parseAndHandleAnalysisQuery } from '@/lib/analysis';
 import { AnalysisErrorMessage } from '@/components/main/analysis/error-message';
 import { AnalysisLoadingScreen } from '@/components/main/analysis/loading-screen';
+import { Suspense } from 'react';
 
-export default function NetworkAnalysisPage() {
+function NetworkAnalysisContent() {
   const { data, errorMessage, isLoading } = parseAndHandleAnalysisQuery<NetworkAnalysisData>(
     analyseNetwork,
     (params) => (!params.depth ? "Suchparameter 'depth' fehlt" : null),
   );
 
   return (
-    <AppMainContent pathComponents={[{ title: 'Netzwerkanalyse', path: '/network-analysis' }]}>
+    <>
       <AnalysisFilter type="network" />
       <AnalysisErrorMessage errorMessage={errorMessage} />
       <AnalysisLoadingScreen isLoading={isLoading} />
@@ -34,6 +35,16 @@ export default function NetworkAnalysisPage() {
           <NetworkGraph data={data} />
         </>
       )}
+    </>
+  );
+}
+
+export default function NetworkAnalysisPage() {
+  return (
+    <AppMainContent pathComponents={[{ title: 'Netzwerkanalyse', path: '/network-analysis' }]}>
+      <Suspense fallback={<AnalysisLoadingScreen isLoading={true} />}>
+        <NetworkAnalysisContent />
+      </Suspense>
     </AppMainContent>
   );
 }

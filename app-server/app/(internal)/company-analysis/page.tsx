@@ -8,16 +8,18 @@ import { AnalysisErrorMessage } from '@/components/main/analysis/error-message';
 import { AnalysisLoadingScreen } from '@/components/main/analysis/loading-screen';
 import StockChart from '@/components/main/analysis/stock-chart';
 import TransactionTable from '@/components/main/analysis/transaction-table';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 
-export default function companyAnalysisPage() {
+function CompanyAnalysisContent() {
   const { data, errorMessage, isLoading } = parseAndHandleAnalysisQuery<CompanyAnalysisData>(
     analyseCompany,
     (params) => (params.depth ? "Suchparameter 'depth' darf nicht definiert sein" : null),
   );
+
   const [highlightedDate, setHighlightedDate] = useState<Date | null>(null);
+
   return (
-    <AppMainContent pathComponents={[{ title: 'Unternehmensanalyse', path: '/company-analysis' }]}>
+    <>
       <AnalysisFilter type="company" />
       <AnalysisErrorMessage errorMessage={errorMessage} />
       <AnalysisLoadingScreen isLoading={isLoading} />
@@ -44,6 +46,16 @@ export default function companyAnalysisPage() {
           />
         </>
       )}
+    </>
+  );
+}
+
+export default function CompanyAnalysisPage() {
+  return (
+    <AppMainContent pathComponents={[{ title: 'Unternehmensanalyse', path: '/company-analysis' }]}>
+      <Suspense fallback={<AnalysisLoadingScreen isLoading={true} />}>
+        <CompanyAnalysisContent />
+      </Suspense>
     </AppMainContent>
   );
 }
