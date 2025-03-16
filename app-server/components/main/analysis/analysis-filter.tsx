@@ -110,7 +110,7 @@ export function AnalysisFilter({ type }: { type: 'network' | 'company' }): React
                         <FormLabel>Suchtiefe</FormLabel>
                       </div>
                       <FormControl>
-                        <Input {...field} type="number" min="1" max="5" />
+                        <Input {...field} type="number" min="1" max="10" />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>

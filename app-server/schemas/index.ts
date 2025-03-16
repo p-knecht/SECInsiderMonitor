@@ -161,7 +161,7 @@ export const AnalysisSchema = z
       .number()
       .int('Ungültige Zahl')
       .positive('Ungültige Zahl')
-      .max(5, 'Maximum: 5')
+      .max(10, 'Maximum: 10')
       .min(1, 'Minimum: 1')
       .optional(),
     from: z.string().regex(dateRegex, 'Ungültiges Datumsformat'),

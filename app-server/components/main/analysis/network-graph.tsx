@@ -124,6 +124,7 @@ function showInfoBox(
         router.push(
           `/network-analysis?cik=${originalObject.cik}&from=${data.queryParams?.from}&to=${data.queryParams?.to}&depth=${data.queryParams?.depth}`,
         );
+        window.location.reload(); // fully reload the page to reset the graph and avoid rerendering issues
       });
     }
   } else {
@@ -209,6 +210,7 @@ export default function NetworkGraph({ data }: { data: NetworkAnalysisData }) {
                 params.set('to', data.queryParams?.to!);
                 params.set('depth', data.queryParams?.depth?.toString()!);
                 router.push(`?${params.toString()}`);
+                window.location.reload(); // fully reload the page to reset the graph and avoid rerendering issues
               }
             } else {
               // update last tap timestamp
