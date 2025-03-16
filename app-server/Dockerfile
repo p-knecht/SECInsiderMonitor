@@ -14,7 +14,8 @@ COPY app-server/app ./app/
 COPY app-server/public ./public/
 
 # Build the app
-RUN npm run build
+RUN npm run build:appserver
+RUN npm run build:initialize-db-indexes 
 
 # Stage 2: Production Image
 FROM node:22-alpine AS production
@@ -26,6 +27,7 @@ COPY --from=build /usr/src/app/app-server/.next ./.next
 COPY --from=build /usr/src/app/app-server/public ./public
 COPY --from=build /usr/src/app/app-server/package*.json ./
 COPY --from=build /usr/src/app/db-schema ../db-schema
+COPY --from=build /usr/src/app/app-server/initialize-database-indexes.js ./initialize-database-indexes.js
 
 # delete dev dependencies and set NODE_ENV to production
 RUN npm prune --omit=dev
@@ -33,4 +35,4 @@ ENV NODE_ENV=production
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["npm", "start"] 

@@ -14,9 +14,11 @@
   "author": "Pascal Knecht",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
     "start": "next start",
-    "initialize-db": "node initialize-database-indexes.js",
+    "build:appserver": "next build",
+    "build:initialize-db-indexes": "tsc --skipLibCheck initialize-database-indexes.ts",
+    "initialize-db-indexes": "node initialize-database-indexes.js",
+    "initialize-auth-token": "npx auth secret",
     "prisma:generate": "prisma generate --schema=../db-schema/schema.prisma",
     "prisma:push": "prisma db push --skip-generate --schema=../db-schema/schema.prisma",
     "prisma:studio": "prisma studio --schema=../db-schema/schema.prisma"

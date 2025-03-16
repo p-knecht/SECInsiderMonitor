@@ -21,9 +21,19 @@ if ! npm run prisma:push; then
 fi
 
 echo "Running initialize database indexes..."
-if ! npm run initialize-db; then
+if ! npm run initialize-db-indexes; then
     echo "Failed to initialize database indexes! Exiting..."
     exit 3
+
+echo "Check if .env.local file exists and contains 'AUTH_SECRET'..."
+if [ ! -f .env.local ]; then
+    echo ".env.local file not found. Creating it..."
+    touch .env.local
+fi
+if ! grep -q "^AUTH_SECRET=" .env.local; then
+    echo "AUTH_SECRET is not set in .env.local file. Initializing it..."
+    npm run initialize-auth-token
+fi
 
 echo "Starting sim-appserver application..."
 exec "$@"
