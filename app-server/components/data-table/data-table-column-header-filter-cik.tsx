@@ -119,7 +119,7 @@ export const DataTableColumnHeaderFilterCik = ({
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-64">
+      <DropdownMenuContent className="min-w-64">
         <Input
           type="text"
           placeholder="Suche..."

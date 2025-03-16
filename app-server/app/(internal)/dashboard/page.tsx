@@ -7,7 +7,7 @@ import { TopReportingOwners } from '@/components/main/dashboard/show-top-owners'
 export default function dashboardPage() {
   return (
     <AppMainContent pathComponents={[{ title: 'Dashboard', path: '/dashboard' }]}>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <FilingSummary />
         <FilingTrend />
         <TopIssuers />
