@@ -6,7 +6,6 @@ import { LoginFormSchema } from '@/schemas';
 import { getUserByEmail } from '@/data/user';
 import { dbconnector } from '@/lib/dbconnector';
 
-export const runtime = 'nodejs'; // disable edge runtime for this file (as not supported by bcryptjs)
 export default {
   providers: [
     Credentials({
