@@ -56,7 +56,7 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
         rm -f "$LOCK_FILE"
         break
     else
-        echo "Another instance locked database at the moment.
+        echo "Another instance locked database at the moment."
         attempt=$((attempt+1))
     fi
 done
