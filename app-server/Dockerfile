@@ -20,6 +20,7 @@ COPY app-server/public ./public/
 COPY app-server/schemas ./schemas/
 
 # Build the app
+RUN npm run prisma:generate
 RUN npm run build:appserver
 RUN npm run build:initialize-db-indexes 
 
