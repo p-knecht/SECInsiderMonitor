@@ -44,7 +44,6 @@
     "clsx": "^2.1.1",
     "cytoscape": "^3.31.1",
     "cytoscape-fcose": "^2.2.0",
-    "dotenv": "^16.4.7",
     "he": "^1.2.0",
     "log4js": "^6.9.1",
     "lucide-react": "^0.479.0",

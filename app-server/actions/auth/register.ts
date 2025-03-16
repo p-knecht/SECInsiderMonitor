@@ -9,9 +9,13 @@ import { generateVerificationToken } from '@/lib/tokens';
 import { sendTokenVerificationMail } from '@/lib/mailer';
 import { UserRole } from '@prisma/client';
 
+export const isRegistrationDisabled = async (): Promise<boolean> => {
+  return process.env.SERVER_DISABLE_REGISTRATION?.trim().toLowerCase() === 'true';
+};
+
 export const register = async (data: z.infer<typeof RegisterFormSchema>) => {
   // check if registration is disabled
-  if (process.env.SERVER_DISABLE_REGISTRATION?.toLowerCase() === 'true') {
+  if (await isRegistrationDisabled()) {
     return { error: 'Registrierung ist deaktiviert.' };
   }
 

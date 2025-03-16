@@ -70,5 +70,8 @@ if ! node initialize-auth-token.js; then
     exit 4
 fi
 
+echo "Creating symlink for config/.env.local to .env.local"
+ln -sf /usr/src/app/app-server/config/.env.local /usr/src/app/app-server/.env.local
+
 echo "Starting sim-appserver application..."
 exec "$@"

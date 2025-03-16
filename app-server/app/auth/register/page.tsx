@@ -1,10 +1,21 @@
-'use server';
+'use client';
 
 import { CardWrapper } from '@/components/auth/card-wrapper';
 import { RegisterForm } from '@/components/auth/register-form';
 import { FormError } from '@/components/form-error';
+import { useState, useEffect } from 'react';
+import { isRegistrationDisabled } from '@/actions/auth/register';
 
-export default async function RegisterPage() {
+export default function RegisterPage() {
+  const [registrationDisabled, setRegistrationDisabled] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkRegistrationDisabled = async () => {
+      setRegistrationDisabled(await isRegistrationDisabled());
+    };
+    checkRegistrationDisabled();
+  }, []);
+
   return (
     <CardWrapper
       cardTitle="Konto erstellen"
@@ -12,7 +23,7 @@ export default async function RegisterPage() {
       footerLinkLabel="Konto bereits vorhanden? Jetzt anmelden"
       footerLinkHref="/auth/login"
     >
-      {process.env.SERVER_DISABLE_REGISTRATION?.toLowerCase() === 'true' ? (
+      {registrationDisabled ? (
         <FormError message="Registrierung ist derzeit deaktiviert." />
       ) : (
         <RegisterForm />

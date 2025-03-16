@@ -1,21 +1,26 @@
-'use server';
+'use client';
 
 import { CardWrapper } from '@/components/auth/card-wrapper';
 import { LoginForm } from '@/components/auth/login-form';
+import { useState, useEffect } from 'react';
+import { isRegistrationDisabled } from '@/actions/auth/register';
 
-export default async function LoginPage() {
+export default function LoginPage() {
+  const [registrationDisabled, setRegistrationDisabled] = useState<boolean>(true);
+
+  useEffect(() => {
+    const checkRegistrationDisabled = async () => {
+      setRegistrationDisabled(await isRegistrationDisabled());
+    };
+    checkRegistrationDisabled();
+  }, []);
+
   return (
     <CardWrapper
       cardTitle="Willkommen bei SIM"
       cardDescription="Mit bestehendem Konto anmelden"
-      footerLinkLabel={
-        process.env.SERVER_DISABLE_REGISTRATION?.toLowerCase() === 'true'
-          ? ''
-          : 'Noch kein Konto? Jetzt registrieren'
-      }
-      footerLinkHref={
-        process.env.SERVER_DISABLE_REGISTRATION?.toLowerCase() === 'true' ? '' : '/auth/register'
-      }
+      footerLinkLabel={registrationDisabled ? '' : 'Noch kein Konto? Jetzt registrieren'}
+      footerLinkHref={registrationDisabled ? '' : '/auth/register'}
     >
       <LoginForm />
     </CardWrapper>
