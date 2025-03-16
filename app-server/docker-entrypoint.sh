@@ -24,11 +24,13 @@ echo "Running initialize database indexes..."
 if ! npm run initialize-db-indexes; then
     echo "Failed to initialize database indexes! Exiting..."
     exit 3
+fi
 
 echo "Running initialize auth token..."
 if ! npm run initialize-auth-token; then
     echo "Failed to initialize auth token! Exiting..."
     exit 4
+fi
 
 
 echo "Starting sim-appserver application..."

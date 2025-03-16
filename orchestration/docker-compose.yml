@@ -2,7 +2,7 @@ name: secinsidermonitor
 services:
   database:
     image: mongo
-    container_name: sim-database # note: when changing this name, it must be also changed in the sim-database-init.sh script and DATABASE_URL in datafetcher service
+    container_name: sim-database
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${DB_ROOT_USERNAME}
@@ -32,6 +32,13 @@ services:
     environment:
       DATABASE_URL: mongodb://${DB_SIM_USERNAME}:${DB_SIM_PASSWORD}@sim-database:27017/${DB_SIM_DB}?authSource=admin
       USER_AGENT: ${USER_AGENT}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USE_SSL: ${SMTP_USE_SSL}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME}
+      SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS}
     volumes:
       - logs:/usr/src/app/data-fetcher/logs
 
@@ -39,11 +46,26 @@ services:
     image: p89u7/secinsidermonitor:appserver-latest
     container_name: sim-appserver
     restart: always
+    environment:
+      DATABASE_URL: mongodb://${DB_SIM_USERNAME}:${DB_SIM_PASSWORD}@sim-database:27017/${DB_SIM_DB}?authSource=admin
+      SERVER_FQDN: ${SERVER_FQDN}
+      SERVER_DISABLE_REGISTRATION: ${SERVER_DISABLE_REGISTRATION}
+      AUTH_URL: https://${SERVER_FQDN}
+      AUTH_TRUST_HOST: true
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USE_SSL: ${SMTP_USE_SSL}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME}
+      SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS}
     labels:
       - traefik.enable=true
       - traefik.http.routers.appserver.rule=Host(`${SERVER_FQDN}`)
       - traefik.http.routers.appserver.entrypoints=websecure
       - traefik.http.services.appserver.loadbalancer.server.port=3000
+    volumes:
+      - logs:/usr/src/app/app-server/logs:ro
 
   reverseproxy:
     image: traefik
