@@ -1,8 +1,10 @@
+'use server';
+
 import { CardWrapper } from '@/components/auth/card-wrapper';
 import { RegisterForm } from '@/components/auth/register-form';
 import { FormError } from '@/components/form-error';
 
-export default function RegisterPage() {
+export default async function RegisterPage() {
   return (
     <CardWrapper
       cardTitle="Konto erstellen"

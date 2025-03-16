@@ -1,7 +1,9 @@
+'use server';
+
 import { CardWrapper } from '@/components/auth/card-wrapper';
 import { LoginForm } from '@/components/auth/login-form';
 
-export default function LoginPage() {
+export default async function LoginPage() {
   return (
     <CardWrapper
       cardTitle="Willkommen bei SIM"
