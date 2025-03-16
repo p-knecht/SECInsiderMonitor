@@ -10,8 +10,14 @@ COPY *.json ..
 COPY db-schema ../db-schema
 COPY app-server/*.ts .
 COPY app-server/*.mjs .
+COPY app-server/actions ./actions/
 COPY app-server/app ./app/
+COPY app-server/components ./components/
+COPY app-server/data ./data/
+COPY app-server/hooks ./hooks/
+COPY app-server/lib ./lib/
 COPY app-server/public ./public/
+COPY app-server/schemas ./schemas/
 
 # Build the app
 RUN npm run build:appserver
