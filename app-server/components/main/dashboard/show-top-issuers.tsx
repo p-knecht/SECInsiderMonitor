@@ -59,7 +59,7 @@ export const TopIssuers = () => {
                   );
                   return {
                     cik: _id,
-                    name: issuerName.replace('&amp;', '&'),
+                    name: issuerName,
                     count,
                     color: backgroundColor,
                   };

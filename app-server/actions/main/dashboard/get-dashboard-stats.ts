@@ -1,7 +1,7 @@
 'use server';
 
 import { auth } from '@/auth';
-import { dbconnector } from '@/lib/dbconnector';
+import { aggregateRawOwnershipFilingsWithDecode } from '@/lib/dbconnector';
 
 export const getFilingCounts = async () => {
   // check if user is authenticated
@@ -47,7 +47,7 @@ export const getFilingCounts = async () => {
   });
 
   try {
-    const summary = await dbconnector.ownershipFiling.aggregateRaw({
+    const summary = await aggregateRawOwnershipFilingsWithDecode({
       pipeline: [
         {
           $group: {
@@ -74,7 +74,7 @@ export const getFilingTrend = async () => {
   if (!session?.user.id) return null;
 
   try {
-    const result = await dbconnector.ownershipFiling.aggregateRaw({
+    const result = await aggregateRawOwnershipFilingsWithDecode({
       pipeline: [
         {
           $match: {
@@ -124,7 +124,7 @@ export const getTopIssuer = async () => {
   const TOP_ISSUER_COUNT = 10; // show top 10 issuers
 
   try {
-    const result = await dbconnector.ownershipFiling.aggregateRaw({
+    const result = await aggregateRawOwnershipFilingsWithDecode({
       pipeline: [
         // consider filings from the defined lookback period
         {
@@ -173,7 +173,7 @@ export const getTopReportingOwner = async () => {
   const TOP_REPORTING_OWNER_COUNT = 10; // show top 10 reporting owners
 
   try {
-    const result = await dbconnector.ownershipFiling.aggregateRaw({
+    const result = await aggregateRawOwnershipFilingsWithDecode({
       pipeline: [
         // consider filings from the defined lookback period
         {

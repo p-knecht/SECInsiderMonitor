@@ -1,8 +1,7 @@
 'use server';
 
 import * as z from 'zod';
-import { dbconnector } from '@/lib/dbconnector';
-import * as fs from 'fs';
+import { aggregateRawOwnershipFilingsWithDecode } from '@/lib/dbconnector';
 import { AnalysisSchema } from '@/schemas';
 import yahooFinance from 'yahoo-finance2';
 import {
@@ -205,7 +204,7 @@ export const analyseCompany = async (
       }); // create stock data entries (price = 0) for requested time frame
   }
 
-  const transactions: unknown = await dbconnector.ownershipFiling.aggregateRaw({
+  const transactions: unknown = await aggregateRawOwnershipFilingsWithDecode({
     pipeline: [
       {
         $match: {

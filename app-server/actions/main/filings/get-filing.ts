@@ -1,7 +1,7 @@
 'use server';
 
 import * as z from 'zod';
-import { dbconnector } from '@/lib/dbconnector';
+import { dbconnector, decodeStrings } from '@/lib/dbconnector';
 import { auth } from '@/auth';
 import { GetFilingSchema } from '@/schemas';
 
@@ -15,11 +15,13 @@ export const getFiling = async (data: z.infer<typeof GetFilingSchema>) => {
   if (!session?.user.id) return null;
 
   // search for filing
-  const result = await dbconnector.ownershipFiling.findFirst({
-    where: {
-      filingId: validatedData.data.filingId,
-    },
-  });
+  const result = decodeStrings(
+    await dbconnector.ownershipFiling.findFirst({
+      where: {
+        filingId: validatedData.data.filingId,
+      },
+    }),
+  );
 
   if (!result) return null;
 
@@ -27,5 +29,6 @@ export const getFiling = async (data: z.infer<typeof GetFilingSchema>) => {
   result.embeddedDocuments.forEach((doc: any) => {
     delete doc.rawContent;
   });
+
   return result;
 };

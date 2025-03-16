@@ -14,7 +14,7 @@ export const parseIssuer = (filing: any): CikObject | null => {
 
   return {
     cik: filing.formData.issuer.issuerCik ?? 'unknown CIK',
-    cikName: filing.formData.issuer.issuerName.replace(/&amp;/g, '&') ?? 'unknown name',
+    cikName: filing.formData.issuer.issuerName ?? 'unknown name',
     cikTicker: filing.formData.issuer.issuerTradingSymbol ?? undefined,
   };
 };

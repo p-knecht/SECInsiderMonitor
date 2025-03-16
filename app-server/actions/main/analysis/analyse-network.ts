@@ -1,7 +1,7 @@
 'use server';
 
 import * as z from 'zod';
-import { dbconnector } from '@/lib/dbconnector';
+import { aggregateRawOwnershipFilingsWithDecode } from '@/lib/dbconnector';
 import { AnalysisSchema } from '@/schemas';
 import { lookupCik } from '../filings/loopkup-cik';
 import { authenticateAndHandleInputs, AuthenticatedAnalysisResult } from './utils';
@@ -71,7 +71,7 @@ const buildNodeTree = async (
   // get all edges for this node (run both queries (issuer, reporting owner) in parallel)
   const [filingsAsIssuer, filingsAsReportingOwner] = await Promise.all([
     // find all filings where the cik is the issuer
-    dbconnector.ownershipFiling.aggregateRaw({
+    aggregateRawOwnershipFilingsWithDecode({
       pipeline: [
         {
           // only get filings where the issuer is the cik in defined time frame and has reporting owners
@@ -99,7 +99,7 @@ const buildNodeTree = async (
       ],
     }),
     // find all filings where the cik is a reporting owner
-    dbconnector.ownershipFiling.aggregateRaw({
+    aggregateRawOwnershipFilingsWithDecode({
       pipeline: [
         {
           // only get filings where the cik is a reporting owner in defined time (pre-filtering filings)

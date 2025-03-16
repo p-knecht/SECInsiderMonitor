@@ -3,7 +3,7 @@ import { FormError } from '@/components/form-error';
 import { columns, OwnershipFilingColumn } from './columns';
 import { AppMainContent } from '@/components/main/app-maincontent';
 import { filingsTableParamatersSchema } from '@/schemas';
-import { dbconnector } from '@/lib/dbconnector';
+import { aggregateRawOwnershipFilingsWithDecode } from '@/lib/dbconnector';
 import { buildFilter } from '@/lib/tablefilter';
 import { parseIssuer, parseReportingOwners } from '@/data/cik';
 
@@ -67,7 +67,7 @@ export default async function FilingsPage({ searchParams: searchParams }: Filing
   let filter = buildFilter(validParams, 'filing', true);
 
   // note: we have to use raw aggregation queries here, as Prisma does not support nested filtering at the moment --> can be replaced with Prisma native queries once supported
-  const totalCountResult = await dbconnector.ownershipFiling.aggregateRaw({
+  const totalCountResult = await aggregateRawOwnershipFilingsWithDecode({
     pipeline: [{ $match: filter }, { $count: 'total' }],
   });
   if (Array.isArray(totalCountResult) && totalCountResult.length > 0)
@@ -81,7 +81,7 @@ export default async function FilingsPage({ searchParams: searchParams }: Filing
 
   if (0 < totalCount) {
     // note: we have to use raw aggregation queries here, as Prisma does not support nested filtering at the moment --> can be replaced with Prisma native queries once supported
-    const rawFilings = await dbconnector.ownershipFiling.aggregateRaw({
+    const rawFilings = await aggregateRawOwnershipFilingsWithDecode({
       pipeline: [
         { $match: filter },
         {

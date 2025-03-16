@@ -1,7 +1,7 @@
 'use server';
 
 import * as z from 'zod';
-import { dbconnector } from '@/lib/dbconnector';
+import { aggregateRawOwnershipFilingsWithDecode } from '@/lib/dbconnector';
 import { auth } from '@/auth';
 import { SearchCiksSchema } from '@/schemas';
 import { CikObject } from '@/data/cik';
@@ -25,7 +25,7 @@ export const searchCiks = async (data: z.infer<typeof SearchCiksSchema>) => {
 
     if (!limitType || limitType === 'issuer') {
       queries.push(
-        dbconnector.ownershipFiling.aggregateRaw({
+        aggregateRawOwnershipFilingsWithDecode({
           pipeline: [
             {
               $match: {
@@ -78,7 +78,7 @@ export const searchCiks = async (data: z.infer<typeof SearchCiksSchema>) => {
 
     if (!limitType || limitType === 'reportingOwner') {
       queries.push(
-        dbconnector.ownershipFiling.aggregateRaw({
+        aggregateRawOwnershipFilingsWithDecode({
           pipeline: [
             {
               $match: {

@@ -4,7 +4,7 @@ import * as z from 'zod';
 import { auth } from '@/auth';
 import { LookupCikSchema } from '@/schemas';
 import { CikObject } from '@/data/cik';
-import { dbconnector } from '@/lib/dbconnector';
+import { dbconnector, decodeStrings } from '@/lib/dbconnector';
 
 export const lookupCik = async (
   data: z.infer<typeof LookupCikSchema>,
@@ -21,16 +21,22 @@ export const lookupCik = async (
     // parallelized MongoDB queries for issuer & reportingOwner ciks
     // using raw queries instead of Prisma native query as nested queries are not supported by Prisma at the moment
     const [issuerResult, reportingOwnerResult] = await Promise.all([
-      dbconnector.ownershipFiling.findRaw({
-        // ISSUER
-        filter: { 'formData.issuer.issuerCik': validatedData.data.cik },
-        options: { sort: { 'formData.periodOfReport': -1 }, limit: 1 }, // sort by latest filings to get most recent data
-      }),
-      dbconnector.ownershipFiling.findRaw({
-        // REPORTING OWNER
-        filter: { 'formData.reportingOwner.reportingOwnerId.rptOwnerCik': validatedData.data.cik },
-        options: { sort: { 'formData.periodOfReport': -1 }, limit: 1 }, // sort by latest filings to get most recent data
-      }),
+      decodeStrings(
+        await dbconnector.ownershipFiling.findRaw({
+          // ISSUER
+          filter: { 'formData.issuer.issuerCik': validatedData.data.cik },
+          options: { sort: { 'formData.periodOfReport': -1 }, limit: 1 }, // sort by latest filings to get most recent data
+        }),
+      ),
+      decodeStrings(
+        dbconnector.ownershipFiling.findRaw({
+          // REPORTING OWNER
+          filter: {
+            'formData.reportingOwner.reportingOwnerId.rptOwnerCik': validatedData.data.cik,
+          },
+          options: { sort: { 'formData.periodOfReport': -1 }, limit: 1 }, // sort by latest filings to get most recent data
+        }),
+      ),
     ]);
 
     // check if object exists as issuer in database (prefered, as it contains more data --> ticker)

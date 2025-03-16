@@ -61,7 +61,7 @@ export const TopReportingOwners = () => {
                   );
                   return {
                     cik: _id,
-                    name: ownerName.replace('&amp;', '&'),
+                    name: ownerName,
                     count,
                     color: backgroundColor,
                   };
