@@ -1,10 +1,17 @@
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { randomBytes } from 'crypto';
+import { join } from 'path';
 
-const ENV_FILE = '.env.local';
+const CONFIG_DIR = 'config';
+const ENV_FILE = join(CONFIG_DIR, '.env.local');
 
-// read contents of ENV_FILE and parse into an object
-console.log(`Reading environment variables from '${ENV_FILE}'...`);
+// make sure the config directory exists
+if (!existsSync(CONFIG_DIR)) {
+  mkdirSync(CONFIG_DIR, { recursive: true });
+}
+
+// read contents of ENV_FILE and parse into an object, if it exists otherwise create a new empty object
+console.log(`Trying to reading environment variables from '${ENV_FILE}'...`);
 const envVars = existsSync(ENV_FILE)
   ? Object.fromEntries(
       readFileSync(ENV_FILE, 'utf8')
@@ -24,7 +31,8 @@ if (!envVars['AUTH_SECRET']) {
     ENV_FILE,
     Object.entries(envVars)
       .map(([k, v]) => `${k}="${v}"`)
-      .join('\n'),
+      .join('\n') + '\n',
+    'utf8',
   );
   console.log(`'AUTH_SECRET' has been written to ${ENV_FILE} file.`);
 } else {

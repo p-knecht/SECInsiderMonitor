@@ -8,6 +8,7 @@ RUN npm install
 
 COPY *.json .. 
 COPY db-schema ../db-schema
+COPY db-schema/initialize-database-indexes.ts .
 COPY app-server/*.ts .
 COPY app-server/*.mjs .
 COPY app-server/actions ./actions/

@@ -41,6 +41,7 @@ services:
       SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS}
     volumes:
       - logs:/usr/src/app/data-fetcher/logs
+      - database-lock:/usr/src/app/data-fetcher/dblock
 
   appserver:
     image: p89u7/secinsidermonitor:appserver-latest
@@ -66,6 +67,8 @@ services:
       - traefik.http.services.appserver.loadbalancer.server.port=3000
     volumes:
       - logs:/usr/src/app/app-server/logs:ro
+      - appserver-config:/usr/src/app/app-server/config
+      - database-lock:/usr/src/app/app-server/dblock
 
   reverseproxy:
     image: traefik
@@ -98,5 +101,7 @@ services:
 volumes:
   database:
   database-config:
+  appserver-config:
+  database-lock:
   certificateStore:
   logs:

@@ -8,6 +8,7 @@ RUN npm install
 
 COPY *.json .. 
 COPY db-schema ../db-schema
+COPY db-schema/initialize-database-indexes.ts .
 COPY data-fetcher/*.ts .
 
 # Build the app

@@ -15,6 +15,9 @@
 **/tmp/
 **/temp/
 
+# local config
+**/config/
+
 # Next.js build output
 **/.next/
 
