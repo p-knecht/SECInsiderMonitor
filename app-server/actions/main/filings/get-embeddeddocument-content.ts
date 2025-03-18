@@ -5,7 +5,6 @@ import { dbconnector } from '@/lib/dbconnector';
 import { auth } from '@/auth';
 import { GetEmbeddedDocumentContentSchema } from '@/schemas';
 import mime from 'mime-types';
-import { Buffer } from 'buffer';
 
 /**
  * Provides the content of an embedded document (e.g. a PDF file) that is part of a filing.
@@ -42,25 +41,10 @@ export const getEmbeddedDocumentContent = async (
       ? mime.lookup(document.fileName) || 'application/octet-stream'
       : 'application/octet-stream';
 
-    // decode content if necessary (only for certain MIME types, as stated in specification)
-    let content: string | Buffer<ArrayBuffer> = document.rawContent;
-    if (
-      [
-        'image/png',
-        'image/jpeg',
-        'image/gif',
-        'application/pdf',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      ].includes(mimeType) &&
-      /^[A-Za-z0-9+/]+={0,2}$/.test(content)
-    )
-      content = Buffer.from(content, 'base64');
-
     // return document content
     return {
       fileName: document.fileName,
-      content,
+      content: document.rawContent,
       mimeType,
     };
   } catch (error) {

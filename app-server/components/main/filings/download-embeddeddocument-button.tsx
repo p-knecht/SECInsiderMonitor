@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { getEmbeddedDocumentContent } from '@/actions/main/filings/get-embeddeddocument-content';
 import { Button } from '@/components/ui/button';
+import { decode } from 'uuencode';
 
 /**
  * Renders a download button component for a specific embedded document allowing the user to download the file.
@@ -53,6 +54,39 @@ export default function DownloadFileButton({
           setError(false);
         }, 2000);
         return;
+      }
+
+      // Check if content needs to be decoded (some content ist uuencoded as stated in SEC EDGAR documentation)
+      if (
+        result.content &&
+        [
+          'image/png',
+          'image/jpeg',
+          'image/gif',
+          'application/pdf',
+          'application/zip',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'application/vnd.ms-excel',
+          'application/vnd.ms-powerpoint',
+        ].includes(result.mimeType || '')
+      ) {
+        // get uuencoded lines between begin and end markers
+        const match = result.content.match(/begin [^\n]+\n([\s\S]*?)\nend/);
+
+        // only decode if match was found otherwise return the content as is
+        if (match && match.length > 1) {
+          // some files have trimmed lines which need to be padded for decoding to work properly
+          const uuencodedContent = match[1]
+            .split('\n')
+            .map((l) => {
+              // get the length marker and calculate the padded length according to the uuencode algorithm
+              const lengthMarker = l.charCodeAt(0); // first char is the length marker
+              const paddedLength = Math.ceil(((lengthMarker - 32) * 4) / 3); // padded bytes must be a multiple of 3
+              return l.padEnd(1 + paddedLength);
+            })
+            .join('\n');
+          result.content = decode(uuencodedContent || '');
+        }
       }
 
       // Create a blob from the content and trigger the download to the user

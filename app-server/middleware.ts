@@ -70,7 +70,6 @@ export default auth((req) => {
 
     return res;
   }
-  return null;
 });
 
 export const config = {
