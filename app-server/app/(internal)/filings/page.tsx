@@ -1,4 +1,4 @@
-import { DataTable } from '@/components/data-table/data-table';
+import { DataTable } from '@/components/main/data-table/data-table';
 import { FormError } from '@/components/form-error';
 import { columns, OwnershipFilingColumn } from './columns';
 import { AppMainContent } from '@/components/main/app-maincontent';
@@ -7,6 +7,9 @@ import { aggregateRawOwnershipFilingsWithDecode } from '@/lib/dbconnector';
 import { buildFilter } from '@/lib/tablefilter';
 import { parseIssuer, parseReportingOwners } from '@/data/cik';
 
+/**
+ * Defines the available search parameters for the filing table.
+ */
 interface FilingsPageSearchParams {
   page?: string;
   pageSize?: string;
@@ -15,14 +18,20 @@ interface FilingsPageSearchParams {
   [key: string]: string | string[] | undefined;
 }
 
+/**
+ * Wraps the FilingsPageSearchParams in a Promise to allow for async loading of this page
+ */
 interface FilingsPageProps {
   searchParams: Promise<FilingsPageSearchParams>;
 }
 
+/**
+ * Renders the main content of the filing table page
+ *
+ * @param {FilingsPageProps} - The search parameters for the filing table
+ * @returns - The filing table page layout containing an overview of all filings.
+ */
 export default async function FilingsPage({ searchParams: searchParams }: FilingsPageProps) {
-  const parsedParams = filingsTableParamatersSchema.safeParse(await searchParams);
-  let validParams: FilingsPageSearchParams = {};
-
   // default values
   let page = 1;
   let pageSize = 10;
@@ -30,6 +39,9 @@ export default async function FilingsPage({ searchParams: searchParams }: Filing
   let totalCount = 0;
   let filings: OwnershipFilingColumn[] = [];
 
+  // Parse search parameters to prevent malicious input
+  const parsedParams = filingsTableParamatersSchema.safeParse(await searchParams);
+  let validParams: FilingsPageSearchParams = {};
   if (parsedParams.success) {
     validParams = parsedParams.data;
   } else {

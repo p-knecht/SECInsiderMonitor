@@ -1,6 +1,8 @@
 import { EmailVerificationToken } from '@prisma/client';
 import nodemailer, { SendMailOptions, SentMessageInfo } from 'nodemailer';
 
+// do some checks for environment variables and functionality of the transporter on initial loading of this module
+
 // Check for mandatory env variables
 if (!process.env.SMTP_HOST) throw new Error('SMTP_HOST is not set');
 if (!process.env.SMTP_FROM_NAME) throw new Error('SMTP_FROM_NAME is not set');
@@ -39,6 +41,12 @@ transporter.verify((error) => {
   }
 });
 
+/**
+ * Send a generic email with the given options. But set the from address and name explicitly to the configured values.
+ *
+ * @param {SendMailOptions} options - The options for the email to send.
+ * @returns {Promise<SentMessageInfo>} - The result of the email sending operation.
+ */
 export const sendGenericMail = async (options: SendMailOptions): Promise<SentMessageInfo> => {
   // always set the from address and name explicitly
   return transporter.sendMail({
@@ -47,6 +55,13 @@ export const sendGenericMail = async (options: SendMailOptions): Promise<SentMes
   });
 };
 
+/**
+ * Sends an email with a verification link to the given email address.
+ *
+ * @param {string} email - email address to send the verification mail to
+ * @param {EmailVerificationToken} tokenObject - token object to include in the mail
+ * @returns {Promise<SentMessageInfo>} - The result of the email sending operation.
+ */
 export const sendTokenVerificationMail = async (
   email: string,
   tokenObject: EmailVerificationToken,
@@ -62,6 +77,13 @@ export const sendTokenVerificationMail = async (
   });
 };
 
+/**
+ * Sends an email with a password reset link to the given email address.
+ *
+ * @param {string} email - email address to send the password reset mail to
+ * @param {EmailVerificationToken} tokenObject - token object to include in the mail
+ * @returns {Promise<SentMessageInfo>} - The result of the email sending operation.
+ */
 export const sendPasswordResetMail = async (
   email: string,
   tokenObject: EmailVerificationToken,

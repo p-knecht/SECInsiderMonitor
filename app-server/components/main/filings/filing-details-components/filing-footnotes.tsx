@@ -2,6 +2,12 @@
 
 import { OwnershipFiling } from '@prisma/client';
 
+/**
+ * Renders a component that displays the footnotes of the filing.
+ *
+ * @param {OwnershipFiling} filingData - The filing data to display the footnotes for.
+ * @returns {JSX.Element} - The component that displays the footnotes of the filing.
+ */
 export default function FilingFootnotes({ filingData }: { filingData: OwnershipFiling }) {
   if (!filingData.formData?.footnotes || filingData.formData.footnotes.footnote.length === 0) {
     return (

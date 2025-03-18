@@ -1,9 +1,18 @@
 import { CircleCheckIcon } from 'lucide-react';
 
+/**
+ * Props for the FormSuccess component containing the success message to display.
+ */
 interface FormSuccessProps {
   message?: string;
 }
 
+/**
+ * Renders a success box component to display a success message.
+ *
+ * @param {FormSuccessProps} {message} - The props used by the FormSuccess component containing the success message
+ * @returns {JSX.Element} - The rendered FormSuccess component showing the success message
+ */
 export const FormSuccess = ({ message }: FormSuccessProps) => {
   if (!message) return null;
   return (

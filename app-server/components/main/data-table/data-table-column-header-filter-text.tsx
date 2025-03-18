@@ -11,10 +11,19 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 
+/**
+ * The properties for the custom DataTableColumnHeaderFilterText component containing the column id to filter.
+ */
 interface DataTableColumnHeaderFilterTextProps {
   columnId: string;
 }
 
+/**
+ * Renders a custom column header filter text component, containing a text input field to filter the column in a dropdown menu. Multiple filter values can be added and removed; the filter values are stored in the URL query parameters.
+ *
+ * @param {DataTableColumnHeaderFilterTextProps} {columnId} - The column header filter text properties to get the column id to filter.
+ * @returns {JSX.Element} - The renderer DataTableColumnHeaderFilterText component.
+ */
 export const DataTableColumnHeaderFilterText = ({
   columnId,
 }: DataTableColumnHeaderFilterTextProps) => {
@@ -25,7 +34,12 @@ export const DataTableColumnHeaderFilterText = ({
   // get all unique filter values for this column
   const currentFilter = Array.from(new Set(searchParams.getAll(`filter[${columnId}]`)));
 
-  // Remove text filter entry
+  /**
+   * Removes a text filter entry from the URL query parameters.
+   *
+   * @param {string} value - The filter value to remove.
+   * @returns {void}
+   */
   const removeTextFilter = (value: string) => {
     const params = new URLSearchParams(window.location.search);
     // delete all filter entries for this column and re-add all except the one to remove
@@ -33,10 +47,15 @@ export const DataTableColumnHeaderFilterText = ({
     currentFilter
       .filter((item) => item !== value)
       .forEach((f) => params.append(`filter[${columnId}]`, f));
-    router.push(`?${params.toString()}`);
+    router.push(`?${params.toString()}`); // update URL
   };
 
-  // Add text filter entry
+  /**
+   * Adds a text filter entry to the URL query parameters.
+   *
+   * @param {string} value - The filter value to add.
+   * @returns {void}
+   */
   const addTextFilter = (value: string) => {
     const params = new URLSearchParams(window.location.search);
     // add new text filter entry

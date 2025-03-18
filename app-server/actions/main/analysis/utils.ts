@@ -3,6 +3,9 @@ import { AnalysisSchema } from '@/schemas';
 import { z } from 'zod';
 import { lookupCik } from '@/actions/main/filings/loopkup-cik';
 
+/**
+ * Prepared and validated input data for the analysis
+ */
 export interface AuthenticatedAnalysisResult {
   error?: string;
   queryParams?: {
@@ -19,6 +22,12 @@ export interface AuthenticatedAnalysisResult {
   toDate?: Date;
 }
 
+/**
+ * Auxiliary function to authenticate the user and handle the input data for the analysis (network and company)
+ * @param {z.infer<typeof AnalysisSchema>} data - input data from the client (containing CIK, from, to and optionally depth)
+ * @param {boolean} depthUsed - flag indicating if the depth parameter is used in the analysis
+ * @returns {Promise<AuthenticatedAnalysisResult>} - a promise with the prepared and validated input data for the analysis
+ */
 export async function authenticateAndHandleInputs(
   data: z.infer<typeof AnalysisSchema>,
   depthUsed: boolean,

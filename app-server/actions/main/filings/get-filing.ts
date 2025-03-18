@@ -5,6 +5,12 @@ import { dbconnector, decodeStrings } from '@/lib/dbconnector';
 import { auth } from '@/auth';
 import { GetFilingSchema } from '@/schemas';
 
+/**
+ * Provides a filing contents of the specified filingId (but removes embedded document content to keep response small).
+ *
+ * @param {z.infer<typeof GetFilingSchema>} data - input data to get filing containing filingId
+ * @returns {Promise<object|null>} - a promise that resolves with the filing or rejects with null
+ */
 export const getFiling = async (data: z.infer<typeof GetFilingSchema>) => {
   // revalidate received (unsafe) values from client
   const validatedData = GetFilingSchema.safeParse(data);

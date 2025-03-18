@@ -10,29 +10,34 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import Image from 'next/image';
-import { LucideIcon } from 'lucide-react';
-import { SidebarEntry } from '@/components/main/sidebar-entry';
-import { currentRole } from '@/lib/auth';
+import { SidebarEntry, SidebarEntryProps } from '@/components/main/sidebar-entry';
 import { UserRole } from '@prisma/client';
+import { auth } from '@/auth';
 
-interface SidebarEntry {
-  label: string;
-  icon: LucideIcon;
-  href: string;
+/**
+ * Defines the sidebar entries for the main, admin, and footer sections.
+ */
+interface SidebarSections {
+  mainEntries: SidebarEntryProps[];
+  adminEntries: SidebarEntryProps[];
+  footerEntries: SidebarEntryProps[];
 }
 
-interface SidebarEntries {
-  mainEntries: SidebarEntry[];
-  adminEntries: SidebarEntry[];
-  footerEntries: SidebarEntry[];
-}
-
+/**
+ * Defines the properties for the AppSidebar component containing the sidebar entries grouped by main, admin, and footer sections.
+ */
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  entries: SidebarEntries;
+  entries: SidebarSections;
 }
 
+/**
+ * Render the AppSidebar component with the grouped sidebar entries. (Entries in admin section/group are only shown for admin users.)
+ *
+ * @param {AppSidebarProps} { entries, ...props } - The AppSidebar properties containing the sidebar entries grouped by main, admin, and footer sections.
+ * @returns {JSX.Element} - The renderer AppSidebar component.
+ */
 export async function AppSidebar({ entries, ...props }: AppSidebarProps) {
-  const userRole = await currentRole();
+  const userRole = (await auth())?.user?.role;
   return (
     <Sidebar collapsible="icon" {...props} className="z-50">
       <SidebarHeader>

@@ -6,6 +6,9 @@ import { AnalysisSchema } from '@/schemas';
 import { lookupCik } from '../filings/loopkup-cik';
 import { authenticateAndHandleInputs, AuthenticatedAnalysisResult } from './utils';
 
+/**
+ * Return data for the network analysis
+ */
 export interface NetworkAnalysisData {
   error?: string;
   nodes?: {
@@ -14,7 +17,7 @@ export interface NetworkAnalysisData {
       cikName: string;
       cikTicker?: string;
     };
-    stratum: number;
+    depthRemaining: number;
   }[];
   edges?: {
     issuerCik: string;
@@ -35,19 +38,29 @@ export interface NetworkAnalysisData {
   };
 }
 
+/**
+ * Recursively build the node tree for the network analysis
+ *
+ * @param {string} cik - CIK to be fetched
+ * @param {number} depthRemaining - remaining depth for the current node (decreased with each recursion, if 0, no further recursion is done)
+ * @param {NetworkAnalysisData} returnData - object to store the results
+ * @param {Date} fromDate - start date for the analysis
+ * @param {Date} toDate - end date for the analysis
+ * @returns
+ */
 const buildNodeTree = async (
   cik: string,
-  stratum: number,
+  depthRemaining: number,
   returnData: NetworkAnalysisData,
   fromDate: Date,
   toDate: Date,
 ) => {
   // recursion break conditions (to prevent infinite loops)
-  if (stratum < 0) return; // max depth reached
+  if (depthRemaining < 0) return; // max depth reached
   const existingNode = returnData.nodes?.find((node) => node.cik === cik);
   if (existingNode) {
-    // if stratum of existing node is lower, update it -->  get always highest stratum
-    if (existingNode.stratum < stratum) existingNode.stratum = stratum;
+    // if depthRemaining of existing node is lower, update it -->  get always highest depthRemaining
+    if (existingNode.depthRemaining < depthRemaining) existingNode.depthRemaining = depthRemaining;
     return; // node already fetched -> skip further processing
   }
 
@@ -65,7 +78,7 @@ const buildNodeTree = async (
           ? nodeInfo.cikTicker
           : undefined,
     },
-    stratum,
+    depthRemaining: depthRemaining,
   });
 
   // get all edges for this node (run both queries (issuer, reporting owner) in parallel)
@@ -138,6 +151,7 @@ const buildNodeTree = async (
     ...(Array.isArray(filingsAsReportingOwner) ? filingsAsReportingOwner : []),
   ];
 
+  // store discovered ciks in set to avoid duplicates
   const discoveredCiks: Set<string> = new Set<string>();
 
   for (const filing of allRelevantFilings) {
@@ -160,7 +174,7 @@ const buildNodeTree = async (
     }
 
     if (!existingEdge) {
-      // handle relationType
+      // handle relationType --> convert boolean flags to human readable strings
       const relationTypes: string[] = [];
       if (filing.relationInformation.isDirector) relationTypes.push('Director');
       if (filing.relationInformation.isOfficer)
@@ -180,9 +194,15 @@ const buildNodeTree = async (
   }
 
   for (const discoveredCik of discoveredCiks)
-    await buildNodeTree(discoveredCik, stratum - 1, returnData, fromDate, toDate);
+    await buildNodeTree(discoveredCik, depthRemaining - 1, returnData, fromDate, toDate);
 };
 
+/**
+ * Execute the network analysis for the given input data
+ *
+ * @param {z.infer<typeof AnalysisSchema>} data - input data for the network analysis containing the cik, depth, from and to date
+ * @returns {Promise<NetworkAnalysisData>} - a promise that resolves to the network analysis data
+ */
 export const analyseNetwork = async (
   data: z.infer<typeof AnalysisSchema>,
 ): Promise<NetworkAnalysisData> => {
@@ -211,14 +231,14 @@ export const analyseNetwork = async (
       preparedInputs.toDate!,
     ); // using non-null assertion operator (!) as the values are validated/assured in authenticateAndHandleInputs
 
-    // Phase 2: Prune dongeling edges
+    // Phase 2: Prune dongeling edges (edges without nodes on both sides)
     returnData.edges = returnData.edges?.filter((edge) => {
       const issuerNode = returnData.nodes?.find((node) => node.cik === edge.issuerCik);
       const ownerNode = returnData.nodes?.find((node) => node.cik === edge.ownerCik);
       return issuerNode && ownerNode;
     });
   } catch (error) {
-    console.error(`Error in getEmbeddedDocumentContent: ${error}`);
+    console.error(`Error in analyseNetwork: ${error}`);
     return { error: 'Interner Serverfehler' };
   }
   return returnData;

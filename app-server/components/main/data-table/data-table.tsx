@@ -21,6 +21,9 @@ import {
 } from '@/components/ui/select';
 import { usePathname, useRouter } from 'next/navigation';
 
+/**
+ * The properties for the custom DataTable component (supporting server-side pagination).
+ */
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -29,6 +32,12 @@ interface DataTableProps<TData, TValue> {
   pageSize: number;
 }
 
+/**
+ * Renders a custom data table component with support server-side pagination and required ui components for navigation and changing page size.
+ *
+ * @param {DataTableProps<TData, TValue>} {columns, data, totalCount, currentPage, pageSize} - The data table properties defining table content and pagination.
+ * @returns {JSX.Element} - The renderer DataTable component.
+ */
 export function DataTable<TData, TValue>({
   columns,
   data,
@@ -49,15 +58,27 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
   });
 
+  /**
+   * Handles the page change event to navigate to the new page.
+   *
+   * @param {number} newPage - The new page number to navigate to.
+   * @returns {void}
+   */
   const handlePageChange = (newPage: number) => {
     const params = new URLSearchParams(window.location.search);
     params.set('page', newPage.toString());
     router.push(`${pathname}?${params.toString()}`);
   };
 
+  /**
+   * Handles the page size change event to set the new page size and navigate to the first page.
+   *
+   * @param {string} newPageSize - The new page size to set.
+   * @returns {void}
+   */
   const handlePageSizeChange = (newPageSize: string) => {
     const params = new URLSearchParams(window.location.search);
-    params.set('pageSize', newPageSize.toString());
+    params.set('pageSize', newPageSize);
     params.set('page', '1'); // Jump to first page when changing page size
     router.push(`${pathname}?${params.toString()}`);
   };

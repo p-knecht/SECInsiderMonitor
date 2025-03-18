@@ -11,9 +11,18 @@ import { useState, useEffect } from 'react';
 import { searchCiks } from '@/actions/main/filings/search-ciks';
 import { CikObject } from '@/data/cik';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { CikBadge } from '@/components/data-table/cik-badge';
+import { CikBadge } from '@/components/main/cik-badge';
 import { FormControl, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
+/**
+ * Renders a custom form field type for selecting one or multiple CIKs with live search to support the user.
+ *
+ * @param {{value: string[] | string, onChange: (value: string[] | string) => void}} field - The form field object containing the value and onChange function.
+ * @param {string} label - The label for the form field.
+ * @param {boolean} - Whether the form field is disabled. Defaults to false.
+ * @param {'knownIssuerCik' | 'knownReportingOwnerCik' | 'knownCik' | 'anyCik'} The type of CIK to limit the search to. Defaults to 'anyCik'.
+ * @returns {React.ReactNode} - The rendered CIK selector form field.
+ */
 export const CIKSelectorFormField = ({
   field,
   label,
@@ -39,10 +48,11 @@ export const CIKSelectorFormField = ({
       : [];
   const [open, setOpen] = useState(false);
 
+  // start search on cik filter change (after debounce)
   useEffect(() => {
-    if (typingTimeout) clearTimeout(typingTimeout);
+    if (typingTimeout) clearTimeout(typingTimeout); // clear previous timeout on every keypress if exists
     if (textFilter.trim() !== '') {
-      const timeout = setTimeout(() => performSearch(textFilter), 500);
+      const timeout = setTimeout(() => performSearch(textFilter), 500); // wait for user to stop typing before searching (debounce queries)
       setTypingTimeout(timeout);
     } else {
       setSearchResults([]);
@@ -50,10 +60,17 @@ export const CIKSelectorFormField = ({
     }
   }, [textFilter]);
 
+  /**
+   * Executes a search request on the backend to get CIKs and issuer/reporting owner names matching the query and adds them to the search results state.
+   *
+   * @param {string} query - The search query to perform.
+   * @returns {Promise<void>} - a promise resolving when the search results are fetched and set to state.
+   */
   const performSearch = async (query: string) => {
     query = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').trim();
     setIsLoading(true);
 
+    // build query type based on limitType to make sure we only search for the correct type of CIK if relevant
     let queryType: 'issuer' | 'reportingOwner' | undefined = undefined;
     if (limitType === 'knownIssuerCik') queryType = 'issuer';
     if (limitType === 'knownReportingOwnerCik') queryType = 'reportingOwner';
@@ -62,12 +79,19 @@ export const CIKSelectorFormField = ({
     setIsLoading(false);
   };
 
+  /**
+   * Adds a CIK to the selected CIK(s) and resets the search results and text filter.
+   *
+   * @param {string} value - The CIK to add to the selected CIK(s).
+   * @returns {void} - No return value.
+   */
   const addCik = (value: string) => {
     if (value.match(/^\d{10}$/)) {
       setTextFilter('');
       setSearchResults([]);
       setOpen(false);
       if (Array.isArray(field.value)) {
+        // if multiple CIKs are allowed, add to array of selected CIKs otherwise set the single CIK
         field.onChange([...selectedCiks, value]);
       } else {
         field.onChange(value);
@@ -75,6 +99,12 @@ export const CIKSelectorFormField = ({
     }
   };
 
+  /**
+   * Highlights the matched text in the search results (to allow user to see what part of the result matched the query).
+   *
+   * @param {string} text - The text to highlight.
+   * @returns {JSX.Element[]} - The text with highlighted matches.
+   */
   const highlightMatch = (text: string) => {
     if (!textFilter) return text;
     const regex = new RegExp(`(${textFilter.trim()})`, 'gi');

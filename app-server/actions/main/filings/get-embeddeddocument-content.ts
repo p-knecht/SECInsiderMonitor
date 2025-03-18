@@ -7,6 +7,12 @@ import { GetEmbeddedDocumentContentSchema } from '@/schemas';
 import mime from 'mime-types';
 import { Buffer } from 'buffer';
 
+/**
+ * Provides the content of an embedded document (e.g. a PDF file) that is part of a filing.
+ *
+ * @param {z.infer<typeof GetEmbeddedDocumentContentSchema>} data - input data to get embedded document content containing filingId and document sequence number
+ * @returns {Promise<{ fileName: string, content: string | Buffer<ArrayBuffer>, mimeType: string } | { error: string }>} - a promise that resolves with the document content, file name and MIME type or rejects with an error message
+ */
 export const getEmbeddedDocumentContent = async (
   data: z.infer<typeof GetEmbeddedDocumentContentSchema>,
 ) => {

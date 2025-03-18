@@ -1,7 +1,9 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ReactNode } from 'react';
 
-// code lists as specified by the SEC
+/**
+ * Dictionary for the transaction codes (according to SEC specifications)
+ */
 const transactionCodes: Record<string, string> = {
   A: 'A: Grant, award or other acquisition pursuant to Rule 16b-3(d)',
   C: 'C: Conversion of derivative security',
@@ -23,23 +25,38 @@ const transactionCodes: Record<string, string> = {
   Z: 'Z: Deposit into or withdrawal from voting trust',
 };
 
+/**
+ * Dictionary for the timeliness codes (according to SEC specifications)
+ */
 const timelinessCodes: Record<string, string> = {
   E: 'E: Early',
   L: 'L: Late',
   '-': 'On-time',
 };
 
+/**
+ * Dictionary for the acquired/disposed codes (according to SEC specifications)
+ */
 const acquiredDisposedCodes: Record<string, string> = {
   A: 'A: Acquired',
   D: 'D: Disposed',
 };
 
+/**
+ * Dictionary for the owner type codes (according to SEC specifications)
+ */
 const ownerTypeCodes: Record<string, string> = {
   D: 'D: Direct',
   I: 'I: Indirect',
 };
 
-// utility function to create a coded element with a tooltip
+/**
+ * Renders a tooltip with the description of a code of a coded element
+ *
+ * @param {string} code - the code of the coded element to be looked up in the dictionary
+ * @param {Record<string, string>} dictionary - the dictionary to look up the code in
+ * @returns {ReactNode} - the tooltip with the description of the code
+ */
 function createCodedElement(code: string, dictionary: Record<string, string>): ReactNode {
   return (
     <Tooltip>
@@ -55,7 +72,15 @@ function createCodedElement(code: string, dictionary: Record<string, string>): R
   );
 }
 
-// utility function to build the content of a field/cell
+/**
+ * Builds the content of a field in the filing table based on the object and the custom type. Contains the logic to handle special fields/cases of the SEC filing data structure.
+ *
+ * @param {any} obj - the (partial) object from SEC filing to be rendered
+ * @param {Array<{ id: string, text: string }>} footnotes - the footnotes to attach to the filing (might be used in this specific field)
+ * @param {string | null} customType - the custom type of the field (declares if it is a special field, e.g. transactionAmounts)
+ * @param {boolean} unnumberFootnotes - if true, footnotes will not be shown in a numbered way (used for footnotes not showing in context of the full filing)
+ * @returns {ReactNode} - the content of the field or parts of it
+ */
 export function buildFieldContent(
   obj: any,
   footnotes: { id: string; text: string }[] = [],
@@ -70,6 +95,8 @@ export function buildFieldContent(
     return <span className="font-bold text-gray-900">{obj}</span>;
 
   let value: string | number | Date | null | undefined | ReactNode = null;
+
+  // switch case for appropriate handling of custom type fields
   switch (customType) {
     case 'transactionTimeliness': // custom case for transactionTimeliness
       if (obj.value == '') obj.value = '-'; // if value is empty, set it to '-'
@@ -231,6 +258,7 @@ export function buildFieldContent(
   // lookup attached footnotes and format them
   const footnotesMap = new Map(footnotes.map(({ id, text }) => [id, text]));
 
+  // if the object has footnotes, attach them to the field and add a tooltip to show the footnote text
   const footNotes = obj.footnoteId?.map(({ id }: { id: string }) => {
     const footnoteText = footnotesMap.get(id) || 'Fehler: Verweis konnte nicht aufgelöst werden.';
     return (

@@ -7,9 +7,16 @@ import { PencilIcon, CheckIcon, ExternalLinkIcon, ClipboardIcon } from 'lucide-r
 import Link from 'next/link';
 import EditUserContent from './edit-user-content';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { SessionProvider, useSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { FormError } from '@/components/form-error';
 
+/**
+ * Renders a button to open a sheet (modal) containing a form to edit a user's details.
+ *
+ * @param {string} userId - The user ID of the user to edit
+ * @param {string} userEmail - The email address of the user to edit
+ * @returns {JSX.Element} - The rendered EditUserButton component
+ */
 export default function EditUserButton({
   userId,
   userEmail,
@@ -19,13 +26,21 @@ export default function EditUserButton({
 }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // direct link to the user's edit page
   const directLink = `users/${userId}`;
 
+  /**
+   * Copies the direct link to the clipboard and sets the copied state to true for 2 seconds.
+   *
+   * @returns {Promise<void>} - A promise that resolves after the link has been copied
+   */
   const handleCopy = async () => {
     try {
+      // copy the direct link to the clipboard
       await navigator.clipboard.writeText(`https://${process.env.SERVER_FQDN}/admin/${directLink}`);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), 2000); // reset copied state after 2 seconds
     } catch (err) {
       console.error('Fehler beim Kopieren', err);
     }

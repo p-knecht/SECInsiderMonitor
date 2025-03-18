@@ -4,12 +4,17 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { useSession } from 'next-auth/react';
 import { SetUserPasswordForm } from './set-user-password';
-import { FormError } from '@/components/form-error';
 import { SetUserRoleForm } from './set-user-role';
 import { DeleteUserForm } from './delete-user';
 
+/**
+ * Renders a div containing an accordion with options to edit a user's password, role or delete the user. Usable on dedicated user page or in user edit sheet
+ * @param {string} userId - The user ID of the user to edit
+ * @param {'single' | 'multiple'} displayType - The type of display to use for the accordion (single or multiple) --> single for user edit sheet, multiple for dedicated user page
+ * @param {() => void} onClose - The optional callback function to use to close the dialog
+ * @returns
+ */
 export default function EditUserContent({
   userId,
   displayType,
@@ -19,8 +24,6 @@ export default function EditUserContent({
   displayType: 'single' | 'multiple';
   onClose?: () => void;
 }) {
-  // only show edit options if user id is not same as current user
-
   return (
     <div className="pl-4 pr-4 rounded-lg border bg-white">
       <Accordion type={displayType} collapsible>

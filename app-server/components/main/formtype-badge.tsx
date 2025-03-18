@@ -1,6 +1,9 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 
+/**
+ * Definitions for different form types. Includes a description, background color, and font color for the badges of each form type.
+ */
 const formTypeDefinitions: Record<
   string,
   { description: string; bgColor: string; fontColor: string }
@@ -23,6 +26,13 @@ const formTypeDefinitions: Record<
   default: { description: 'Unknown Form Type', bgColor: 'bg-gray-200', fontColor: 'text-black' },
 };
 
+/**
+ * Renders a badge component for a given form type.
+ *
+ * @param {string} formtype - The form type to render the badge for.
+ * @param {string} tooltipLocation - The location of the tooltip. Defaults to 'top'.
+ * @returns {React.ReactNode} - The rendered badge component.
+ */
 export const FormtypeBadge = ({
   formtype,
   tooltipLocation,

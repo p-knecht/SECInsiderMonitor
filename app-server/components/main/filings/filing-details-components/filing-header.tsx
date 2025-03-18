@@ -6,6 +6,12 @@ import { Building2, CheckIcon, Network, XIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useRouter } from 'next/navigation';
 
+/**
+ * Renders a component that displays the main information from the header of the filing like issuer information, additional filing information ("flags") and reporting owner information.
+ *
+ * @param {OwnershipFiling} filingData - The filing data to display
+ * @returns {JSX.Element} - The component that displays the main information from the header of the filing
+ */
 export default function FilingHeader({ filingData }: { filingData: OwnershipFiling }) {
   const { formData } = filingData;
   const router = useRouter();

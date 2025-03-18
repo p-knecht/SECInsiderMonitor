@@ -16,15 +16,27 @@ import {
 } from 'recharts';
 import { useRouter } from 'next/navigation';
 
+/**
+ * Renders a card with a bar chart showing the filing trend of the last 30 days (per filing type).
+ *
+ * @returns {JSX.Element} - The renderer FilingTrend component.
+ */
 export const FilingTrend = () => {
   const [trendData, setTrendData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
+    /**
+     * Sends a request to the server to get the filing trend data for the last 30 days.
+     *
+     * @returns {Promise<void>} - The promise which resolves when the data is fetched.
+     */
     async function fetchTrend() {
       setLoading(true);
       const data = await getFilingTrend();
+
+      // if no data is available, stop loading
       if (!data || !Array.isArray(data)) {
         setLoading(false);
         return;
@@ -35,12 +47,11 @@ export const FilingTrend = () => {
         const date = new Date();
         date.setDate(date.getDate() - i);
         return date.toISOString().split('T')[0];
-      }).reverse(); // Neueste Daten zuerst
+      }).reverse();
 
       // group and add received data by date and form type
       const groupedData: { [date: string]: { [formType: string]: number } } = {};
       last30Days.forEach((date) => (groupedData[date] = { 'Form 3': 0, 'Form 4': 0, 'Form 5': 0 }));
-
       data.forEach(({ _id, count }) => {
         const formattedDate = new Date(_id.date?.$date || _id.date).toISOString().split('T')[0];
         const formType = `Form ${_id.formType}`;
@@ -64,6 +75,12 @@ export const FilingTrend = () => {
     fetchTrend();
   }, []);
 
+  /**
+   * Auxiliary function to handle click events on the chart and redirect to the filings page.
+   *
+   * @param {event} event - The event object containing the clicked label
+   * @returns {void}
+   */
   const handleChartClick = (event: any) => {
     if (event && event.activeLabel) {
       const date = event.activeLabel;

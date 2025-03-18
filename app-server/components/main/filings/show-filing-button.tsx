@@ -8,11 +8,22 @@ import Link from 'next/link';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import ShowFilingContent from '@/components/main/filings/filing-content';
 
+/**
+ * Renders a button to open a sheet (modal) containing filing details
+ *
+ * @param {string} filingId - The id of the filing to show
+ * @returns {JSX.Element} The ShowFilingButton component
+ */
 export default function ShowFilingButton({ filingId }: { filingId: string }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const directLink = `filings/${filingId}`;
 
+  /**
+   * Copies the direct link to the clipboard and sets the copied state to true for 2 seconds.
+   *
+   * @returns {Promise<void>} - The promise that resolves when the link is copied
+   */
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(`https://${process.env.SERVER_FQDN}/admin/${directLink}`);

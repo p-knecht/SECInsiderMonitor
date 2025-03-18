@@ -4,11 +4,14 @@ import { Badge } from '@/components/ui/badge';
 import { UserRole } from '@prisma/client';
 import { ColumnDef } from '@tanstack/react-table';
 import { CircleCheckIcon, CircleXIcon } from 'lucide-react';
-import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header';
+import { DataTableColumnHeader } from '@/components/main/data-table/data-table-column-header';
 import EditUserButton from '@/components/main/admin/users/edit-user-button';
 
+/**
+ * Defines the data for the user table columns.
+ */
 export interface UserColumn {
-  // not using User from prisma/client as only a subset of fields is needed
+  // not using user from prisma/client as only a subset of fields is needed
   createdAt: Date;
   email: string | null;
   emailVerified: Boolean | null;
@@ -17,6 +20,9 @@ export interface UserColumn {
   id: string;
 }
 
+/**
+ * Defines the column keys, headers and cell contents for the user table.
+ */
 export const columns: ColumnDef<UserColumn>[] = [
   {
     accessorKey: 'email',

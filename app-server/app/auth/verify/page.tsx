@@ -1,7 +1,12 @@
 import { CardWrapper } from '@/components/auth/card-wrapper';
-import { VerifyForm } from '@/components/auth/verify-form';
+import { VerifyContent } from '@/components/auth/verify-content';
 import { Suspense } from 'react';
 
+/**
+ * Renders the content of the verify account page (allows to verify the account with a verification token).
+ *
+ * @returns {JSX.Element} - The verify account page layout.
+ */
 export default function VerifyPage() {
   return (
     <CardWrapper
@@ -11,7 +16,7 @@ export default function VerifyPage() {
       footerLinkHref="/auth/login"
     >
       <Suspense>
-        <VerifyForm />
+        <VerifyContent />
       </Suspense>
     </CardWrapper>
   );

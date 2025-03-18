@@ -1,15 +1,18 @@
-import { RoleGate } from '@/components/auth/role-gate';
+import { RoleGate } from '@/components/role-gate';
 import { AppMainContent } from '@/components/main/app-maincontent';
 import { UserRole } from '@prisma/client';
-import { DataTable } from '@/components/data-table/data-table';
+import { DataTable } from '@/components/main/data-table/data-table';
 import { columns, UserColumn } from './columns';
 import { dbconnector } from '@/lib/dbconnector';
 import { buildFilter } from '@/lib/tablefilter';
-import { currentRole } from '@/lib/auth';
 import { FormError } from '@/components/form-error';
 import { userTableParamatersSchema } from '@/schemas';
 import { SessionProvider } from 'next-auth/react';
+import { auth } from '@/auth';
 
+/**
+ * Defines the available search parameters for the user table.
+ */
 interface UsersPageSearchParams {
   page?: string;
   pageSize?: string;
@@ -18,10 +21,19 @@ interface UsersPageSearchParams {
   [key: string]: string | string[] | undefined;
 }
 
+/**
+ * Wraps the UserPageSearchParams in a Promise to allow for async loading of this page
+ */
 interface UsersPageProps {
   searchParams: Promise<UsersPageSearchParams>;
 }
 
+/**
+ * Renders the main content of the user table page
+ *
+ * @param {UsersPageProps} { searchParams: searchParams } - The search parameters for the user table
+ * @returns {JSX.Element} - The user table page layout containing an overview of all users.
+ */
 export default async function UsersPage({ searchParams: searchParams }: UsersPageProps) {
   // default values
   let totalCount = 0;
@@ -31,7 +43,7 @@ export default async function UsersPage({ searchParams: searchParams }: UsersPag
   let parsingError = '';
 
   // only process request if user is admin
-  if ((await currentRole()) == UserRole.admin) {
+  if ((await auth())?.user?.role == UserRole.admin) {
     // Parse search parameters to prevent malicious input
     const parsedParams = userTableParamatersSchema.safeParse(await searchParams);
     let validParams: UsersPageSearchParams = {};
@@ -65,9 +77,10 @@ export default async function UsersPage({ searchParams: searchParams }: UsersPag
     // Handle filtering parameters
     const filter = buildFilter(validParams, 'user', false);
 
+    // Fetch count of all users that match the filter for pagination
     totalCount = await dbconnector.user.count({ where: filter });
 
-    // if page is out of bounds, set it to the last page
+    // if requested page is out of bounds, set it to the last page
     if (page > Math.ceil(totalCount / pageSize)) {
       page = Math.ceil(totalCount / pageSize);
     }

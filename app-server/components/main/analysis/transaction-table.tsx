@@ -11,17 +11,23 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Transaction } from '@/actions/main/analysis/analyse-company';
 import { buildFieldContent } from '../filings/filing-details-components/filing-table-content';
-import { CikBadge } from '@/components/data-table/cik-badge';
+import { CikBadge } from '@/components/main/cik-badge';
 import { TooltipProvider } from '@radix-ui/react-tooltip';
 import ShowFilingButton from '../filings/show-filing-button';
 import { CheckIcon, XIcon } from 'lucide-react';
 
+/**
+ * The properties for the TransactionTable component.
+ */
 interface TransactionTableProps {
   transactions: Transaction[];
   onDateClick: (date: Date | null) => void;
   activeDate: Date | null;
 }
 
+/**
+ * The columns for the TransactionTable component containing the accessor key, header, and cell renderer for each column.
+ */
 const columns: ColumnDef<Transaction>[] = [
   {
     accessorKey: 'transactionDate',
@@ -126,6 +132,12 @@ const columns: ColumnDef<Transaction>[] = [
   },
 ];
 
+/**
+ * Renders a table with transactions for a company in the analysed time frame (matching to the stock chart).
+ *
+ * @param {TransactionTableProps} { transactions, onDateClick, activeDate } - The properties for the TransactionTable component containing an array of transactions, a callback function to handle date clicks, and the currently active date.
+ * @returns {React.ReactNode} - The rendered TransactionTable component
+ */
 export function TransactionTable({
   transactions,
   onDateClick,
@@ -141,12 +153,14 @@ export function TransactionTable({
   const rowRefs = useRef<Map<number, HTMLTableRowElement>>(new Map());
   const [disableScroll, setDisableScroll] = useState(false);
 
+  // scroll to the active row when the active date changes
   useEffect(() => {
     if (!disableScroll && activeDate && tableContainerRef.current) {
       requestAnimationFrame(() => {
-        const activeRow = rowRefs.current.get(activeDate.getTime());
+        const activeRow = rowRefs.current.get(activeDate.getTime()); // get the row with the active date
         if (activeRow) {
           activeRow.scrollIntoView({
+            // scroll the active row into view
             behavior: 'smooth',
             block: 'center',
           });
@@ -157,73 +171,67 @@ export function TransactionTable({
   }, [activeDate]);
 
   return (
-    <div className="p-4 border rounded-lg shadow">
-      <h2 className="text-lg font-semibold mb-4">Transaction History</h2>
-      <TooltipProvider>
-        <div ref={tableContainerRef} className="relative flex flex-col h-96 overflow-y-auto border">
-          <Table className="text-center w-full">
-            <TableHeader className="sticky top-0 bg-white shadow-md z-20">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead
-                      key={header.id}
-                      className="text-center p-2 bg-white whitespace-nowrap"
-                    >
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
+    <TooltipProvider>
+      <div ref={tableContainerRef} className="relative flex flex-col h-96 overflow-y-auto border">
+        <Table className="text-center w-full">
+          <TableHeader className="sticky top-0 bg-white shadow-md z-20">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className="text-center p-2 bg-white whitespace-nowrap">
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
 
-            <TableBody>
-              {table.getRowModel().rows.length > 0 ? (
-                table.getRowModel().rows.map((row) => {
-                  const transactionTime = row.original.transactionDate.value.getTime();
-                  const isActiveRow = activeDate && transactionTime === activeDate.getTime();
+          <TableBody>
+            {table.getRowModel().rows.length > 0 ? (
+              table.getRowModel().rows.map((row) => {
+                const transactionTime = row.original.transactionDate.value.getTime();
+                const isActiveRow = activeDate && transactionTime === activeDate.getTime();
 
-                  return (
-                    <TableRow
-                      key={row.id}
-                      ref={(el) => {
-                        if (el && !rowRefs.current.has(transactionTime)) {
-                          rowRefs.current.set(transactionTime, el); // set the row ref to the first row with this date
-                        }
-                      }}
-                      className={`cursor-pointer transition-colors ${
-                        isActiveRow ? 'bg-amber-50 hover:bg-amber-100' : ''
-                      }`} // active rows should be highlighted
-                      onClick={() => {
-                        setDisableScroll(true); // disable scroll when clicking on a row (auto scrolling should only happen by clicks on the chart)
-                        onDateClick(
-                          isActiveRow ? null : new Date(row.original.transactionDate.value), // if the row is already active, deactivate it otherwise activate it
-                        );
-                      }}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell
-                          key={cell.id}
-                          className="p-2 text-sm break-words whitespace-nowrap"
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  );
-                })
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="p-4 text-gray-500">
-                    Keine Transaktionen als Issuer für das ausgewählte Unternehmen gefunden.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </TooltipProvider>
-    </div>
+                return (
+                  <TableRow
+                    key={row.id}
+                    ref={(el) => {
+                      if (el && !rowRefs.current.has(transactionTime)) {
+                        rowRefs.current.set(transactionTime, el); // set the row ref to the first row with this date
+                      }
+                    }}
+                    className={`cursor-pointer transition-colors ${
+                      isActiveRow ? 'bg-amber-50 hover:bg-amber-100' : ''
+                    }`} // active rows should be highlighted
+                    onClick={() => {
+                      setDisableScroll(true); // disable scroll when clicking on a row (auto scrolling should only happen by clicks on the chart)
+                      onDateClick(
+                        isActiveRow ? null : new Date(row.original.transactionDate.value), // if the row is already active, deactivate it otherwise activate it
+                      );
+                    }}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        className="p-2 text-sm break-words whitespace-nowrap"
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="p-4 text-gray-500">
+                  Keine Transaktionen als Issuer für das ausgewählte Unternehmen gefunden.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </TooltipProvider>
   );
 }
 

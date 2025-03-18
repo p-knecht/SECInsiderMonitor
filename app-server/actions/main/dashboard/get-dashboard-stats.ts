@@ -3,12 +3,21 @@
 import { auth } from '@/auth';
 import { aggregateRawOwnershipFilingsWithDecode } from '@/lib/dbconnector';
 
+/**
+ * Fetches the filing counts for the last day, week, month and year
+ * @returns {Promise<Record<string, any> | null>} - A promise that resolves to the filing counts for the last day, week, month and year or null if an error occurred
+ */
 export const getFilingCounts = async () => {
   // check if user is authenticated
   const session = await auth();
   if (!session?.user.id) return null;
 
-  // create time filter for aggregation pipeline --> always go back to the beginning of the day (00:00) to ensure consistent results
+  /**
+   * reusable time filter for aggregation pipeline below --> always go back to the beginning of the day (00:00) to ensure consistent results
+   * @param {string} name - The name of the field to create
+   * @param {number} days - The number of days to go back
+   * @returns {Record<string, any>} - The time filter
+   */
   const createTimeFilter = (name: string, days: number) => ({
     [name]: {
       $sum: {
@@ -47,6 +56,7 @@ export const getFilingCounts = async () => {
   });
 
   try {
+    // query database to get filing counts for the last day, week, month and year
     const summary = await aggregateRawOwnershipFilingsWithDecode({
       pipeline: [
         {
@@ -68,12 +78,18 @@ export const getFilingCounts = async () => {
   }
 };
 
+/**
+ * Gets the filing trend for the last 30 days
+ *
+ * @returns {Promise<Record<string, any> | null>} - A promise that resolves to the filing trend for the last 30 days or null if an error occurred
+ */
 export const getFilingTrend = async () => {
   // check if user is authenticated
   const session = await auth();
   if (!session?.user.id) return null;
 
   try {
+    // query database to get filing trend for the last 30 days
     const result = await aggregateRawOwnershipFilingsWithDecode({
       pipeline: [
         {
@@ -115,6 +131,11 @@ export const getFilingTrend = async () => {
   }
 };
 
+/**
+ * Gets the top 10 issuers by number of filings in the last 30 days
+ *
+ * @returns {Promise<Record<string, any> | null>} - A promise that resolves to the top 10 issuers or null if an error occurred
+ */
 export const getTopIssuer = async () => {
   // check if user is authenticated
   const session = await auth();
@@ -124,6 +145,7 @@ export const getTopIssuer = async () => {
   const TOP_ISSUER_COUNT = 10; // show top 10 issuers
 
   try {
+    // query database to get top issuers by number of filings in the last 30 days
     const result = await aggregateRawOwnershipFilingsWithDecode({
       pipeline: [
         // consider filings from the defined lookback period
@@ -164,6 +186,11 @@ export const getTopIssuer = async () => {
   }
 };
 
+/**
+ * Gets the top 10 reporting owners by number of filings in the last 30 days
+ *
+ * @returns {Promise<Record<string, any> | null>} - A promise that resolves to the top 10 reporting owners or null if an error occurred
+ */
 export const getTopReportingOwner = async () => {
   // check if user is authenticated
   const session = await auth();
@@ -173,6 +200,7 @@ export const getTopReportingOwner = async () => {
   const TOP_REPORTING_OWNER_COUNT = 10; // show top 10 reporting owners
 
   try {
+    // query database to get top reporting owners by number of filings in the last 30 days
     const result = await aggregateRawOwnershipFilingsWithDecode({
       pipeline: [
         // consider filings from the defined lookback period

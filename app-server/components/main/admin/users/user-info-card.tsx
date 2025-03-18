@@ -2,7 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { User } from '@prisma/client';
 
+/**
+ * Renders a card containing information about a user (email, role, created/updated at, last login)
+ *
+ * @param {User} user - The user object to display information for
+ * @returns {JSX.Element} - The rendered UserInfoCard component
+ */
 export default function UserInfoCard({ user }: { user: User }) {
+  // definition of items to display in the card
   const infoItems = [
     { label: 'E-Mail:', value: user.email },
     {

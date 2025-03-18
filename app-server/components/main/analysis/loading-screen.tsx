@@ -2,8 +2,15 @@
 
 import { PulseLoader } from 'react-spinners';
 
+/**
+ * Renders a loading screen for the analysis pages. This screen is needed as analysis can take a while to load.
+ *
+ * @param {Boolean} isLoading - Whether the data is still loading
+ * @returns {React.ReactNode} - The rendered loading screen component
+ */
 export function AnalysisLoadingScreen({ isLoading }: { isLoading: Boolean }): React.ReactNode {
-  if (!isLoading) return null;
+  if (!isLoading)
+    return null; // don't show loading screen if data is already loaded
   else
     return (
       <div className="flex flex-col items-center justify-center flex-grow py-5 text-gray-700">

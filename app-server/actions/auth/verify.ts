@@ -1,10 +1,16 @@
 'use server';
 
 import { dbconnector } from '@/lib/dbconnector';
-import { getUserByEmail } from '@/data/user';
-import { getEmailVerificationTokenByToken } from '@/data/email-verification-token';
 import { z } from 'zod';
+import { getAuthObjectByEmail, getAuthObjectByKey } from '@/data/auth-object';
+import { EmailVerificationToken, User } from '@prisma/client';
 
+/**
+ * Verifies the email of a user using a provided verification token
+ *
+ * @param {string} token - The registration token to verify email
+ * @returns {Promise<{error: string}> | {success: string}} - A promise that resolves to an object with an error message or a success message
+ */
 export const verifyToken = async (token: string) => {
   // revalidate received (unsafe) values from client
   const validatedData = z.string().uuid().safeParse(token);
@@ -12,9 +18,11 @@ export const verifyToken = async (token: string) => {
     return { error: 'Ungültige Daten' };
   }
 
-  const tokenObject = await getEmailVerificationTokenByToken(validatedData.data);
-
   // check if token exists
+  const tokenObject = (await getAuthObjectByKey(
+    'emailVerificationToken',
+    validatedData.data,
+  )) as EmailVerificationToken;
   if (!tokenObject) return { error: 'Verifizierungscode ist ungültig' };
 
   // check if token is expired
@@ -23,9 +31,8 @@ export const verifyToken = async (token: string) => {
     return { error: 'Verifizierungscode ist abgelaufen' };
   }
 
-  const user = await getUserByEmail(tokenObject.email);
-
   // check if user exists
+  const user = (await getAuthObjectByEmail('user', tokenObject.email)) as User;
   if (!user) {
     await dbconnector.emailVerificationToken.delete({ where: { id: tokenObject.id } });
     return { error: 'Verknüpfter Benutzer existiert nicht' };

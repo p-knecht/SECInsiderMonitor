@@ -1,10 +1,20 @@
 import * as z from 'zod';
 import { UserRole } from '@prisma/client';
 
+/*//
+// This file contains the schemas used to validate the requests form the clients (especially requests to Server Actions to prevent malicious or malformed requests)
+//*/
+
+/**
+ * Schema used to validate request when deleting the own user account
+ */
 export const DeleteAccountSchema = z.object({
   password: z.string().min(1, 'Bitte aktuelles Passwort eingeben'),
 });
 
+/**
+ * Schema used to validate request when sending a password reset request
+ */
 export const ForgotPasswordSchema = z.object({
   email: z
     .string()
@@ -12,6 +22,9 @@ export const ForgotPasswordSchema = z.object({
     .transform((email) => email.toLowerCase()),
 });
 
+/**
+ * Schema used to validate request  when setting a new password for a user (as admin)
+ */
 export const SetUserPasswordSchema = z
   .object({
     userId: z.string(),
@@ -23,6 +36,9 @@ export const SetUserPasswordSchema = z
     path: ['confirmPassword'],
   });
 
+/**
+ * Schema used to validate request when setting a new role for a user (as admin)
+ */
 export const SetUserRoleSchema = z.object({
   userId: z.string(),
   role: z.nativeEnum(UserRole, {
@@ -30,10 +46,16 @@ export const SetUserRoleSchema = z.object({
   }),
 });
 
+/**
+ * Schema used to validate request when deleting a user (as admin)
+ */
 export const DeleteUserSchema = z.object({
   userId: z.string(),
 });
 
+/**
+ * Schema used to validate request when changing the own password
+ */
 export const ChangePasswordSchema = z
   .object({
     oldPassword: z.string().min(1, 'Bitte aktuelles Passwort eingeben'),
@@ -45,6 +67,9 @@ export const ChangePasswordSchema = z
     path: ['confirmPassword'],
   });
 
+/**
+ * Schema used to validate request when resetting the own password using a password reset token
+ */
 export const ResetPasswordSchema = z
   .object({
     token: z.string().uuid('Ungültiger Passwort-Reset-Token'),
@@ -56,6 +81,9 @@ export const ResetPasswordSchema = z
     path: ['confirmPassword'],
   });
 
+/**
+ * Schema used to validate request when logging in
+ */
 export const LoginFormSchema = z.object({
   email: z
     .string()
@@ -64,6 +92,9 @@ export const LoginFormSchema = z.object({
   password: z.string().min(1, 'Bitte Passwort eingeben'),
 });
 
+/**
+ * Schema used to validate request when registering a new user
+ */
 export const RegisterFormSchema = z
   .object({
     email: z
@@ -78,9 +109,12 @@ export const RegisterFormSchema = z
     path: ['confirmPassword'],
   });
 
-// simplified date regex (days) for table filter
+// simplified date regex (days) used for table filters
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
+/**
+ * Schema used to validate request when loading a page of the user table (with potential sorting and filtering)
+ */
 export const userTableParamatersSchema = z
   .object({
     page: z.string().regex(/^\d+$/, 'Page muss eine Zahl sein').optional(),
@@ -111,6 +145,9 @@ export const userTableParamatersSchema = z
   })
   .strict();
 
+/**
+ * Schema used to validate request when loading a page of the filings table (with potential sorting and filtering)
+ */
 export const filingsTableParamatersSchema = z
   .object({
     page: z.string().regex(/^\d+$/, 'Page muss eine Zahl sein').optional(),
@@ -144,16 +181,25 @@ export const filingsTableParamatersSchema = z
   })
   .strict();
 
+/**
+ * Schema used to validate request when searching for CIKs (with a search string)
+ */
 export const SearchCiksSchema = z.object({
   searchString: z.string(),
   limit: z.number().int().positive(),
   limitType: z.enum(['issuer', 'reportingOwner']).optional(),
 });
 
+/**
+ * Schema used to validate request when searching for specific CIK (--> lookup)
+ */
 export const LookupCikSchema = z.object({
   cik: z.string().regex(/^\d{10}$/, 'Ungültiges CIK-Format'),
 });
 
+/**
+ * Schema used to validate request when asking for a company or network analysis
+ */
 export const AnalysisSchema = z
   .object({
     cik: z.string().regex(/^\d{10}$/, 'Ungültige Entität'),
@@ -169,20 +215,32 @@ export const AnalysisSchema = z
   })
   .strict();
 
+/**
+ * Schema used to validate request when asking for a specific filing
+ */
 export const GetFilingSchema = z.object({
   filingId: z.string().regex(/^\d{10}-\d{2}-\d{6}$/, 'Ungültige filingId'),
 });
 
+/**
+ * Schema used to validate request when asking for the content of an embedded document
+ */
 export const GetEmbeddedDocumentContentSchema = z.object({
   filingId: z.string().regex(/^\d{10}-\d{2}-\d{6}$/, 'Ungültige filingId'),
   sequence: z.number().int().positive(),
 });
 
+/**
+ * Schema used to validate the name of a datafetcher-logfile
+ */
 export const LogfileSchema = z
   .string()
   .trim()
   .regex(/^datafetcher-\d{4}-\d{2}-\d{2}\.log$/, 'Ungültiges Logfile-Format');
 
+/**
+ * Schema used to validate request when creating a new notification subscription
+ */
 export const NotificationSubscriptionSchema = z
   .object({
     description: z.string().min(1, 'Bitte Beschreibung erfassen'),
@@ -198,6 +256,9 @@ export const NotificationSubscriptionSchema = z
     },
   );
 
+/**
+ * Schema used to validate request when deleting a notification subscription
+ */
 export const DeleteNotificationSubscriptionSchema = z.object({
   subscriptionId: z.string(),
 });

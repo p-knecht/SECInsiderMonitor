@@ -2,6 +2,13 @@
 import { OwnershipFiling } from '@prisma/client';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { buildFieldContent } from '@/components/main/filings/filing-details-components/filing-table-content';
+
+/**
+ * Renders a component that displays the non-derivative instruments (transactions and holdings) of the filing.
+ *
+ * @param {OwnershipFiling} filingData - The filing data to display the non-derivative instruments for.
+ * @returns {JSX.Element} - The component that displays the non-derivative instruments (transactions and holdings) of the filing.
+ */
 export default function FilingNonDerivatives({ filingData }: { filingData: OwnershipFiling }) {
   // Check if there is any non derivative data to display
   if (

@@ -5,8 +5,15 @@ import bcryptjs from 'bcryptjs';
 import { dbconnector } from '@/lib/dbconnector';
 import { auth } from '@/auth';
 import { DeleteAccountSchema } from '@/schemas';
-import { getUserById } from '@/data/user';
+import { getAuthObjectByKey } from '@/data/auth-object';
+import { User } from '@prisma/client';
 
+/**
+ * Function to delete the account of the current user
+ *
+ * @param {z.infer<typeof DeleteAccountSchema>} data - The data to delete the account containing the password of the user
+ * @returns {Promise<{error: string}> | {success: string}} - A promise that resolves to an object with an error message or a success message
+ */
 export const deleteAccount = async (data: z.infer<typeof DeleteAccountSchema>) => {
   // revalidate received (unsafe) values from client
   const validatedData = DeleteAccountSchema.safeParse(data);
@@ -21,7 +28,7 @@ export const deleteAccount = async (data: z.infer<typeof DeleteAccountSchema>) =
   }
 
   // get user by id
-  const user = await getUserById(session.user.id);
+  const user = (await getAuthObjectByKey('user', session.user.id)) as User;
   if (!user) {
     return { error: 'Benutzer existiert nicht' };
   }
@@ -41,6 +48,9 @@ export const deleteAccount = async (data: z.infer<typeof DeleteAccountSchema>) =
 
   // delete user from database
   await dbconnector.user.delete({ where: { id: user.id } });
+
+  // delete notification subscriptions of user
+  await dbconnector.notificationSubscription.deleteMany({ where: { subscriber: user.id } });
 
   return { success: 'Konto wurde gelöscht' };
 };

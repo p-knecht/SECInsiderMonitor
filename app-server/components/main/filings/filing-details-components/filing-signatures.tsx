@@ -2,6 +2,12 @@
 
 import { OwnershipFiling } from '@prisma/client';
 
+/**
+ * Renders a component that displays the signatures of the owners of the filing.
+ *
+ * @param {OwnershipFiling} filingData - The filing data to display the signatures for.
+ * @returns {JSX.Element} - The component that displays the signatures of the owners of the filing.
+ */
 export default function FilingSignatures({ filingData }: { filingData: OwnershipFiling }) {
   if (!filingData.formData?.ownerSignature || filingData.formData?.ownerSignature.length === 0) {
     return (

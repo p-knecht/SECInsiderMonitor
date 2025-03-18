@@ -48,11 +48,12 @@ export async function initializeDatabaseIndexes() {
       }
     }
     console.log('Database indexes initialized successfully');
+
     await mongoClient.close();
   } catch (error) {
     console.error(`Error initializing database indexes: ${error}`);
   }
 }
 
-// run the initialization function
+// start the database indexes initialization process
 initializeDatabaseIndexes();

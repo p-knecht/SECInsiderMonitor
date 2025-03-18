@@ -5,15 +5,25 @@ import { getTopIssuer } from '@/actions/main/dashboard/get-dashboard-stats';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, YAxis } from 'recharts';
-import { calculateCikBadgeStyle } from '@/components/data-table/cik-badge';
+import { calculateCikBadgeStyle } from '@/components/main/cik-badge';
 import { useRouter } from 'next/navigation';
 
+/**
+ * Renders a card with a bar chart showing the top 10 issuers of the last 30 days.
+ *
+ * @returns {JSX.Element} - The renderer TopIssuers component.
+ */
 export const TopIssuers = () => {
   const [stats, setStats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
+    /**
+     * Sends a request to the server to get the top issuer data for the last 30 days.
+     *
+     * @returns {Promise<void>} - The promise which resolves when the data is fetched.
+     */
     async function fetchStats() {
       const data = await getTopIssuer();
       if (data && Array.isArray(data)) {
@@ -24,13 +34,17 @@ export const TopIssuers = () => {
     fetchStats();
   }, []);
 
-  // handle click on chart to navigate to filings page
+  /**
+   * Handles the click on the chart to navigate to the filings page.
+   *
+   * @param {any} event - The event object containing the clicked payload.
+   * @returns {void}
+   */
   const handleChartClick = (event: any) => {
     if (event && event.activePayload?.[0]?.payload) {
       const { cik } = event.activePayload[0].payload;
       const pastDate = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]; // 30 days ago
-
-      router.push(`/filings?filter[issuer]=${cik}&filter[periodOfReport][from]=${pastDate}`);
+      router.push(`/filings?filter[issuer]=${cik}&filter[periodOfReport][from]=${pastDate}`); // navigate to filings page
     }
   };
 

@@ -12,18 +12,28 @@ import { loadLogfile } from '@/actions/main/admin/datafetcher/load-logfile';
 import { Logfile } from '@/app/(internal)/admin/datafetcher/page';
 import { AlertTriangleIcon, CircleCheckIcon, FileQuestionIcon, XCircleIcon } from 'lucide-react';
 
+/**
+ * Renders a component which shows a list of available logfiles and their states (error, warn, ok) in an accordion menu. When a logfile is clicked, the content of the logfile is (lazy) loaded and displayed.
+ * @param {Logfile[]} { logfiles } - contains an array of logfiles available to display
+ * @returns {JSX.Element} - The rendered LogfileList component
+ */
 export default function LogfileList({ logfiles }: { logfiles: Logfile[] }) {
-  const [logContents, setLogContents] = useState<{ [key: string]: string }>({});
-  const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
+  const [logContents, setLogContents] = useState<{ [key: string]: string }>({}); // store log file content as soon as it is loaded
+  const [loading, setLoading] = useState<{ [key: string]: boolean }>({}); // store loading state of log files
   const [isPending, startTransition] = useTransition();
 
-  // lazy load logfiles --> only load when user clicks on the file
+  /**
+   * Checks if the logfile is already loaded or currently loading. If not, the logfile content is loaded from the server and stored in the state. (lazy load logfiles --> only load log file content when user clicks on the file)
+   *
+   * @param {string} logfile - The logfile to be loaded
+   * @returns {void}
+   */
   function handleLoadLog(logfile: string) {
     if (logContents[logfile] || loading[logfile]) return; // file already loaded or loading
     setLoading((prev) => ({ ...prev, [logfile]: true }));
 
     startTransition(async () => {
-      const content = await loadLogfile(logfile);
+      const content = await loadLogfile(logfile); // load log file content from server
       setLogContents((prev) => ({ ...prev, [logfile]: content }));
       setLoading((prev) => ({ ...prev, [logfile]: false }));
     });

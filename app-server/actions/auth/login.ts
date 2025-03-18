@@ -1,14 +1,20 @@
 'use server';
 
 import * as z from 'zod';
-
 import { LoginFormSchema } from '@/schemas';
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
-import { getUserByEmail } from '@/data/user';
 import { generateVerificationToken } from '@/lib/tokens';
 import { sendTokenVerificationMail } from '@/lib/mailer';
+import { getAuthObjectByEmail } from '@/data/auth-object';
+import { User } from '@prisma/client';
 
+/**
+ * Attempts to sign in a user with the provided email and password
+ *
+ * @param {z.infer<typeof LoginFormSchema>} data - data object containing the email and password of the user
+ * @returns {Promise<{error: string}> | {success: string}} - returns a promise that resolves to an object with an error message or a success message
+ */
 export const login = async (data: z.infer<typeof LoginFormSchema>) => {
   // revalidate received (unsafe) values from client
   const validatedData = LoginFormSchema.safeParse(data);
@@ -16,9 +22,10 @@ export const login = async (data: z.infer<typeof LoginFormSchema>) => {
     return { error: 'Ungültige Anmeldedaten' };
   }
 
-  const existingUser = await getUserByEmail(validatedData.data.email);
-
+  // check if user exists but is not verified
+  const existingUser = (await getAuthObjectByEmail('user', validatedData.data.email)) as User;
   if (existingUser && !existingUser.emailVerified) {
+    // send a new verification token to the user (as the old one might have been lost or expired)
     const token = await generateVerificationToken(validatedData.data.email);
     sendTokenVerificationMail(validatedData.data.email, token);
     return {

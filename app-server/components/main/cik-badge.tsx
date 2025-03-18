@@ -7,9 +7,15 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 // use cache to store queried CIK data for faster badge rendering
 const cikCache = new Map<string, CikObject>();
 
+/**
+ * Calculates the badge style based on the CIK.
+ *
+ * @param {string} cik - The CIK to calculate the badge style for.
+ * @returns {Record<string, string>} - The badge style object containing the background color and text color.
+ */
 export const calculateCikBadgeStyle = (cik: string) => {
   let hash = 0;
-  // calculate a numeric hash from the CIK (no secure hashing needed here, as we only need it for consistent and fast (!) color deviation; based on https://stackoverflow.com/a/7616484)
+  // calculate a numeric hash from the CIK (no secure hashing needed here, as we only need it for consistent and fast color deviation; based on https://stackoverflow.com/a/7616484)
   for (let i = 0; i < cik.length; i++) {
     hash = (hash << 5) - hash + cik.charCodeAt(i);
     hash |= 0;
@@ -26,6 +32,16 @@ export const calculateCikBadgeStyle = (cik: string) => {
   };
 };
 
+/**
+ * Renders a custom badge component for a given CIK, including the CIK name and ticker symbol. If the CIK name is not provided, it will be looked up and cached.
+ *
+ * @param {string} cik - The CIK to render the badge for.
+ * @param {string} cikName - The CIK name to render the badge for. If not provided, the CIK name will be looked up.
+ * @param {string} cikTicker - The CIK ticker symbol to render the badge for. If not provided, the CIK ticker symbol will be looked up.
+ * @param {'left' | 'right' | 'top' | 'bottom'} tooltipLocation - The location of the tooltip. Defaults to 'right'.
+ * @param {ReactNode} children - The children to render inside the badge, to extend the badge with additional content.
+ * @returns {React.ReactNode} - The rendered CIK badge component.
+ */
 export const CikBadge = ({
   cik,
   cikName,
@@ -47,8 +63,9 @@ export const CikBadge = ({
     if (!cikName) {
       // if the full object is not set yet (no cikName provided), look it up
       if (cikCache.has(cik)) {
-        setFullCikObject(cikCache.get(cik)!);
+        setFullCikObject(cikCache.get(cik)!); // if the cache has the data, use it
       } else {
+        // if the cache does not have the data, look it up
         lookupCik({ cik }).then((data) => {
           if (data?.cikName) {
             // only save data to cache if we get a valid response
@@ -73,6 +90,7 @@ export const CikBadge = ({
     }
   }, [cik]);
 
+  // calculate badge style based on the CIK
   const { backgroundColor, textColor } = calculateCikBadgeStyle(cik);
 
   return (

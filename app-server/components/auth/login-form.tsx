@@ -22,10 +22,14 @@ import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
 import { login } from '@/actions/auth/login';
 
+/**
+ * Renders a login form to authenticate users with their email and password.
+ *
+ * @returns {JSX.Element} - The rendered login form component
+ */
 export const LoginForm = () => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>('');
   const [successMessage, setSuccessMessage] = useState<string | undefined>('');
-
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof LoginFormSchema>>({
@@ -36,11 +40,18 @@ export const LoginForm = () => {
     },
   });
 
+  /**
+   * Sends a request to the server to authenticate the user with the given email and password.
+   *
+   * @param {z.infer<typeof LoginFormSchema>} data - The data to be submitted to the server
+   * @returns {void}
+   */
   const onSubmit = (data: z.infer<typeof LoginFormSchema>) => {
     // reset form state
     setErrorMessage('');
     setSuccessMessage('');
 
+    // start transition to prevent multiple form submissions or changing the inputs while waiting for response
     startTransition(() => {
       // send login request
       login(data).then((data) => {

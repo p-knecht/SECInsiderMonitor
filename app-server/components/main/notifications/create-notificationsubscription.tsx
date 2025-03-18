@@ -14,17 +14,24 @@ import {
 } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-
 import { NotificationSubscriptionSchema } from '@/schemas';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
 import { createNotificationSubscription } from '@/actions/main/notifications/create-notification-subscription';
 import { Input } from '@/components/ui/input';
-import { CIKSelectorFormField } from '@/components/main/notifications/cikselector-formfield';
-import { FormtypeBadge } from '@/components/data-table/formtype-badge';
+import { CIKSelectorFormField } from '@/components/main/cikselector-formfield';
+import { FormtypeBadge } from '@/components/main/formtype-badge';
 
+/**
+ * List of form types that can be selected for notification subscriptions.
+ */
 const formTypes = ['3', '4', '5'] as const;
 
+/**
+ * Renders a card containing a form to allow users to create a new notification subscription.
+ * @param {Function} onSubscriptionCreated - The callback function to call when a new subscription has been created
+ * @returns {JSX.Element} - The rendered CreateNotificationSubscriptionForm component
+ */
 export const CreateNotificationSubscriptionForm = ({
   onSubscriptionCreated,
 }: {
@@ -44,6 +51,12 @@ export const CreateNotificationSubscriptionForm = ({
     },
   });
 
+  /**
+   * Sends a request to the server to create a new notification subscription based on the form data.
+   *
+   * @param {z.infer<typeof NotificationSubscriptionSchema>} data - The data to be submitted to the server
+   * @returns {void}
+   */
   const onSubmit = (data: z.infer<typeof NotificationSubscriptionSchema>) => {
     // reset form state
     setErrorMessage('');

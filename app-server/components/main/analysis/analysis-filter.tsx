@@ -14,8 +14,14 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CIKSelectorFormField } from '../notifications/cikselector-formfield';
+import { CIKSelectorFormField } from '@/components/main/cikselector-formfield';
 
+/**
+ * Renders a div containing a generic form to allow users to filter the analysis results (used for network and company analysis).
+ *
+ * @param {string} type - The type of analysis to provide a filter for (network or company)
+ * @returns {React.ReactNode} - The rendered AnalysisFilter component
+ */
 export function AnalysisFilter({ type }: { type: 'network' | 'company' }): React.ReactNode {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -23,27 +29,33 @@ export function AnalysisFilter({ type }: { type: 'network' | 'company' }): React
   const form = useForm<z.infer<typeof AnalysisSchema>>({
     resolver: zodResolver(AnalysisSchema),
     defaultValues: {
-      cik: searchParams.get('cik') || '',
-      depth: type == 'company' ? undefined : Number(searchParams.get('depth')) || 3,
+      cik: searchParams.get('cik') || '', // use CIK from URL if available
+      depth: type == 'company' ? undefined : Number(searchParams.get('depth')) || 3, // use depth from URL if available or set it to 3
       from:
         searchParams.get('from') ||
-        new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString().split('T')[0],
-      to: searchParams.get('to') || new Date().toISOString().split('T')[0],
+        new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString().split('T')[0], // use from date from URL if available or set it to one year ago
+      to: searchParams.get('to') || new Date().toISOString().split('T')[0], // use to date from URL if available or set it to today
     },
   });
 
+  /**
+   * Sends a request to the server to do a analysis query based on the form data.
+   *
+   * @param {z.infer<typeof AnalysisSchema>} data - The data to be submitted to the server
+   * @returns {void}
+   */
   const onSubmit = (data: z.infer<typeof AnalysisSchema>) => {
     const params = new URLSearchParams();
 
     params.set('cik', form.getValues('cik'));
     params.set('from', form.getValues('from'));
     params.set('to', form.getValues('to'));
-    if (type == 'network') params.set('depth', form.getValues('depth')?.toString() ?? '');
+    if (type == 'network') params.set('depth', form.getValues('depth')?.toString() ?? ''); // depth is only added for network analysis - not needed for company analysis
     router.push(`?${params.toString()}`);
   };
 
   return (
-    <div className="mb-3 text-sm w-fit mx-auto">
+    <div className="text-sm w-fit mx-auto">
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}

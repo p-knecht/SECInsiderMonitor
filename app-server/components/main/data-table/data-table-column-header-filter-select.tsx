@@ -8,11 +8,20 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Checkbox } from '@/components/ui/checkbox';
 
+/**
+ * The properties for the custom DataTableColumnHeaderFilterSelect component containing the column id and data available for selection.
+ */
 interface DataTableColumnHeaderFilterSelectProps {
   columnId: string;
   selectData: { value: string; label: React.ReactNode }[];
 }
 
+/**
+ * Renders a custom column header filter select component, containing a dropdown menu with checkboxes to filter the column. Multiple filter values can be (un-)checked; the filter values are stored in the URL query parameters.
+ *
+ * @param {DataTableColumnHeaderFilterSelectProps} {columnId, selectData} - The column header filter select properties to get the column id and select data.
+ * @returns {JSX.Element} - The renderer DataTableColumnHeaderFilterSelect component.
+ */
 export const DataTableColumnHeaderFilterSelect = ({
   columnId,
   selectData,
@@ -23,7 +32,13 @@ export const DataTableColumnHeaderFilterSelect = ({
   // get all unique filter values for this column
   const currentFilter = Array.from(new Set(searchParams.getAll(`filter[${columnId}]`)));
 
-  // update checkbox filters
+  /**
+   * Updates the checkbox filters in the URL query parameters.
+   *
+   * @param {string} value - The filter value to add or remove.
+   * @param {boolean} checked - The new state of the checkbox.
+   * @returns {void}
+   */
   const updateCheckboxFilters = (value: string, checked: boolean) => {
     const params = new URLSearchParams(window.location.search);
     if (checked) {
@@ -35,7 +50,7 @@ export const DataTableColumnHeaderFilterSelect = ({
         .filter((item) => item !== value)
         .forEach((f) => params.append(`filter[${columnId}]`, f));
     }
-    router.push(`?${params.toString()}`);
+    router.push(`?${params.toString()}`); // update URL
   };
 
   return (

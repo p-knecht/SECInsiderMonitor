@@ -1,12 +1,15 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header';
+import { DataTableColumnHeader } from '@/components/main/data-table/data-table-column-header';
 import { CikObject } from '@/data/cik';
-import { CikBadge } from '@/components/data-table/cik-badge';
-import { FormtypeBadge } from '@/components/data-table/formtype-badge';
+import { CikBadge } from '@/components/main/cik-badge';
+import { FormtypeBadge } from '@/components/main/formtype-badge';
 import ShowFilingButton from '@/components/main/filings/show-filing-button';
 
+/**
+ * Defines the data for the filing table columns.
+ */
 export interface OwnershipFilingColumn {
   // not using OwnershipFiling from prisma/client as only a subset of fields is needed
   filingId: string;
@@ -17,6 +20,9 @@ export interface OwnershipFilingColumn {
   dateFiled?: Date;
 }
 
+/**
+ * Defines the column keys, headers and cell contents for the filing table.
+ */
 export const columns: ColumnDef<OwnershipFilingColumn>[] = [
   {
     accessorKey: 'filingId',

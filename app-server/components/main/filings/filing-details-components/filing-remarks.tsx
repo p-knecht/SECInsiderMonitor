@@ -2,6 +2,12 @@
 
 import { OwnershipFiling } from '@prisma/client';
 
+/**
+ * Renders a component that displays the remarks of the filing.
+ *
+ * @param {OwnershipFiling} filingData - The filing data to display the remarks for.
+ * @returns {JSX.Element} - The component that displays the remarks of the filing.
+ */
 export default function FilingRemarks({ filingData }: { filingData: OwnershipFiling }) {
   if (!filingData.formData?.remarks) {
     return (

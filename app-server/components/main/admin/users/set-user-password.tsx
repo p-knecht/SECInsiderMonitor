@@ -15,18 +15,22 @@ import {
 } from '@/components/ui/form';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Button } from '@/components/ui/button';
-
 import { SetUserPasswordSchema } from '@/schemas';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
 import { setUserPassword } from '@/actions/main/admin/users/set-user-password';
 import { useRouter } from 'next/navigation';
 
+/**
+ * Renders a form to allow admin users to set a user's password.
+ *
+ * @param {string} userId - The user ID of the user to set the password for
+ * @returns {JSX.Element} - The rendered SetUserPasswordForm component
+ */
 export const SetUserPasswordForm = ({ userId }: { userId: string }) => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>('');
   const [successMessage, setSuccessMessage] = useState<string | undefined>('');
   const [isPending, startTransition] = useTransition();
-
   const router = useRouter();
 
   const form = useForm<z.infer<typeof SetUserPasswordSchema>>({
@@ -38,13 +42,20 @@ export const SetUserPasswordForm = ({ userId }: { userId: string }) => {
     },
   });
 
-  const password = form.watch('password');
+  const password = form.watch('password'); // watch the password field to display the password strength bar
 
+  /**
+   * Sends a request to the server to set the user's password to the given password.
+   *
+   * @param {z.infer<typeof SetUserPasswordSchema>} data - The data to be submitted to the server
+   * @returns {void}
+   */
   const onSubmit = (data: z.infer<typeof SetUserPasswordSchema>) => {
     // reset form state
     setErrorMessage('');
     setSuccessMessage('');
 
+    // start transition to prevent multiple form submissions or changing the inputs while waiting for response
     startTransition(() => {
       // send set password request
       setUserPassword(data).then((data) => {
@@ -52,7 +63,7 @@ export const SetUserPasswordForm = ({ userId }: { userId: string }) => {
         setErrorMessage(data.error);
         setSuccessMessage(data.success);
         if (data.success) {
-          router.refresh();
+          router.refresh(); // refresh the page to show the updated user details ('Aktualisiert am' field)
         }
       });
     });

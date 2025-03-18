@@ -6,10 +6,21 @@ import { FormError } from '@/components/form-error';
 import { useState, useEffect } from 'react';
 import { isRegistrationDisabled } from '@/actions/auth/register';
 
+/**
+ * Renders the content of the register page.
+ *
+ * @returns {JSX.Element} - The register page layout containing the register form.
+ */
 export default function RegisterPage() {
   const [registrationDisabled, setRegistrationDisabled] = useState<boolean>(false);
 
+  // Check if registration is disabled and hide form + show message if it is
   useEffect(() => {
+    /**
+     * Checks if registration is disabled and sets the state accordingly.
+     *
+     * @returns {Promise<void>} - A promise that resolves when the registration status is checked.
+     */
     const checkRegistrationDisabled = async () => {
       setRegistrationDisabled(await isRegistrationDisabled());
     };

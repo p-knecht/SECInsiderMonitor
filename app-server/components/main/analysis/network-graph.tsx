@@ -5,18 +5,28 @@ import { NetworkAnalysisData } from '@/actions/main/analysis/analyse-network';
 import { useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
+// register fcose layout used for the graph
 cytoscape.use(fcose);
 
-// we need to use a ref for the info box, because we don't want to rerender the graph (caused by setState) when the info box is shown/hidden
+/**
+ * Function to manually build the info box with information about the selected item (node or edge)
+ * (we need to use a ref for the info box and update it manually, because we don't want to rerender the graph (caused by setState) when the info box is shown/hidden)
+ *
+ * @param {React.RefObject<HTMLDivElement | null>} infoBoxRef - reference to the info box element to show information about the selected item
+ * @param {cytoscape.SingularElementReturnValue} item - the selected item (node or edge)
+ * @param {NetworkAnalysisData} data - the full data object of the network analysis
+ * @param {ReturnType<typeof useRouter>} router - the router object to navigate to other pages
+ * @returns {void}
+ */
 function showInfoBox(
   infoBoxRef: React.RefObject<HTMLDivElement | null>,
   item: cytoscape.SingularElementReturnValue,
   data: NetworkAnalysisData,
   router: ReturnType<typeof useRouter>,
 ) {
-  if (!infoBoxRef.current) return;
+  if (!infoBoxRef.current) return; // return if info box reference is not available
 
-  const isNode = item.isNode();
+  const isNode = item.isNode(); // check if selected item is a node or an edge
   const originalObject = item.data('fullObject');
 
   const title = isNode ? 'Ausgewählte Entität' : 'Ausgewählte Beziehung';
@@ -25,17 +35,18 @@ function showInfoBox(
   let addNetworkAnalysisButton = false;
 
   if (isNode) {
-    const distance = (data.queryParams?.depth || 3) - originalObject.stratum;
+    const distance = (data.queryParams?.depth || 3) - originalObject.depthRemaining;
     if (distance > 0)
       // only show button if the node is not the query node
       addNetworkAnalysisButton = true;
 
+    // build table data for nodes based on node information
     tableData['CIK der Entität'] = originalObject.cik;
     tableData['Name der Entität'] = originalObject.cikInfo.cikName;
     tableData['Ticker der Entität'] = originalObject.cikInfo.cikTicker || '';
     tableData['Distanz zur analysierten Entität'] =
       distance > 0 ? distance.toString() : '0 (Dies ist die analysierte Entität)';
-    if (originalObject.stratum > 0) {
+    if (originalObject.depthRemaining > 0) {
       // number of owner relationships
       tableData['Anzahl der Beziehungen (als Reporting Owner)'] =
         data.edges?.filter((edge) => edge.ownerCik === originalObject.cik).length.toString() || '0';
@@ -45,6 +56,7 @@ function showInfoBox(
         '0';
     }
   } else {
+    // build table data for edges based on edge information
     tableData['Beziehungsart(en)'] = originalObject.relationTypes.join(', ');
     tableData['Datum der letzten Einreichung'] = originalObject.latestDateFiled.$date.split('T')[0];
     tableData['Noch aktiv?'] = originalObject.retiredRelation ? 'Nein' : 'Ja';
@@ -69,7 +81,7 @@ function showInfoBox(
       <tr><td class="font-medium w-36 p-1 border text-gray-700">${key}</td><td class="p-1 border">${tableData[key]}</td></tr>`;
   }
 
-  // build content
+  // build full content of info box
   let content = `
     <h3 class="text-md font-semibold mb-2">${title}</h3>
     <table class="w-full text-xs border-collapse border border-gray-300 bg-white">
@@ -79,6 +91,7 @@ function showInfoBox(
     `;
 
   if (isNode) {
+    //add buttons for nodes
     content += `
     <div class="flex flex-col gap-2 mt-3">
     <button id="open-owner-filings" class="w-full bg-white px-3 py-2 text-sm rounded hover:bg-[#f1f5f9] border-[#e2e8f0] border">
@@ -95,6 +108,7 @@ function showInfoBox(
     </button>`;
     }
   } else {
+    // add button for edges
     content += `
     <div class="flex flex-col gap-2 mt-3">
     <button id="open-filings" class="w-full bg-white px-3 py-2 text-sm rounded hover:bg-[#f1f5f9] border-[#e2e8f0] border">
@@ -136,11 +150,23 @@ function showInfoBox(
   }
 }
 
+/**
+ * Function to hide the info box when no item is selected
+ *
+ * @param {React.RefObject<HTMLDivElement | null>} infoBoxRef - reference to the info box element to hide it
+ * @returns {void}
+ */
 function hideInfoBox(infoBoxRef: React.RefObject<HTMLDivElement | null>) {
   if (!infoBoxRef.current) return;
   infoBoxRef.current.style.display = 'none';
 }
 
+/**
+ * Renders a network graph based on the provided analysis data
+ *
+ * @param {NetworkAnalysisData} data - The data object containing the nodes and edges of the graph and query details
+ * @returns {JSX.Element} - The rendered NetworkGraph component
+ */
 export default function NetworkGraph({ data }: { data: NetworkAnalysisData }) {
   const router = useRouter();
   const infoBoxRef = useRef<HTMLDivElement | null>(null); // we have to use useRef, because useState would cause a rerender causing the graph to be reorganized
@@ -148,7 +174,7 @@ export default function NetworkGraph({ data }: { data: NetworkAnalysisData }) {
   let selectedItem: cytoscape.SingularElementReturnValue | null = null;
 
   const items = [
-    // Nodes
+    // define content of nodes
     ...(data.nodes ?? []).map((node) => ({
       data: {
         id: node.cik,
@@ -157,13 +183,13 @@ export default function NetworkGraph({ data }: { data: NetworkAnalysisData }) {
           ? node.cikInfo.cikTicker + '\n' + node.cikInfo.cikName
           : node.cikInfo.cikName,
         nodeType: node.cik == data.queryParams?.cik ? 'queryNode' : 'normalNode',
-        stratum: node.stratum,
-        nodeSize: 30 + 20 * (node.stratum / data.queryParams?.depth!), // set node size between 50 and 30 depending on stratum
+        depthRemaining: node.depthRemaining,
+        nodeSize: 30 + 20 * (node.depthRemaining / data.queryParams?.depth!), // set node size between 50 and 30 depending on depthRemaining
         fullObject: node,
       },
     })),
 
-    // Edges
+    // define content of edges
     ...(data.edges ?? []).map((edge) => ({
       data: {
         id: edge.ownerCik + '-' + edge.issuerCik,

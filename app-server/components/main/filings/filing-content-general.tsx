@@ -2,10 +2,17 @@
 
 import { OwnershipFiling } from '@prisma/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FormtypeBadge } from '@/components/data-table/formtype-badge';
+import { FormtypeBadge } from '@/components/main/formtype-badge';
 import { CheckIcon, XIcon } from 'lucide-react';
 
+/**
+ * Renders a card containing general information about a filing
+ *
+ * @param {OwnershipFiling} filingData - The filing data to show the general information of
+ * @returns {JSX.Element} The FilingContentGeneral component
+ */
 export default function FilingContentGeneral({ filingData }: { filingData: OwnershipFiling }) {
+  // definition of items to display in the card
   const items = [
     { label: 'Filing-ID:', value: filingData.filingId || 'N/A' },
     {

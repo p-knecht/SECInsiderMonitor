@@ -16,9 +16,15 @@ import { FormError } from '@/components/form-error';
 import { TrashIcon } from 'lucide-react';
 import { deleteNotificationSubscription } from '@/actions/main/notifications/delete-notification-subscriptions';
 import { NotificationSubscription } from '@prisma/client';
-import { CikBadge } from '@/components/data-table/cik-badge';
-import { FormtypeBadge } from '@/components/data-table/formtype-badge';
+import { CikBadge } from '@/components/main/cik-badge';
+import { FormtypeBadge } from '@/components/main/formtype-badge';
 
+/**
+ * Renders a card containing a table of the user's current notification subscriptions.
+ *
+ * @param {NotificationSubscription[], boolean, Function} {subscriptions, isLoading, refreshSubscriptions}  - The user's notification subscriptions, a boolean indicating if the subscriptions are currently being loaded, and a function to refresh the subscriptions after a change (e.g. deletion).
+ * @returns {JSX.Element} - The component that displays the user's notification subscriptions.
+ */
 export const ShowNotificationSubscriptions = ({
   subscriptions,
   isLoading,
@@ -31,7 +37,12 @@ export const ShowNotificationSubscriptions = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  // Löschen einer Benachrichtigung
+  /**
+   * Handles the deletion of a notification subscription.
+   *
+   * @param {string} id - The ID of the subscription to delete.
+   * @returns {Promise<void>} - A promise that resolves when the subscription has been deleted.
+   */
   const handleDelete = async (id: string) => {
     startTransition(async () => {
       try {

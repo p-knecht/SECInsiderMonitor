@@ -1,3 +1,13 @@
+/**
+ * Add a text based filter for given key to the filter object based on the given search parameters.
+ *
+ * @param {Object} retrievedSearchParams - The search parameters retrieved from the request query.
+ * @param {string} key - The key of the search parameter to use.
+ * @param {function} condition - The condition to apply to the filter based on the search parameter value (allows for custom matching conditions e.g. exact match).
+ * @param {Object} filter - The filter object to add the condition to.
+ * @param {boolean} useMongo - Whether to use MongoDB native queries (true) or Prisma queries (false).
+ * @returns {void}
+ */
 const addTextFilter = (
   retrievedSearchParams: { [key: string]: string | string[] | undefined },
   key: string,
@@ -17,6 +27,16 @@ const addTextFilter = (
   }
 };
 
+/**
+ * Add a date based filter for given key to the filter object based on the given search parameters. This allows filtering by a given date range.
+ *
+ * @param {Object} retrievedSearchParams - The search parameters retrieved from the request query.
+ * @param {string} keyPrefix - The prefix of the search parameters to use.
+ * @param {string} field - The field to apply the filter.
+ * @param {Object} filter - The filter object to add the condition to.
+ * @param {boolean} useMongo - Whether to use MongoDB native queries (true) or Prisma queries (false).
+ * @returns {void}
+ */
 const addDateFilter = (
   retrievedSearchParams: { [key: string]: string | string[] | undefined },
   keyPrefix: string,
@@ -45,6 +65,15 @@ const addDateFilter = (
     filter[useMongo ? '$and' : 'AND'].push({ [field]: dateFilter });
 };
 
+/**
+ * Auxiliary function to build a filter object for Prisma or MongoDB queries based on the given search parameters.
+ * The filter object is built based on the given type ('user' or 'filing') and the required query type (prisma or mongodb native).
+ *
+ * @param {Object} retrievedSearchParams - The search parameters retrieved from the request query, which will be parsed based on specification to get relevant filters
+ * @param {string} type - The type of the filter ('user' or 'filing').
+ * @param {boolean} useMongo - Whether to use MongoDB native queries (true) or Prisma queries (false).
+ * @returns {Object} - The filter object to be used in the query.
+ */
 export const buildFilter = (
   retrievedSearchParams: { [key: string]: string | string[] | undefined },
   type: 'user' | 'filing',
@@ -52,6 +81,7 @@ export const buildFilter = (
 ) => {
   const filter: any = useMongo ? { $and: [] } : { AND: [] };
 
+  // Build a filter object for user table
   if (type === 'user') {
     addTextFilter(
       retrievedSearchParams,
@@ -81,6 +111,7 @@ export const buildFilter = (
     addDateFilter(retrievedSearchParams, 'filter[lastLogin]', 'lastLogin', filter, useMongo);
   }
 
+  // Build a filter object for filing table
   if (type === 'filing') {
     addTextFilter(
       retrievedSearchParams,
@@ -107,7 +138,7 @@ export const buildFilter = (
       useMongo,
     );
 
-    // nested filtering is currently only supported with MongoDB native/raw queries --> skip following filters for Prisma
+    // nested filtering is currently only supported with MongoDB native/raw queries --> skip following filters if a Prisma filter was requested
     if (useMongo) {
       addTextFilter(
         retrievedSearchParams,
@@ -154,7 +185,7 @@ export const buildFilter = (
     addDateFilter(retrievedSearchParams, 'filter[dateFiled]', 'dateFiled', filter, useMongo);
   }
 
-  // Remove empty AND filter if no filters were applied (as empty $and-filter causes issues with MongoDB native queries)
+  // Remove empty AND filter if no filters were applied (as empty $and-filter might cause issues with MongoDB native queries)
   if (useMongo && filter.$and.length === 0) delete filter.$and;
   return filter;
 };

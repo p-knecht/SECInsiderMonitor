@@ -13,15 +13,24 @@ import { useState, useEffect } from 'react';
 import { searchCiks } from '@/actions/main/filings/search-ciks';
 import { CikObject } from '@/data/cik';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { CikBadge } from '@/components/data-table/cik-badge';
+import { CikBadge } from '@/components/main/cik-badge';
 
-interface DataTableColumnHeaderFilterTextProps {
+/**
+ * The properties for the custom DataTableColumnHeaderFilterCik component containing the column id to filter.
+ */
+interface DataTableColumnHeaderFilterCikProps {
   columnId: string;
 }
 
+/**
+ * Renders a custom column header filter cik component, containing a text input field to filter the column in a dropdown menu, allowing contextual live-search for available CIKs and issuer/reporting owner names. Multiple filter values can be added and removed; the filter values are stored in the URL query parameters.
+ *
+ * @param {DataTableColumnHeaderFilterCikProps} {columnId} - The column header filter cik properties to get the column id to filter.
+ * @returns {JSX.Element} - The renderer DataTableColumnHeaderFilterCik component.
+ */
 export const DataTableColumnHeaderFilterCik = ({
   columnId,
-}: DataTableColumnHeaderFilterTextProps) => {
+}: DataTableColumnHeaderFilterCikProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [textFilter, setTextFilter] = useState('');
@@ -35,7 +44,7 @@ export const DataTableColumnHeaderFilterCik = ({
     if (filterValue.match(/^\d{10}$/)) {
       return (
         <CikBadge key={filterValue} cik={filterValue}>
-          <button onClick={() => removeTextFilter(filterValue)} className="ml-1">
+          <button onClick={() => removeCikFilter(filterValue)} className="ml-1">
             <XIcon className="h-3 w-3 cursor-pointer" />
           </button>
         </CikBadge>
@@ -44,7 +53,7 @@ export const DataTableColumnHeaderFilterCik = ({
       return (
         <Badge key={filterValue} className="flex items-center gap-1">
           {filterValue}
-          <button onClick={() => removeTextFilter(filterValue)} className="ml-1">
+          <button onClick={() => removeCikFilter(filterValue)} className="ml-1">
             <XIcon className="h-3 w-3 cursor-pointer" />
           </button>
         </Badge>
@@ -52,7 +61,7 @@ export const DataTableColumnHeaderFilterCik = ({
     }
   });
 
-  // start search on text filter change (after debounce)
+  // start search on cik filter change (after debounce)
   useEffect(() => {
     setIsLoading(true);
     if (typingTimeout) clearTimeout(typingTimeout); // clear previous timeout on every keypress if exists
@@ -65,6 +74,12 @@ export const DataTableColumnHeaderFilterCik = ({
     }
   }, [textFilter]);
 
+  /**
+   * Executes a search request on the backend to get CIKs and issuer/reporting owner names matching the query and adds them to the search results state.
+   *
+   * @param {string} query - The search query to perform.
+   * @returns {Promise<void>} - a promise resolving when the search results are fetched and set to state.
+   */
   const performSearch = async (query: string) => {
     query = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').trim(); // escape regex special characters to prevent side effects
     setIsLoading(true);
@@ -72,8 +87,13 @@ export const DataTableColumnHeaderFilterCik = ({
     setIsLoading(false);
   };
 
-  // Remove text filter entry
-  const removeTextFilter = (value: string) => {
+  /**
+   * Removes a cik filter entry from the URL query parameters.
+   *
+   * @param {string} value - The filter value to remove.
+   * @returns {void}
+   */
+  const removeCikFilter = (value: string) => {
     const params = new URLSearchParams(window.location.search);
     params.delete(`filter[${columnId}]`);
     currentFilter
@@ -82,14 +102,24 @@ export const DataTableColumnHeaderFilterCik = ({
     router.push(`?${params.toString()}`);
   };
 
-  // Add text filter entry
-  const addTextFilter = (value: string) => {
+  /**
+   * Adds a cik filter entry to the URL query parameters.
+   *
+   * @param {string} value - The filter value to add.
+   * @returns {void}
+   */
+  const addCikFilter = (value: string) => {
     const params = new URLSearchParams(window.location.search);
     if (!currentFilter.includes(value)) params.append(`filter[${columnId}]`, value);
     router.push(`?${params.toString()}`);
   };
 
-  // Highlight matching text in search results
+  /**
+   * Highlights the matched text in the search results (to allow user to see what part of the result matched the query).
+   *
+   * @param {string} text - The text to highlight.
+   * @returns {JSX.Element[]} - The text with highlighted matches.
+   */
   const highlightMatch = (text: string) => {
     if (!textFilter) return text;
     const escapedQuery = textFilter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // escape regex special characters to prevent side effects
@@ -127,7 +157,7 @@ export const DataTableColumnHeaderFilterCik = ({
           onChange={(e) => setTextFilter(e.target.value)}
           onKeyDown={(event) => {
             if (event.key === 'Enter' && textFilter.trim() !== '') {
-              addTextFilter(textFilter.trim());
+              addCikFilter(textFilter.trim());
               setTextFilter('');
             }
           }}
@@ -144,7 +174,7 @@ export const DataTableColumnHeaderFilterCik = ({
                   <div
                     className="cursor-pointer p-1 hover:bg-gray-200 text-sm"
                     onClick={() => {
-                      addTextFilter(result.cik);
+                      addCikFilter(result.cik);
                       setTextFilter('');
                       setSearchResults([]);
                     }}

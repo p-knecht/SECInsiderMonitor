@@ -1,4 +1,11 @@
 import Image from 'next/image';
+
+/**
+ *  Defines general layout for the authentication (public) pages of the application
+ *
+ * @param {React.ReactNode} children - The embedded children of the layout
+ * @returns {React.ReactNode} - The layout of the authentication/public pages of the application
+ */
 const AuthLayout = ({
   children,
 }: Readonly<{

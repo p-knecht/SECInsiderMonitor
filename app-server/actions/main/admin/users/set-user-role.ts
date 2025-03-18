@@ -4,9 +4,14 @@ import * as z from 'zod';
 import { dbconnector } from '@/lib/dbconnector';
 import { auth } from '@/auth';
 import { SetUserRoleSchema } from '@/schemas';
-import { getUserById } from '@/data/user';
-import { UserRole } from '@prisma/client';
-
+import { User, UserRole } from '@prisma/client';
+import { getAuthObjectByKey } from '@/data/auth-object';
+/**
+ * Set a new role for a user (only admins are allowed to change user roles)
+ *
+ * @param {z.infer<typeof SetUserRoleSchema>} data - Data to set a new role for a user containing the user id and the new role
+ * @returns { Promise<{ success: string } | { error: string }> } - A promise that resolves to an object with an error message or a success message
+ */
 export const setUserRole = async (data: z.infer<typeof SetUserRoleSchema>) => {
   // revalidate received (unsafe) values from client
   const validatedData = SetUserRoleSchema.safeParse(data);
@@ -21,7 +26,7 @@ export const setUserRole = async (data: z.infer<typeof SetUserRoleSchema>) => {
   }
 
   // get requesting user object
-  const requestingUser = await getUserById(session.user.id);
+  const requestingUser = (await getAuthObjectByKey('user', session.user.id)) as User;
   if (!requestingUser) {
     return { error: 'Anfragender Benutzer existiert nicht' };
   }
@@ -37,7 +42,7 @@ export const setUserRole = async (data: z.infer<typeof SetUserRoleSchema>) => {
   }
 
   // get user by id
-  const user = await getUserById(validatedData.data.userId);
+  const user = (await getAuthObjectByKey('user', validatedData.data.userId)) as User;
   if (!user) {
     return { error: 'Benutzer existiert nicht' };
   }

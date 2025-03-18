@@ -4,9 +4,15 @@ import * as z from 'zod';
 import { dbconnector } from '@/lib/dbconnector';
 import { auth } from '@/auth';
 import { DeleteUserSchema } from '@/schemas';
-import { getUserById } from '@/data/user';
-import { UserRole } from '@prisma/client';
+import { User, UserRole } from '@prisma/client';
+import { getAuthObjectByKey } from '@/data/auth-object';
 
+/**
+ * Deletes a user account from the database (only admins are allowed to delete accounts of other users)
+ *
+ * @param {z.infer<typeof DeleteUserSchema>} data - Data to delete a user account containing the user id
+ * @returns {Promise<{ success: string } | { error: string }>} - A promise that resolves to an object with an error message or a success message
+ */
 export const deleteUser = async (data: z.infer<typeof DeleteUserSchema>) => {
   // revalidate received (unsafe) values from client
   const validatedData = DeleteUserSchema.safeParse(data);
@@ -21,7 +27,7 @@ export const deleteUser = async (data: z.infer<typeof DeleteUserSchema>) => {
   }
 
   // get requesting user object
-  const requestingUser = await getUserById(session.user.id);
+  const requestingUser = (await getAuthObjectByKey('user', session.user.id)) as User;
   if (!requestingUser) {
     return { error: 'Anfragender Benutzer existiert nicht' };
   }
@@ -37,13 +43,16 @@ export const deleteUser = async (data: z.infer<typeof DeleteUserSchema>) => {
   }
 
   // get user by id
-  const user = await getUserById(validatedData.data.userId);
+  const user = (await getAuthObjectByKey('user', validatedData.data.userId)) as User;
   if (!user) {
     return { error: 'Benutzer existiert nicht' };
   }
 
   // delete user from database
   await dbconnector.user.delete({ where: { id: user.id } });
+
+  // delete notification subscriptions of user
+  await dbconnector.notificationSubscription.deleteMany({ where: { subscriber: user.id } });
 
   return { success: 'Das Benutzerkonto wurde gelöscht' };
 };

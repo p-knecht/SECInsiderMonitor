@@ -4,6 +4,12 @@ import { OwnershipFiling } from '@prisma/client';
 import DownloadFileButton from '@/components/main/filings/download-embeddeddocument-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+/**
+ * Renders a card containing the list and information about embedded documents of a filing with download buttons
+ *
+ * @param {OwnershipFiling} filingData - The filing data to show the embedded documents of
+ * @returns {JSX.Element} The FilingContentEmbeddedDocuments component
+ */
 export default function FilingContentEmbeddedDocuments({
   filingData,
 }: {

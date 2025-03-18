@@ -15,7 +15,6 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Button, buttonVariants } from '@/components/ui/button';
-
 import { DeleteAccountSchema } from '@/schemas';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
@@ -33,11 +32,16 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useRouter } from 'next/navigation';
 
+/**
+ * Renders a card containing a form (inclusive alert dialog) to allow users to delete their own account (requires password confirmation).
+ * @returns {JSX.Element} - The rendered DeleteAccountForm component
+ */
 export const DeleteAccountForm = () => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>('');
   const [successMessage, setSuccessMessage] = useState<string | undefined>('');
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof DeleteAccountSchema>>({
     resolver: zodResolver(DeleteAccountSchema),
@@ -46,19 +50,30 @@ export const DeleteAccountForm = () => {
     },
   });
 
-  const router = useRouter();
-
+  /**
+   * Wrapper function to submit the account deletion form after the user confirmed the action in the alert dialog (and close the dialog).
+   *
+   * @returns {void}
+   */
   const submitAccountDeletion = () => {
-    setOpen(false);
+    setOpen(false); // close alert dialog after confirmation
 
     // validate form and submit if valid
     form.handleSubmit(onSubmit)();
   };
+
+  /**
+   * Sends a request to the server to delete the user's account with the given password.
+   *
+   * @param {z.infer<typeof DeleteAccountSchema>} data - The data to be submitted to the server
+   * @returns {void}
+   */
   const onSubmit = (data: z.infer<typeof DeleteAccountSchema>) => {
     // reset form state
     setErrorMessage('');
     setSuccessMessage('');
 
+    // start transition to prevent multiple form submissions or changing the inputs while waiting for response
     startTransition(() => {
       // send account deletion request
       deleteAccount(data).then((data) => {

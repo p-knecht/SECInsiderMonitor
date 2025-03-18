@@ -13,7 +13,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-
 import { SetUserRoleSchema } from '@/schemas';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
@@ -28,11 +27,16 @@ import {
 } from '@/components/ui/select';
 import { useRouter } from 'next/navigation';
 
+/**
+ * Renders a form to allow admin users to set a user's role.
+ *
+ * @param {string} userId - The user ID of the user to set the role for
+ * @returns {JSX.Element} - The rendered SetUserRoleForm component
+ */
 export const SetUserRoleForm = ({ userId }: { userId: string }) => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>('');
   const [successMessage, setSuccessMessage] = useState<string | undefined>('');
   const [isPending, startTransition] = useTransition();
-
   const router = useRouter();
 
   const form = useForm<z.infer<typeof SetUserRoleSchema>>({
@@ -43,11 +47,18 @@ export const SetUserRoleForm = ({ userId }: { userId: string }) => {
     },
   });
 
+  /**
+   * Sends a request to the server to set the user's role to the given role.
+   *
+   * @param {z.infer<typeof SetUserRoleSchema>} data - The data to be submitted to the server
+   * @returns {void}
+   */
   const onSubmit = (data: z.infer<typeof SetUserRoleSchema>) => {
     // reset form state
     setErrorMessage('');
     setSuccessMessage('');
 
+    // start transition to prevent multiple form submissions or changing the inputs while waiting for response
     startTransition(() => {
       // send role change request
       setUserRole(data).then((data) => {
@@ -55,7 +66,7 @@ export const SetUserRoleForm = ({ userId }: { userId: string }) => {
         setErrorMessage(data.error);
         setSuccessMessage(data.success);
         if (data.success) {
-          router.refresh();
+          router.refresh(); // refresh the page to show the updated user details ('Aktualisiert am' field)
         }
       });
     });

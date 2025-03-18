@@ -5,8 +5,15 @@ import bcryptjs from 'bcryptjs';
 import { dbconnector } from '@/lib/dbconnector';
 import { auth } from '@/auth';
 import { ChangePasswordSchema } from '@/schemas';
-import { getUserById } from '@/data/user';
+import { getAuthObjectByKey } from '@/data/auth-object';
+import { User } from '@prisma/client';
 
+/**
+ * Function to change the password of the current user
+ *
+ * @param {z.infer<typeof ChangePasswordSchema>} data - The data to change the password containing the old password, the new password and the confirmation password
+ * @returns {Promise<{error: string}> | {success: string}} - A promise that resolves to an object with an error message or a success message
+ */
 export const changePassword = async (data: z.infer<typeof ChangePasswordSchema>) => {
   // revalidate received (unsafe) values from client
   const validatedData = ChangePasswordSchema.safeParse(data);
@@ -21,7 +28,7 @@ export const changePassword = async (data: z.infer<typeof ChangePasswordSchema>)
   }
 
   // get user by id
-  const user = await getUserById(session.user.id);
+  const user = (await getAuthObjectByKey('user', session.user.id)) as User;
   if (!user) {
     return { error: 'Benutzer existiert nicht' };
   }

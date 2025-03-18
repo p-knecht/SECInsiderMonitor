@@ -6,6 +6,12 @@ import { auth } from '@/auth';
 import { SearchCiksSchema } from '@/schemas';
 import { CikObject } from '@/data/cik';
 
+/**
+ * Searches for CIKs containing the searchString in issuer and reporting owner data.
+ *
+ * @param {z.infer<typeof SearchCiksSchema>} data - input data to search ciks containing searchString, limit and limitType
+ * @returns {Promise<CikObject[]>} - a promise that resolves with an array of cik objects matching the search string
+ */
 export const searchCiks = async (data: z.infer<typeof SearchCiksSchema>) => {
   // revalidate received (unsafe) values from client
   const validatedData = SearchCiksSchema.safeParse(data);
@@ -15,14 +21,15 @@ export const searchCiks = async (data: z.infer<typeof SearchCiksSchema>) => {
   const session = await auth();
   if (!session?.user.id) return [];
 
+  // extract values from validated data
   const { searchString, limit, limitType } = validatedData.data;
-
   try {
     // using raw queries instead of Prisma native query as nested queries are not supported by Prisma at the moment
 
     // prepare array of promises for parallel search of issuer and reporting owner
     const queries: Promise<any>[] = [];
 
+    // prepare issuer query if requested
     if (!limitType || limitType === 'issuer') {
       queries.push(
         aggregateRawOwnershipFilingsWithDecode({
@@ -76,6 +83,7 @@ export const searchCiks = async (data: z.infer<typeof SearchCiksSchema>) => {
       );
     }
 
+    // prepare reporting owner query if requested
     if (!limitType || limitType === 'reportingOwner') {
       queries.push(
         aggregateRawOwnershipFilingsWithDecode({
@@ -145,25 +153,25 @@ export const searchCiks = async (data: z.infer<typeof SearchCiksSchema>) => {
     // execute all queries in parallel
     const [issuerResults, reportingOwnerResults] = await Promise.all(queries);
 
-    // merge results from issuer and reporting owner
+    // prepare a map to store the return results and avoid duplicates
     const results = new Map<string, CikObject>();
 
     // prefer issuer data over reporting owner data as it contains more information (ticker)
     if (issuerResults && Array.isArray(issuerResults))
       issuerResults
-        .filter((r): r is CikObject => r && typeof r.cik === 'string') // Type Guard für TypeScript
+        .filter((r): r is CikObject => r && typeof r.cik === 'string')
         .forEach((r) => results.set(r.cik, r));
 
     // add reporting owner data if not already in results
     if (reportingOwnerResults && Array.isArray(reportingOwnerResults))
       reportingOwnerResults
-        .filter((r): r is CikObject => r && typeof r.cik === 'string' && !results.has(r.cik))
+        .filter((r): r is CikObject => r && typeof r.cik === 'string' && !results.has(r.cik)) // only add if not already added through issuer data
         .forEach((r) => results.set(r.cik, r));
 
     // return the results as an array and limit the amount of results
     return Array.from(results.values()).slice(0, limit);
   } catch (error) {
     console.error(`Error in searchCiks for ${searchString}: ${error}`);
-    return [];
+    return []; // return empty array in case of error
   }
 };

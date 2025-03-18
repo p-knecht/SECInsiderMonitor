@@ -5,9 +5,15 @@ import bcryptjs from 'bcryptjs';
 import { dbconnector } from '@/lib/dbconnector';
 import { auth } from '@/auth';
 import { SetUserPasswordSchema } from '@/schemas';
-import { getUserById } from '@/data/user';
-import { UserRole } from '@prisma/client';
+import { User, UserRole } from '@prisma/client';
+import { getAuthObjectByKey } from '@/data/auth-object';
 
+/**
+ * Set a new password for a user (only admins are allowed to change passwords of other users)
+ *
+ * @param {SetUserPasswordSchema} data - Data to set a new password for a user containing the user id and the new password
+ * @returns {Promise<{ success: string } | { error: string }>} - A promise that resolves to an object with an error message or a success message
+ */
 export const setUserPassword = async (data: z.infer<typeof SetUserPasswordSchema>) => {
   // revalidate received (unsafe) values from client
   const validatedData = SetUserPasswordSchema.safeParse(data);
@@ -22,7 +28,7 @@ export const setUserPassword = async (data: z.infer<typeof SetUserPasswordSchema
   }
 
   // get requesting user object
-  const requestingUser = await getUserById(session.user.id);
+  const requestingUser = (await getAuthObjectByKey('user', session.user.id)) as User;
   if (!requestingUser) {
     return { error: 'Anfragender Benutzer existiert nicht' };
   }
@@ -38,7 +44,7 @@ export const setUserPassword = async (data: z.infer<typeof SetUserPasswordSchema
   }
 
   // get user by id
-  const user = await getUserById(validatedData.data.userId);
+  const user = (await getAuthObjectByKey('user', validatedData.data.userId)) as User;
   if (!user) {
     return { error: 'Benutzer existiert nicht' };
   }

@@ -9,10 +9,19 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 
+/**
+ * The properties for the custom DataTableColumnHeaderSorter component containing the column id to sort.
+ */
 interface DataTableColumnHeaderSorterProps {
   columnId: string;
 }
 
+/**
+ * Renders a custom data table column header sorter component with basic sorting options (asc, desc, none).
+ *
+ * @param {DataTableColumnHeaderSorterProps} {columnId} - The data table column header sorter properties to get column id to sort.
+ * @returns {JSX.Element} - The renderer DataTableColumnHeaderSorter component.
+ */
 export const DataTableColumnHeaderSorter = ({ columnId }: DataTableColumnHeaderSorterProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -21,17 +30,23 @@ export const DataTableColumnHeaderSorter = ({ columnId }: DataTableColumnHeaderS
   const currentSort = searchParams.get('sort') || '';
   const currentOrder = searchParams.get('order') || 'asc';
 
-  // function to handle sorting
+  /**
+   * Handles the sorting of the column by setting the sort and order url params accordingly.
+   *
+   * @param {'asc' | 'desc' | ''} direction - The direction to sort the column by.
+   * @returns {void}
+   */
   const applyColumnSorting = (direction: 'asc' | 'desc' | '') => {
     const params = new URLSearchParams(window.location.search);
     if (direction === '') {
+      // remove sort and order params if direction is empty
       params.delete('sort');
       params.delete('order');
     } else {
       params.set('sort', columnId);
       params.set('order', direction);
     }
-    router.push(`?${params.toString()}`);
+    router.push(`?${params.toString()}`); // update URL
   };
 
   return (

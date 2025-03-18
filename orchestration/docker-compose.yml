@@ -32,6 +32,7 @@ services:
     environment:
       DATABASE_URL: mongodb://${DB_SIM_USERNAME}:${DB_SIM_PASSWORD}@sim-database:27017/${DB_SIM_DB}?authSource=admin
       USER_AGENT: ${USER_AGENT}
+      SERVER_FQDN: ${SERVER_FQDN}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_USE_SSL: ${SMTP_USE_SSL}

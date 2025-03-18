@@ -7,6 +7,13 @@ import ShowFilingContentTabGeneral from '@/components/main/filings/filing-conten
 import ShowFilingContentTabEmbeddedDocuments from '@/components/main/filings/filing-content-embeddeddocuments';
 import ShowFilingContentDetails from '@/components/main/filings/filing-content-details';
 
+/**
+ * Renders a component showing the information about a filing wrapping several sub components (general, embedded documents, details)
+ *
+ * @param {string} filingId - The id of the filing to show
+ * @param {string} type - The type of embedding this component (page or sheet)
+ * @returns {JSX.Element} - The rendered FilingContent component
+ */
 export default function FilingContent({
   filingId,
   type,
@@ -18,6 +25,11 @@ export default function FilingContent({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    /**
+     * Fetches the filing data from the API and sets it to the state
+     *
+     * @returns {Promise<void>} - The promise that resolves when the filing data is fetched
+     */
     async function fetchFiling() {
       try {
         const data = await getFiling({ filingId });

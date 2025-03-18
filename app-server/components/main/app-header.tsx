@@ -12,6 +12,11 @@ import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import React from 'react';
 
+/**
+ * Renders the AppHeader component with the provided path components as breadcrumbs.
+ * @param {pathComponents: { title: string; path?: string }[]} - The AppHeader properties containing the path components to be displayed.
+ * @returns {JSX.Element} - The renderer AppHeader component.
+ */
 export function AppHeader({
   pathComponents = [],
 }: {

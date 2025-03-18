@@ -12,6 +12,9 @@ import {
   LogOutIcon,
 } from 'lucide-react';
 
+/**
+ * List of all sidebar categories and entries for the internal pages of the application
+ */
 const sidebarEntries = {
   mainEntries: [
     { label: 'Dashboard', icon: LayoutDashboardIcon, href: '/dashboard' },
@@ -30,6 +33,12 @@ const sidebarEntries = {
   ],
 };
 
+/**
+ *  Defines general layout for the internal pages of the application (containing the navigation sidebar)
+ *
+ * @param {React.ReactNode} children - The embedded children of the layout
+ * @returns {React.ReactNode} - The layout of the internal pages of the application
+ */
 const MainLayout = ({
   children,
 }: Readonly<{

@@ -7,12 +7,21 @@ import { getNotificationSubscriptions } from '@/actions/main/notifications/get-n
 import { NotificationSubscription } from '@prisma/client';
 import { AppMainContent } from '@/components/main/app-maincontent';
 
+/**
+ * Renders the main content of the notification subscription page.
+ *
+ * @returns {JSX.Element} - The notification subscription page layout containing a form to create new notification subscriptions and a list of existing subscriptions.
+ */
 export default function NotificationsPage() {
   const [subscriptions, setSubscriptions] = useState<NotificationSubscription[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isPending, startTransition] = useTransition();
 
-  // Funktion zum Laden der Abonnements
+  /**
+   * Fetches the notification subscriptions from the server and updates the state.
+   *
+   * @returns {void} - Fetches the notification subscriptions and updates the state.
+   */
   const fetchSubscriptions = () => {
     setIsLoading(true);
     startTransition(() => {
@@ -23,7 +32,7 @@ export default function NotificationsPage() {
     });
   };
 
-  // Beim Laden der Seite einmalig ausführen
+  // start fetching the notification subscriptions when the page is loaded
   useEffect(() => {
     fetchSubscriptions();
   }, []);

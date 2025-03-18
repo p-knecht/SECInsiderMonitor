@@ -14,6 +14,13 @@ import FilingFootnotes from '@/components/main/filings/filing-details-components
 import FilingRemarks from '@/components/main/filings/filing-details-components/filing-remarks';
 import FilingSignatures from '@/components/main/filings/filing-details-components/filing-signatures';
 
+/**
+ * Renders a component showing the details of a filing structured in an accordion menu (structure derived from the SEC schema)
+ *
+ * @param {OwnershipFiling} filingData - The filing data to show the details of
+ * @param {'page' | 'sheet'} type - The type of embedding this component (page or sheet)
+ * @returns {JSX.Element} - The rendered FilingContentDetails component
+ */
 export default function FilingContentDetails({
   filingData,
   type,

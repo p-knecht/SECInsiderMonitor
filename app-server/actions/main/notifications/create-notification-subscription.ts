@@ -5,6 +5,12 @@ import { dbconnector } from '@/lib/dbconnector';
 import { auth } from '@/auth';
 import { NotificationSubscriptionSchema } from '@/schemas';
 
+/**
+ * Creates a notification subscription based on the input data.
+ *
+ * @param {z.infer<typeof NotificationSubscriptionSchema>} data - input data to create a notification subscription containing description
+ * @returns {Promise<{ success: string } | { error: string }>} - a promise that resolves with a success message or an error message
+ */
 export async function createNotificationSubscription(
   data: z.infer<typeof NotificationSubscriptionSchema>,
 ) {
@@ -21,10 +27,12 @@ export async function createNotificationSubscription(
   const subscriptionCount = await dbconnector.notificationSubscription.count({
     where: { subscriber: session.user.id },
   });
-  if (subscriptionCount >= MAX_SUBSCRIPTIONS)
+  if (subscriptionCount >= MAX_SUBSCRIPTIONS) {
+    // return error if user has reached the maximum number of subscriptions
     return { error: `Maximale Anzahl an Abonnements (${MAX_SUBSCRIPTIONS}) erreicht` };
+  }
 
-  // add subscription
+  // add subscription to database
   await dbconnector.notificationSubscription.create({
     data: {
       subscriber: session.user.id,

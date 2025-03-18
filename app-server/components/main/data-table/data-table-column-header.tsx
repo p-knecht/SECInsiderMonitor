@@ -1,11 +1,14 @@
 import { Column } from '@tanstack/react-table';
 import { cn } from '@/lib/utils';
-import { DataTableColumnHeaderSorter } from '@/components/data-table/data-table-column-header-sorter';
-import { DataTableColumnHeaderFilterText } from '@/components/data-table/data-table-column-header-filter-text';
-import { DataTableColumnHeaderFilterSelect } from '@/components/data-table/data-table-column-header-filter-select';
-import { DataTableColumnHeaderFilterDate } from '@/components/data-table/data-table-column-header-filter-date';
-import { DataTableColumnHeaderFilterCik } from '@/components/data-table//data-table-column-header-filter-cik';
+import { DataTableColumnHeaderSorter } from '@/components/main/data-table/data-table-column-header-sorter';
+import { DataTableColumnHeaderFilterText } from '@/components/main/data-table/data-table-column-header-filter-text';
+import { DataTableColumnHeaderFilterSelect } from '@/components/main/data-table/data-table-column-header-filter-select';
+import { DataTableColumnHeaderFilterDate } from '@/components/main/data-table/data-table-column-header-filter-date';
+import { DataTableColumnHeaderFilterCik } from '@/components/main/data-table/data-table-column-header-filter-cik';
 
+/**
+ * The properties used for data table column header component containing the column definition and title.
+ */
 interface DataTableColumnHeaderProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElement> {
   column: Column<TData, TValue>;
   title: string;
@@ -13,6 +16,12 @@ interface DataTableColumnHeaderProps<TData, TValue> extends React.HTMLAttributes
   selectData?: { value: string; label: React.ReactNode }[];
 }
 
+/**
+ * Renders a custom data table column header component, containing sorter component and warping column specific filter components.
+ *
+ * @param {DataTableColumnHeaderProps<TData, TValue>} {column, title, filterType, selectData, className} - The data table column header properties to get filter type and information needed in type specific components
+ * @returns {JSX.Element} - The renderer DataTableColumnHeader component.
+ */
 export function DataTableColumnHeader<TData, TValue>({
   column,
   title,

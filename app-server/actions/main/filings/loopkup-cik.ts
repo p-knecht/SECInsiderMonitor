@@ -6,6 +6,12 @@ import { LookupCikSchema } from '@/schemas';
 import { CikObject } from '@/data/cik';
 import { dbconnector, decodeStrings } from '@/lib/dbconnector';
 
+/**
+ * Provides a cik object containing the cik, cikName and cikTicker of the requested cik.
+ *
+ * @param {z.infer<typeof LookupCikSchema>} data - input data to lookup cik containing cik
+ * @returns {Promise<CikObject|null>} - a promise that resolves with the cik object or rejects with null
+ */
 export const lookupCik = async (
   data: z.infer<typeof LookupCikSchema>,
 ): Promise<CikObject | null> => {
@@ -67,5 +73,5 @@ export const lookupCik = async (
   } catch (error) {
     console.error(`Error in lookupCik for ${validatedData.data.cik}: ${error}`);
   }
-  return null; // return null if an error occurs or no cik was found
+  return null; // return null if an error occured or no cik was found
 };

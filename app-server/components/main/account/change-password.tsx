@@ -16,12 +16,16 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Button } from '@/components/ui/button';
-
 import { ChangePasswordSchema } from '@/schemas';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
 import { changePassword } from '@/actions/main/account/change-password';
 
+/**
+ * Renders a card containing a form to allow users to change their own password.
+ *
+ * @returns {JSX.Element} - The rendered ChangePasswordForm component
+ */
 export const ChangePasswordForm = () => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>('');
   const [successMessage, setSuccessMessage] = useState<string | undefined>('');
@@ -36,13 +40,20 @@ export const ChangePasswordForm = () => {
     },
   });
 
-  const password = form.watch('newPassword');
+  const password = form.watch('newPassword'); // watch the password field to display the password strength bar
 
+  /**
+   * Sends a request to the server to change the user's password with the given old and new password.
+   *
+   * @param {z.infer<typeof ChangePasswordSchema>} data - The data to be submitted to the server
+   * @returns {void}
+   */
   const onSubmit = (data: z.infer<typeof ChangePasswordSchema>) => {
     // reset form state
     setErrorMessage('');
     setSuccessMessage('');
 
+    // start transition to prevent multiple form submissions or changing the inputs while waiting for response
     startTransition(() => {
       // send password change request
       changePassword(data).then((data) => {

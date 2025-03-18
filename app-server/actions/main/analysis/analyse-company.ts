@@ -19,6 +19,9 @@ import {
   UnderlyingSecurity,
 } from '@prisma/client';
 
+/**
+ * Transaction data for a single transaction
+ */
 export interface Transaction {
   filingId: string;
   filingDate: Date;
@@ -55,15 +58,25 @@ export interface Transaction {
   };
 }
 
+/**
+ * Stock data for a single day
+ */
 export interface StockData {
   date: Date;
   closePrice?: number;
 }
 
+/**
+ * Tagged stock data for a single day (stock data with transaction type that happend on this day)
+ * A = Acquired, D = Disposed, B = Both, O = Other (e.g. no transaction)
+ */
 export interface TaggedStockData extends StockData {
   transactionType: 'A' | 'D' | 'B' | 'O' | undefined;
 }
 
+/**
+ * Return data for the analysis of a company
+ */
 export interface CompanyAnalysisData {
   error?: string;
   transactions?: Transaction[];
@@ -79,19 +92,29 @@ export interface CompanyAnalysisData {
   };
 }
 
+/**
+ * Check if the given ticker is a valid Yahoo ticker
+ *
+ * @param {string} ticker - The ticker to check for validity
+ * @returns {Promise<boolean>} - A promise that resolves to true if the given ticker is a valid Yahoo ticker, otherwise false
+ */
 async function isValidYahooTicker(ticker: string): Promise<boolean> {
   try {
-    await yahooFinance.quote(ticker);
-    return true;
+    const data = await yahooFinance.quote(ticker, {}, { validateResult: false }); // fetch quote data without extensive validation data to prevent filling the log with errors
+    return data?.regularMarketPreviousClose != undefined; // if previous close is exists, ticker is valid
   } catch (e) {
     return false;
   }
 }
 
-async function getYahooTicker(
-  cikTicker: string,
-  cikName: string,
-): Promise<{ yahooTicker: string; nameLookup: boolean } | null> {
+/**
+ * Function trying to get the Yahoo ticker for a given CIK ticker or name
+ *
+ * @param {string} cikTicker - The CIK ticker to get the Yahoo ticker for
+ * @param {string} cikName - The CIK name to get the Yahoo ticker for (used as fallback if no ticker is found by CIK ticker)
+ * @returns {Promise<string | null>} - A promise that resolves to the Yahoo ticker for the given CIK ticker or name, or null if no ticker was found
+ */
+async function getYahooTicker(cikTicker: string, cikName: string): Promise<string | null> {
   // yahoo tickers are always uppercase
   cikTicker = cikTicker.toUpperCase();
 
@@ -101,14 +124,20 @@ async function getYahooTicker(
     cikTicker?.replace('.', '-'),
     cikTicker?.replace('-', ''),
     cikTicker?.replace('.', ''),
+    cikTicker?.split('.')[0],
   ];
-  for (const ticker of tickerVariants)
-    if (await isValidYahooTicker(ticker)) return { yahooTicker: ticker, nameLookup: false }; // if valid ticker found, return it
+  for (const ticker of tickerVariants) if (await isValidYahooTicker(ticker)) return ticker; // if valid ticker found, return it
 
   // if no valid ticker found, try to find a ticker by name lookup
   const searchResults = await yahooFinance.search(cikName);
   if (!searchResults?.quotes || searchResults.quotes.length === 0) return null; // no search results
 
+  /**
+   *  Auxiliary function to check if a search result is a valid equity result used in filter statement below
+   *  (i.e. has a symbol, shortname and quoteType of 'EQUITY')
+   * @param {any} q - The search result to check
+   * @returns {boolean} - True if the search result is a valid equity result, otherwise false
+   */
   function isValidEquityResult(
     q: any,
   ): q is { symbol: string; shortname: string; quoteType: string } {
@@ -121,6 +150,8 @@ async function getYahooTicker(
     shortname: string;
     quoteType: string;
   }[]; // filter out non-equity quotes or quotes without symbol and add type information to satisfy TypeScript compiler
+
+  // check if there is a search result that matches the company fully or is at least 5 characters long and one contains the other
   const exactMatch = filteredResults.find(
     (q) =>
       q.shortname.toLowerCase() === cikName.toLowerCase() || // exact match
@@ -129,11 +160,16 @@ async function getYahooTicker(
         (cikName.toLowerCase().includes(q.shortname.toLowerCase()) ||
           q.shortname.toLowerCase().includes(cikName.toLowerCase()))),
   );
-  if (exactMatch) return { yahooTicker: exactMatch.symbol, nameLookup: true };
+  if (exactMatch) return exactMatch.symbol;
 
   return null;
 }
 
+/**
+ *  Auxiliary function to convert $date fields to Date objects
+ * @param {any} obj - The object to recursively convert $date fields in
+ * @returns obj - The same object with all $date fields converted to Date objects
+ */
 function convertDates(obj: any): any {
   if (Array.isArray(obj)) {
     return obj.map(convertDates);
@@ -148,6 +184,12 @@ function convertDates(obj: any): any {
   return obj;
 }
 
+/**
+ * Analyse a company based on the given data
+ *
+ * @param {z.infer<typeof AnalysisSchema>} data - Data defining the analysis to perform (CIK, date range)
+ * @returns {Promise<CompanyAnalysisData>} - A promise that resolves to the analysis result for the given company
+ */
 export const analyseCompany = async (
   data: z.infer<typeof AnalysisSchema>,
 ): Promise<CompanyAnalysisData> => {
@@ -155,7 +197,7 @@ export const analyseCompany = async (
     data,
     false,
   );
-  if (preparedInputs.error) return { error: preparedInputs.error }; // repropagate error if any occured
+  if (preparedInputs.error) return { error: preparedInputs.error }; // repropagate error if any occured in authenticateAndHandleInputs()
 
   // initialize returnData
   const returnData: CompanyAnalysisData = {
@@ -165,15 +207,18 @@ export const analyseCompany = async (
     transactions: [],
   };
 
-  if (returnData.queryCikInfo?.cikTicker) {
-    // if we have a ticker, use it to get price history
+  if (returnData.queryCikInfo?.cikTicker || returnData.queryCikInfo?.cikName) {
+    // if we have a ticker or company name, use it to get price history
     try {
+      // trying to get Yahoo ticker for CIK ticker or name
       const yahooTicker = await getYahooTicker(
-        returnData.queryCikInfo.cikTicker,
+        returnData.queryCikInfo.cikTicker || '',
         returnData.queryCikInfo.cikName,
       );
+
       if (yahooTicker) {
-        const data = await yahooFinance.chart(returnData.queryCikInfo.cikTicker, {
+        // only fetch stock data if a valid Yahoo ticker was found
+        const data = await yahooFinance.chart(yahooTicker, {
           period1: preparedInputs.fromDate!,
           period2: preparedInputs.toDate!,
           interval: '1d',
@@ -189,9 +234,11 @@ export const analyseCompany = async (
     }
   }
 
+  // no stock data available or fetched --> generate empty stock data entries to allow displaying transaction types
   if (!returnData.taggedStockData || returnData.taggedStockData?.length === 0) {
-    // no stock data available or fetched --> generate empty stock data entries
     returnData.taggedStockData = [];
+
+    // create stock data entries (price = 0) for requested time frame
     for (
       let date = new Date(preparedInputs.fromDate!);
       date <= preparedInputs.toDate!;
@@ -201,9 +248,10 @@ export const analyseCompany = async (
         date: new Date(date), // create copy of date object
         closePrice: 0, // set close price to 0 --> allows to display transaction types on x-axis even if no stock data is available
         transactionType: undefined,
-      }); // create stock data entries (price = 0) for requested time frame
+      });
   }
 
+  // fetch all relevant transactions for the given CIK (as issuer) and time frame
   const transactions: unknown = await aggregateRawOwnershipFilingsWithDecode({
     pipeline: [
       {
@@ -338,7 +386,7 @@ export const analyseCompany = async (
     if (!stockDataEntry.transactionType || stockDataEntry.transactionType == 'O') {
       stockDataEntry.transactionType = transactionCode;
     } else if (stockDataEntry.transactionType !== transactionCode && transactionCode !== null) {
-      stockDataEntry.transactionType = 'B';
+      stockDataEntry.transactionType = 'B'; // B = both
     }
   }
 

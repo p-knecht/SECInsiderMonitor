@@ -20,13 +20,16 @@ import { RegisterFormSchema } from '@/schemas';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
 import { register } from '@/actions/auth/register';
-
 import PasswordStrengthBar from 'react-password-strength-bar';
 
+/**
+ * Renders a register form to allow users to create a new account.
+ *
+ * @returns {JSX.Element} - The rendered register form component
+ */
 export const RegisterForm = () => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>('');
   const [successMessage, setSuccessMessage] = useState<string | undefined>('');
-
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof RegisterFormSchema>>({
@@ -37,15 +40,22 @@ export const RegisterForm = () => {
       confirmPassword: '',
     },
   });
-  const password = form.watch('password');
+  const password = form.watch('password'); // watch the password field to display the password strength bar
 
+  /**
+   * Sends a request to the server to register a new user with the given email and password.
+   *
+   * @param {z.infer<typeof RegisterFormSchema>} data - The data to be submitted to the server
+   * @returns {void}
+   */
   const onSubmit = (data: z.infer<typeof RegisterFormSchema>) => {
     // reset form state
     setErrorMessage('');
     setSuccessMessage('');
 
+    // start transition to prevent multiple form submissions or changing the inputs while waiting for response
     startTransition(() => {
-      // send login request
+      // send register request
       register(data).then((data) => {
         // handle response and update fields
         setErrorMessage(data.error);
