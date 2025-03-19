@@ -2,45 +2,19 @@
 
 import { Suspense } from 'react';
 import { AppMainContent } from '@/components/main/app-maincontent';
-import { AnalysisFilter } from '@/components/main/analysis/analysis-filter';
-import NetworkGraph from '@/components/main/analysis/network-graph';
-import { analyseNetwork, NetworkAnalysisData } from '@/actions/main/analysis/analyse-network';
-import { parseAndHandleAnalysisQuery } from '@/lib/analysis';
-import { AnalysisErrorMessage } from '@/components/main/analysis/error-message';
 import { AnalysisLoadingScreen } from '@/components/main/analysis/loading-screen';
+import { NetworkAnalysisContent } from '@/components/main/analysis/network-analysis-content';
 
 /**
- * Renders content the network analysis page. Contains the network graph and the analysis filter.
+ * Renders the application frame/header and suspense wrapper for the network analysis page containing the analysis content.
  *
- * @returns {JSX.Element} - The network analysis page layout
+ * @returns {JSX.Element} - The layout for the network analysis page
  */
 export default function NetworkAnalysisPage() {
-  const { data, errorMessage, isLoading } = parseAndHandleAnalysisQuery<NetworkAnalysisData>(
-    analyseNetwork,
-    (params) => (!params.depth ? "Suchparameter 'depth' fehlt" : null),
-  );
-
   return (
     <AppMainContent pathComponents={[{ title: 'Netzwerkanalyse', path: '/network-analysis' }]}>
       <Suspense fallback={<AnalysisLoadingScreen isLoading={true} />}>
-        <AnalysisFilter type="network" />
-        <AnalysisErrorMessage errorMessage={errorMessage} />
-        <AnalysisLoadingScreen isLoading={isLoading} />
-        {data && (
-          <>
-            <div className="px-10 mx-auto text-center">
-              <h2 className="text-lg font-semibold">
-                Netzwerkanalyse für {data.queryCikInfo?.cikName}
-                {data.queryCikInfo?.cikTicker ? ` (${data.queryCikInfo?.cikTicker})` : ''}
-              </h2>
-              <h3 className="text-md font-medium text-gray-500">
-                Analysezeitraum: {data.queryParams?.from} - {data.queryParams?.to}, Suchtiefe:{' '}
-                {data.queryParams?.depth}
-              </h3>
-            </div>
-            <NetworkGraph data={data} />
-          </>
-        )}
+        <NetworkAnalysisContent />
       </Suspense>
     </AppMainContent>
   );
