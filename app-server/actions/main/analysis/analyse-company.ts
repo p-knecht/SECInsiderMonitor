@@ -59,18 +59,12 @@ export interface Transaction {
 }
 
 /**
- * Stock data for a single day
- */
-export interface StockData {
-  date: Date;
-  closePrice?: number;
-}
-
-/**
  * Tagged stock data for a single day (stock data with transaction type that happend on this day)
- * A = Acquired, D = Disposed, B = Both, O = Other (e.g. no transaction)
+ * transactionType coding: A = Acquired, D = Disposed, B = Both, O = Other, undefined = No transaction
  */
-export interface TaggedStockData extends StockData {
+export interface TaggedStockData {
+  date: Date;
+  closePrice: number;
   transactionType: 'A' | 'D' | 'B' | 'O' | undefined;
 }
 
@@ -90,6 +84,19 @@ export interface CompanyAnalysisData {
     cikName: string;
     cikTicker?: string;
   };
+}
+
+/**
+ * Yahoo quote data for a single day
+ */
+interface YahooQuote {
+  date: Date;
+  high: number | null;
+  low: number | null;
+  open: number | null;
+  close: number | null;
+  volume: number | null;
+  adjclose?: number | null;
 }
 
 /**
@@ -185,6 +192,219 @@ function convertDates(obj: any): any {
 }
 
 /**
+ * Try to download stock data for the given company from Yahoo Finance and add it to the given map
+ * (returns an empty map if no data could be fetched)
+ *
+ * @param {string|undefined} cikTicker - The CIK ticker to get the Yahoo ticker for
+ * @param {string} cikName - The CIK name to get the Yahoo ticker for (used as fallback if no ticker is found by CIK ticker)
+ * @param {Date} fromDate - The start date of the time frame to fetch stock data for
+ * @param {Date} toDate - The end date of the time frame to fetch stock data for
+ * @returns {Promise<Map<string, YahooQuote>>} - A promise that resolves to a map of stock data entries for the given time frame
+ */
+async function fetchYahooStockData(
+  cikTicker: string | undefined,
+  cikName: string,
+  fromDate: Date,
+  toDate: Date,
+) {
+  const fetchedStockData = new Map<string, YahooQuote>();
+  // if we have a ticker or company name, try to use it to get price history from  Yahoo Finance
+  if (cikTicker || cikName) {
+    try {
+      // trying to get Yahoo ticker for CIK ticker or name
+      const yahooTicker = await getYahooTicker(cikTicker || '', cikName);
+
+      if (yahooTicker) {
+        // only fetch stock data if a valid Yahoo ticker was found
+        const data = await yahooFinance.chart(yahooTicker, {
+          period1: fromDate,
+          period2: toDate,
+          interval: '1d',
+        });
+
+        // add stock data to map
+        data.quotes.forEach((q: YahooQuote) => {
+          if (q.close !== null) fetchedStockData.set(q.date.toISOString().split('T')[0], q);
+        });
+      }
+    } catch (e) {
+      console.error(`Failed to fetch price history for ${cikName}: ${e}`);
+    }
+  }
+  return fetchedStockData;
+}
+
+/**
+ * Fetches the relevant transactions for the given issuer and time frame from the database
+ * (note: this function returns transacations contained in filings not filings itself --> as transaction date != filing date or date of report)
+ *
+ * @param {string} issuerCik - The CIK of the issuer to fetch transactions from database for
+ * @param {Date} fromDate - The start date of the time frame to fetch transactions for
+ * @param {Date} toDate - The end date of the time frame to fetch transactions for
+ * @returns {Promise<Transaction[]>} - A promise that resolves to an array of transactions for the given issuer and time frame
+ */
+async function fetchRelevantTransactionsFromDatabase(
+  issuerCik: string,
+  fromDate: Date,
+  toDate: Date,
+) {
+  return convertDates(
+    await aggregateRawOwnershipFilingsWithDecode({
+      pipeline: [
+        {
+          $match: {
+            'formData.issuer.issuerCik': issuerCik, // only filings with given CIK as issuer
+            $or: [
+              // make sure at least one transaction exists
+              { 'formData.derivativeTable.derivativeTransaction': { $exists: true, $ne: [] } },
+              {
+                'formData.nonDerivativeTable.nonDerivativeTransaction': { $exists: true, $ne: [] },
+              },
+            ],
+          },
+        },
+        {
+          $project: {
+            // only include relevant fields
+            _id: 0,
+            filingId: 1,
+            filingDate: '$dateFiled',
+            aff10b5One: '$formData.aff10b5One',
+            footnotes: '$formData.footnotes.footnote',
+            reportingOwner: {
+              // generate array of reporting owners with cik and name (other fields are not relevant)
+              $map: {
+                input: '$formData.reportingOwner',
+                as: 'owner',
+                in: {
+                  cik: '$$owner.reportingOwnerId.rptOwnerCik',
+                  cikName: '$$owner.reportingOwnerId.rptOwnerName',
+                },
+              },
+            },
+            derivativeTransactions: '$formData.derivativeTable.derivativeTransaction',
+            nonDerivativeTransactions: '$formData.nonDerivativeTable.nonDerivativeTransaction',
+          },
+        },
+        {
+          // handle derivatives and non-derivatives separately
+          $facet: {
+            derivatives: [
+              { $unwind: '$derivativeTransactions' }, // build one output entry per embedded derivative transaction
+              {
+                $match: {
+                  'derivativeTransactions.transactionDate.value': {
+                    // transaction must be within the given time frame
+                    $gte: { $date: fromDate },
+                    $lte: { $date: toDate },
+                  },
+                },
+              },
+              {
+                $project: {
+                  // filing fileds
+                  filingId: 1,
+                  filingDate: 1,
+                  reportingOwner: 1,
+                  aff10b5One: 1,
+                  footnotes: 1,
+
+                  // generic field
+                  transactionType: 'Derivative',
+
+                  // transaction fields
+                  transactionDate: '$derivativeTransactions.transactionDate',
+                  securityTitle: '$derivativeTransactions.securityTitle',
+                  transactionCoding: '$derivativeTransactions.transactionCoding',
+                  transactionAmounts: '$derivativeTransactions.transactionAmounts',
+                  ownershipNature: '$derivativeTransactions.ownershipNature',
+                  underlyingSecurity: '$derivativeTransactions.underlyingSecurity',
+                  exercisePrice: '$derivativeTransactions.exercisePrice',
+                  exerciseDate: '$derivativeTransactions.exerciseDate',
+                  expirationDate: '$derivativeTransactions.expirationDate',
+                },
+              },
+            ],
+            nonDerivatives: [
+              { $unwind: '$nonDerivativeTransactions' }, // build one output entry per embedded derivative transaction
+              {
+                $match: {
+                  'nonDerivativeTransactions.transactionDate.value': {
+                    // transaction must be within the given time frame
+                    $gte: { $date: fromDate },
+                    $lte: { $date: toDate },
+                  },
+                },
+              },
+              {
+                $project: {
+                  // filing fileds
+                  filingId: 1,
+                  filingDate: 1,
+                  reportingOwner: 1,
+                  aff10b5One: 1,
+                  footnotes: 1,
+
+                  // generic field
+                  transactionType: 'Non-Derivative',
+
+                  // transaction fields
+                  transactionDate: '$nonDerivativeTransactions.transactionDate',
+                  securityTitle: '$nonDerivativeTransactions.securityTitle',
+                  transactionCoding: '$nonDerivativeTransactions.transactionCoding',
+                  transactionAmounts: '$nonDerivativeTransactions.transactionAmounts',
+                  ownershipNature: '$nonDerivativeTransactions.ownershipNature',
+                },
+              },
+            ],
+          },
+        },
+        {
+          $project: {
+            // combine derivatives and non-derivatives into one array (workaround: must be added as new field, which will be unwinded and unrooted later)
+            transactions: { $concatArrays: ['$derivatives', '$nonDerivatives'] },
+          },
+        },
+        { $unwind: '$transactions' }, // one output entry per transaction
+        { $replaceRoot: { newRoot: '$transactions' } }, // "unnest" transactions
+        { $sort: { transactionDate: 1 } }, // sort by transaction date (ascending)
+      ],
+    }),
+  ) as Transaction[];
+}
+
+/**
+ * Summarizes the types of transactions for each day
+ *
+ * @param {Transaction[]} transactions - The transactions to summarize by date
+ * @returns {Map<string, string>} - A map with date index as key and the summarized transaction type as value
+ */
+function summarizeTransactions(transactions: Transaction[]) {
+  const summarizedTransactions = new Map<string, string>();
+  for (const transaction of transactions) {
+    const transactionDateIndex = transaction.transactionDate.value.toISOString().split('T')[0];
+    let transactionType =
+      transaction.transactionAmounts?.transactionAcquiredDisposedCode?.value.toUpperCase() || 'O';
+    if (!['A', 'D'].includes(transactionType)) transactionType = 'O'; // set transaction type to 'O' (= other) if it is not 'A' or 'D'
+
+    if (!summarizedTransactions.has(transactionDateIndex)) {
+      // if there is no transaction for this date yet, add it directly
+      summarizedTransactions.set(transactionDateIndex, transactionType);
+    } else {
+      const previousTransactionType = summarizedTransactions.get(transactionDateIndex);
+      if (previousTransactionType == 'O') {
+        // if there is a transaction of type 'O' for this date, replace it with the new transaction type
+        summarizedTransactions.set(transactionDateIndex, transactionType);
+      } else if (previousTransactionType !== transactionType && transactionType !== 'O') {
+        // if there is a transaction of a different known type (not 'O') for this date, set transaction type to 'B' (= both)
+        summarizedTransactions.set(transactionDateIndex, 'B');
+      }
+    }
+  }
+  return summarizedTransactions;
+}
+
+/**
  * Analyse a company based on the given data
  *
  * @param {z.infer<typeof AnalysisSchema>} data - Data defining the analysis to perform (CIK, date range)
@@ -207,188 +427,54 @@ export const analyseCompany = async (
     transactions: [],
   };
 
-  if (returnData.queryCikInfo?.cikTicker || returnData.queryCikInfo?.cikName) {
-    // if we have a ticker or company name, use it to get price history
-    try {
-      // trying to get Yahoo ticker for CIK ticker or name
-      const yahooTicker = await getYahooTicker(
-        returnData.queryCikInfo.cikTicker || '',
-        returnData.queryCikInfo.cikName,
-      );
+  // fetch relevant transactions for given company and time frame
+  returnData.transactions = await fetchRelevantTransactionsFromDatabase(
+    preparedInputs.queryParams?.cik!,
+    preparedInputs.fromDate!,
+    preparedInputs.toDate!,
+  );
 
-      if (yahooTicker) {
-        // only fetch stock data if a valid Yahoo ticker was found
-        const data = await yahooFinance.chart(yahooTicker, {
-          period1: preparedInputs.fromDate!,
-          period2: preparedInputs.toDate!,
-          interval: '1d',
-        });
-        returnData.taggedStockData = data.quotes.map((q) => ({
-          date: new Date(q.date.toISOString().split('T')[0]), // make sure date is a Date object and set time to 00:00:00
-          closePrice: q.close !== null ? q.close : undefined,
-          transactionType: undefined,
-        }));
+  // summarize transactions for each day with transactions
+  const summarizedTransactions = summarizeTransactions(returnData.transactions);
+
+  // fetch stock data for given company and add it to map
+  const fetchedStockData = await fetchYahooStockData(
+    preparedInputs.queryCikInfo?.cikTicker,
+    preparedInputs.queryCikInfo?.cikName!,
+    preparedInputs.fromDate!,
+    preparedInputs.toDate!,
+  );
+
+  // create a tagged stock data entry for each day in the time frame and add stock data and transaction type (if available)
+  let lastAddedDateIndex: string = '';
+  for (
+    let date = new Date(preparedInputs.fromDate!);
+    date <= preparedInputs.toDate!;
+    date.setDate(date.getDate() + 1)
+  ) {
+    let closePrice = 0;
+    if (fetchedStockData.size > 0) {
+      const currentDateIndex = date.toISOString().split('T')[0];
+      if (fetchedStockData.has(currentDateIndex)) {
+        // if stockData is available, get price for this date
+        closePrice = fetchedStockData.get(currentDateIndex)?.close || 0;
+        lastAddedDateIndex = date.toISOString().split('T')[0];
+      } else if (!lastAddedDateIndex) {
+        // if no stock data is available for this date and no previous date with stock data exists, get first available stock data open price
+        closePrice = fetchedStockData.get(Array.from(fetchedStockData.keys())[0])?.open || 0;
+      } else {
+        // if no stock data is available for this date, use last added stock data close price
+        closePrice = fetchedStockData.get(lastAddedDateIndex)?.close || 0;
       }
-    } catch (e) {
-      console.error(`Failed to fetch price history for ${returnData.queryCikInfo.cikTicker}: ${e}`);
-    }
-  }
 
-  // no stock data available or fetched --> generate empty stock data entries to allow displaying transaction types
-  if (!returnData.taggedStockData || returnData.taggedStockData?.length === 0) {
-    returnData.taggedStockData = [];
-
-    // create stock data entries (price = 0) for requested time frame
-    for (
-      let date = new Date(preparedInputs.fromDate!);
-      date <= preparedInputs.toDate!;
-      date.setDate(date.getDate() + 1)
-    )
-      returnData.taggedStockData.push({
-        date: new Date(date), // create copy of date object
-        closePrice: 0, // set close price to 0 --> allows to display transaction types on x-axis even if no stock data is available
-        transactionType: undefined,
+      // add tagged stock data entry to return data
+      returnData.taggedStockData!.push({
+        date: new Date(date), // create copy of date object to prevent reference issues
+        closePrice: closePrice,
+        transactionType:
+          (summarizedTransactions.get(currentDateIndex) as 'A' | 'B' | 'D' | 'O') || undefined, // get and add transaction type if available
       });
-  }
-
-  // fetch all relevant transactions for the given CIK (as issuer) and time frame
-  const transactions: unknown = await aggregateRawOwnershipFilingsWithDecode({
-    pipeline: [
-      {
-        $match: {
-          'formData.issuer.issuerCik': returnData.queryParams?.cik, // only filings with given CIK as issuer
-          $or: [
-            // make sure at least one transaction exists
-            { 'formData.derivativeTable.derivativeTransaction': { $exists: true, $ne: [] } },
-            { 'formData.nonDerivativeTable.nonDerivativeTransaction': { $exists: true, $ne: [] } },
-          ],
-        },
-      },
-      {
-        $project: {
-          // only include relevant fields
-          _id: 0,
-          filingId: 1,
-          filingDate: '$dateFiled',
-          aff10b5One: '$formData.aff10b5One',
-          footnotes: '$formData.footnotes.footnote',
-          reportingOwner: {
-            // generate array of reporting owners with cik and name (other fields are not relevant)
-            $map: {
-              input: '$formData.reportingOwner',
-              as: 'owner',
-              in: {
-                cik: '$$owner.reportingOwnerId.rptOwnerCik',
-                cikName: '$$owner.reportingOwnerId.rptOwnerName',
-              },
-            },
-          },
-          derivativeTransactions: '$formData.derivativeTable.derivativeTransaction',
-          nonDerivativeTransactions: '$formData.nonDerivativeTable.nonDerivativeTransaction',
-        },
-      },
-      {
-        // handle derivatives and non-derivatives separately
-        $facet: {
-          derivatives: [
-            { $unwind: '$derivativeTransactions' }, // build one output entry per embedded derivative transaction
-            {
-              $match: {
-                'derivativeTransactions.transactionDate.value': {
-                  // transaction must be within the given time frame
-                  $gte: { $date: preparedInputs.fromDate! },
-                  $lte: { $date: preparedInputs.toDate! },
-                },
-              },
-            },
-            {
-              $project: {
-                // filing fileds
-                filingId: 1,
-                filingDate: 1,
-                reportingOwner: 1,
-                aff10b5One: 1,
-                footnotes: 1,
-
-                // generic field
-                transactionType: 'Derivative',
-
-                // transaction fields
-                transactionDate: '$derivativeTransactions.transactionDate',
-                securityTitle: '$derivativeTransactions.securityTitle',
-                transactionCoding: '$derivativeTransactions.transactionCoding',
-                transactionAmounts: '$derivativeTransactions.transactionAmounts',
-                ownershipNature: '$derivativeTransactions.ownershipNature',
-                underlyingSecurity: '$derivativeTransactions.underlyingSecurity',
-                exercisePrice: '$derivativeTransactions.exercisePrice',
-                exerciseDate: '$derivativeTransactions.exerciseDate',
-                expirationDate: '$derivativeTransactions.expirationDate',
-              },
-            },
-          ],
-          nonDerivatives: [
-            { $unwind: '$nonDerivativeTransactions' }, // build one output entry per embedded derivative transaction
-            {
-              $match: {
-                'nonDerivativeTransactions.transactionDate.value': {
-                  // transaction must be within the given time frame
-                  $gte: { $date: preparedInputs.fromDate! },
-                  $lte: { $date: preparedInputs.toDate! },
-                },
-              },
-            },
-            {
-              $project: {
-                // filing fileds
-                filingId: 1,
-                filingDate: 1,
-                reportingOwner: 1,
-                aff10b5One: 1,
-                footnotes: 1,
-
-                // generic field
-                transactionType: 'Non-Derivative',
-
-                // transaction fields
-                transactionDate: '$nonDerivativeTransactions.transactionDate',
-                securityTitle: '$nonDerivativeTransactions.securityTitle',
-                transactionCoding: '$nonDerivativeTransactions.transactionCoding',
-                transactionAmounts: '$nonDerivativeTransactions.transactionAmounts',
-                ownershipNature: '$nonDerivativeTransactions.ownershipNature',
-              },
-            },
-          ],
-        },
-      },
-      {
-        $project: {
-          // combine derivatives and non-derivatives into one array (workaround: must be added as new field, which will be unwinded and unrooted later)
-          transactions: { $concatArrays: ['$derivatives', '$nonDerivatives'] },
-        },
-      },
-      { $unwind: '$transactions' }, // one output entry per transaction
-      { $replaceRoot: { newRoot: '$transactions' } }, // "unnest" transactions
-      { $sort: { transactionDate: 1 } }, // sort by transaction date (ascending)
-    ],
-  });
-  returnData.transactions = convertDates(transactions) as Transaction[]; // cast to correct type
-
-  // add transaction type (for transaction day) to stock data (and summarize multiple transactions on one day if necessary)
-  for (const transaction of returnData.transactions) {
-    const stockDataEntry = returnData.taggedStockData?.find(
-      (entry) => entry.date.getTime() === transaction.transactionDate.value.getTime(),
-    );
-    if (!stockDataEntry) continue; // if there is no stock data entry for this transaction, skip it (should not happen)
-
-    const transactionCode =
-      (transaction.transactionAmounts?.transactionAcquiredDisposedCode?.value as 'A' | 'D' | 'O') ||
-      'O'; // O = other
-    if (!stockDataEntry.transactionType || stockDataEntry.transactionType == 'O') {
-      stockDataEntry.transactionType = transactionCode;
-    } else if (stockDataEntry.transactionType !== transactionCode && transactionCode !== null) {
-      stockDataEntry.transactionType = 'B'; // B = both
     }
   }
-
   return returnData;
 };

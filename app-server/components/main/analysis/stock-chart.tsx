@@ -151,7 +151,7 @@ export function StockChart({ data, onDateClick, activeDate }: StockChartProps): 
         <div className="absolute top-5 right-5 px-3 py-1 w-1/3">
           <FormError
             message="
-              Für das ausgewählte Unternehmen wurden im angegebenen Zeitraum keine Kursdaten bei Yahoo Finance gefunden. Dies könnte daran liegen, dass der SEC-Ticker oder der registrierte Unternehmensname nicht eindeutig zugeordnet werden konnte."
+              Für das ausgewählte Unternehmen wurden im angegebenen Zeitraum keine Kursdaten bei Yahoo Finance gefunden. Dies könnte daran liegen, dass der SEC-Ticker oder Unternehmensname nicht eindeutig zugeordnet werden konnte oder für den gewählten Zeitraum keine Kursdaten vorliegen."
           />
         </div>
       )}
