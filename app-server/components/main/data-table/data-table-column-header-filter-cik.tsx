@@ -200,7 +200,7 @@ export const DataTableColumnHeaderFilterCik = ({
         {currentFilter.length > 0 && (
           <>
             <DropdownMenuSeparator />
-            <div className="flex flex-wrap justify-center max-w-xs gap-1 mb-1">{filterBadges}</div>
+            <div className="flex flex-wrap justify-center gap-1 mb-1">{filterBadges}</div>
           </>
         )}
       </DropdownMenuContent>
