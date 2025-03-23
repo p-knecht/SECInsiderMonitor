@@ -16,7 +16,7 @@
     "dev": "next dev --turbopack",
     "start": "next start",
     "build:appserver": "next build",
-    "build:initialize-scripts": "tsc --skipLibCheck initialize-database-indexes.ts initialize-auth-token.ts",
+    "build:initialize-scripts": "tsc --skipLibCheck initialize-auth-token.ts",
     "prisma:generate": "prisma generate --schema=../db-schema/schema.prisma",
     "prisma:push": "prisma db push --skip-generate --schema=../db-schema/schema.prisma",
     "prisma:studio": "prisma studio --schema=../db-schema/schema.prisma"
@@ -48,7 +48,6 @@
     "log4js": "^6.9.1",
     "lucide-react": "^0.479.0",
     "mime-types": "^2.1.35",
-    "mongodb": "^6.14.2",
     "next": "^15.1.7",
     "next-auth": "^5.0.0-beta.25",
     "nodemailer": "^6.10.0",

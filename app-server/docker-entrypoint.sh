@@ -37,22 +37,17 @@ while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
         echo "Checking for Prisma schema differences..."
         DIFF_OUTPUT=$(npx prisma migrate diff --from-schema-datasource=../db-schema/schema.prisma --to-schema-datamodel=../db-schema/schema.prisma --exit-code || true)
         
-        # check if there were other changes than the manually created indexes (which are not supported by Prisma natively)
-        if echo "$DIFF_OUTPUT" | grep -qvE '^\[-\] Index'; then
-            echo "Non-index changes detected. Running Prisma db push..."
+        # check if schema updates are needed
+        if echo "$DIFF_OUTPUT" | grep -q '[\+\-\~]'; then
+            echo "Changed db schema detected. Running Prisma db push..."
             if ! npm run prisma:push; then
                 echo "Prisma db push failed! Exiting..."
                 exit 2
             fi
         else
-            echo "Only index creations detected. Skipping Prisma db push."
+            echo "No schema changes detected. Skipping Prisma db push."
         fi
 
-        echo "Running initialize database indexes (check if already existing and create if not)..."
-        if ! node initialize-database-indexes.js; then
-            echo "Failed to initialize database indexes! Exiting..."
-            exit 3
-        fi
         rm -f "$LOCK_FILE"
         break
     else

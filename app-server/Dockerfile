@@ -8,7 +8,6 @@ RUN npm install
 
 COPY *.json .. 
 COPY db-schema ../db-schema
-COPY db-schema/initialize-database-indexes.ts .
 COPY app-server/*.ts .
 COPY app-server/*.mjs .
 COPY app-server/actions ./actions/
@@ -35,7 +34,6 @@ COPY --from=build /usr/src/app/app-server/.next ./.next
 COPY --from=build /usr/src/app/app-server/public ./public
 COPY --from=build /usr/src/app/app-server/package*.json ./
 COPY --from=build /usr/src/app/db-schema ../db-schema
-COPY --from=build /usr/src/app/app-server/initialize-database-indexes.js ./initialize-database-indexes.js
 COPY --from=build /usr/src/app/app-server/initialize-auth-token.js ./initialize-auth-token.js
 
 # copy the entrypoint script and make it executable

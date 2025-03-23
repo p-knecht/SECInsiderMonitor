@@ -20,6 +20,15 @@ model OwnershipFiling {
   dateAdded                   DateTime                 @default(now())
   embeddedDocuments           EmbeddedDocument[]
   formData                    OwnershipFilingFormData?
+
+  @@index([dateFiled])
+  @@index([formType])
+  @@index([formData.periodOfReport])
+  @@index([formData.issuer.issuerCik])
+  @@index([formData.issuer.issuerName])
+  @@index([formData.issuer.issuerTradingSymbol])
+  @@index([formData.reportingOwner.reportingOwnerId.rptOwnerCik])
+  @@index([formData.reportingOwner.reportingOwnerId.rptOwnerName])
 }
 
 // Embedded Document Types/Enums
@@ -259,29 +268,36 @@ type IndirectNature {
 // ||||                                       User Schema                                       ||||
 // =================================================================================================
 // =================================================================================================
-// (see https://authjs.dev/getting-started/adapters/prisma?framework=next-js)
+// (derived from https://authjs.dev/getting-started/adapters/prisma?framework=next-js)
 
 model User {
   id            String          @id @default(auto()) @map("_id") @db.ObjectId
   email         String?         @unique
   emailVerified Boolean         @default(false)      
   password      String?
-  role          UserRole        @default(user)
- 
+  role          UserRole        @default(user) 
   createdAt DateTime @default(now())
   lastLogin DateTime?
   updatedAt DateTime @updatedAt
+
+  // Relations
+  notificationSubscriptions NotificationSubscription[]
+  emailVerificationTokens    EmailVerificationToken?
+  passwordResetTokens        PasswordResetToken?
 }
 
 model NotificationSubscription {
   id            String          @id @default(auto()) @map("_id") @db.ObjectId
-  subscriber    String
+  subscriber    String          @db.ObjectId
   description   String
   issuerCiks    String[]
   formTypes     String[]
   reportingOwnerCiks String[]
   lastTriggered DateTime?
   createdAt     DateTime        @default(now())
+
+  // Relations
+  user          User            @relation(fields: [subscriber], references: [id])
 }
 
 enum UserRole {
@@ -291,18 +307,20 @@ enum UserRole {
 
 model EmailVerificationToken {
   id               String  @id @default(auto()) @map("_id") @db.ObjectId
-  email            String
+  email            String  @unique
   token            String  @unique
   expires          DateTime
 
-  @@unique([email, token])
+  // Relations
+  user             User   @relation(fields: [email], references: [email])
 }
 
 model PasswordResetToken {
   id               String  @id @default(auto()) @map("_id") @db.ObjectId
-  email            String
+  email            String  @unique
   token            String  @unique
   expires          DateTime
 
-  @@unique([email, token])
+  // Relations
+  user             User   @relation(fields: [email], references: [email])
 }
