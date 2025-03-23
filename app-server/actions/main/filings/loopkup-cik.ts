@@ -25,7 +25,6 @@ export const lookupCik = async (
 
   try {
     // parallelized MongoDB queries for issuer & reportingOwner ciks
-    // using raw queries instead of Prisma native query as nested queries are not supported by Prisma at the moment
     const [issuerResult, reportingOwnerResult] = await Promise.all([
       decodeStrings(
         await dbconnector.ownershipFiling.findRaw({

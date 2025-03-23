@@ -557,7 +557,6 @@ async function getMatchingFilingsForSubscription(
     });
 
   // query database for new filings matching the subscription since the reference date
-  // note: we have to use raw aggregation queries here, as Prisma does not support nested filtering at the moment --> can be replaced with Prisma native queries once supported
   const rawFilings = await dbconnector.ownershipFiling.aggregateRaw({
     pipeline: [{ $match: filter }, { $sort: { dateAdded: 1 } }],
   });

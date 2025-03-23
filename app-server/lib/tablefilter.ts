@@ -66,12 +66,12 @@ const addDateFilter = (
 };
 
 /**
- * Auxiliary function to build a filter object for Prisma or MongoDB queries based on the given search parameters.
- * The filter object is built based on the given type ('user' or 'filing') and the required query type (prisma or mongodb native).
+ * Auxiliary function to build a filter object for Prisma or MongoDB ("raw") queries based on the given search parameters.
+ * The filter object is built based on the given type ('user' or 'filing') and the required query type (prisma or mongodb native/raw queries).
  *
  * @param {Object} retrievedSearchParams - The search parameters retrieved from the request query, which will be parsed based on specification to get relevant filters
  * @param {string} type - The type of the filter ('user' or 'filing').
- * @param {boolean} useMongo - Whether to use MongoDB native queries (true) or Prisma queries (false).
+ * @param {boolean} useMongo - Whether to use MongoDB native/raw queries (true) or Prisma queries (false).
  * @returns {Object} - The filter object to be used in the query.
  */
 export const buildFilter = (
@@ -138,7 +138,7 @@ export const buildFilter = (
       useMongo,
     );
 
-    // nested filtering is currently only supported with MongoDB native/raw queries --> skip following filters if a Prisma filter was requested
+    // nested filtering on arrays of embedded documents did not fully work during development with Prisma filters (unless matching the full object)  --> skip following filters if a Prisma filter was requested
     if (useMongo) {
       addTextFilter(
         retrievedSearchParams,

@@ -24,8 +24,6 @@ export const searchCiks = async (data: z.infer<typeof SearchCiksSchema>) => {
   // extract values from validated data
   const { searchString, limit, limitType } = validatedData.data;
   try {
-    // using raw queries instead of Prisma native query as nested queries are not supported by Prisma at the moment
-
     // prepare array of promises for parallel search of issuer and reporting owner
     const queries: Promise<any>[] = [];
 

@@ -78,7 +78,6 @@ export default async function FilingsPage({ searchParams: searchParams }: Filing
   // Handle filtering parameters
   let filter = buildFilter(validParams, 'filing', true);
 
-  // note: we have to use raw aggregation queries here, as Prisma does not support nested filtering at the moment --> can be replaced with Prisma native queries once supported
   const totalCountResult = await aggregateRawOwnershipFilingsWithDecode({
     pipeline: [{ $match: filter }, { $count: 'total' }],
   });
@@ -92,7 +91,6 @@ export default async function FilingsPage({ searchParams: searchParams }: Filing
   }
 
   if (0 < totalCount) {
-    // note: we have to use raw aggregation queries here, as Prisma does not support nested filtering at the moment --> can be replaced with Prisma native queries once supported
     const rawFilings = await aggregateRawOwnershipFilingsWithDecode({
       pipeline: [
         { $match: filter },
