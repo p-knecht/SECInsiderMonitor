@@ -40,7 +40,7 @@ export default function LogfileList({ logfiles }: { logfiles: Logfile[] }) {
   }
 
   return (
-    <Accordion type="single" className="w-full">
+    <Accordion type="multiple" className="w-full">
       {logfiles.map((logfile) => (
         <AccordionItem key={logfile.filename} value={logfile.filename}>
           <AccordionTrigger onClick={() => handleLoadLog(logfile.filename)}>

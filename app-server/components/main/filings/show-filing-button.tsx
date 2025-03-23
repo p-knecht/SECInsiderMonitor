@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { CheckIcon, ExternalLinkIcon, ClipboardIcon, ViewIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import ShowFilingContent from '@/components/main/filings/filing-content';
+import { useRouter } from 'next/navigation';
 
 /**
  * Renders a button to open a sheet (modal) containing filing details
@@ -15,6 +16,7 @@ import ShowFilingContent from '@/components/main/filings/filing-content';
  * @returns {JSX.Element} The ShowFilingButton component
  */
 export default function ShowFilingButton({ filingId }: { filingId: string }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const directLink = `filings/${filingId}`;
@@ -26,7 +28,7 @@ export default function ShowFilingButton({ filingId }: { filingId: string }) {
    */
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(`https://${process.env.SERVER_FQDN}/admin/${directLink}`);
+      await navigator.clipboard.writeText(`https://${process.env.SERVER_FQDN}/${directLink}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -35,11 +37,17 @@ export default function ShowFilingButton({ filingId }: { filingId: string }) {
   };
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" className="cursor-pointer h-6 w-6 hover:bg-gray-200">
-          <ViewIcon className="h-4 w-4 text-gray-600" />
-        </Button>
-      </SheetTrigger>
+      <Button
+        variant="ghost"
+        className="cursor-pointer h-6 w-6 hover:bg-gray-200"
+        onClick={() => {
+          // open sheet only on wide viewports, otherwise redirect to subpage directly
+          if (typeof window !== 'undefined' && window.innerWidth >= 768) setOpen(true);
+          else router.push(directLink);
+        }}
+      >
+        <ViewIcon className="h-4 w-4 text-gray-600" />
+      </Button>
       <SheetContent side="right" className="!container overflow-y-auto">
         <div className="flex flex-col gap-4 p-2">
           <SheetHeader className="pb-0">

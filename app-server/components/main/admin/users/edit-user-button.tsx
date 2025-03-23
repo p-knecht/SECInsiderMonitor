@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { PencilIcon, CheckIcon, ExternalLinkIcon, ClipboardIcon } from 'lucide-react';
 import Link from 'next/link';
 import EditUserContent from './edit-user-content';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSession } from 'next-auth/react';
 import { FormError } from '@/components/form-error';
+import { useRouter } from 'next/navigation';
 
 /**
  * Renders a button to open a sheet (modal) containing a form to edit a user's details.
@@ -24,6 +25,7 @@ export default function EditUserButton({
   userId: string;
   userEmail: string | null;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -47,11 +49,17 @@ export default function EditUserButton({
   };
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" className="cursor-pointer h-6 w-6 hover:bg-gray-200">
-          <PencilIcon className="h-4 w-4 text-gray-600" />
-        </Button>
-      </SheetTrigger>
+      <Button
+        variant="ghost"
+        className="cursor-pointer h-6 w-6 hover:bg-gray-200"
+        onClick={() => {
+          // open sheet only on wide viewports, otherwise redirect to subpage directly
+          if (typeof window !== 'undefined' && window.innerWidth >= 768) setOpen(true);
+          else router.push(directLink);
+        }}
+      >
+        <PencilIcon className="h-4 w-4 text-gray-600" />
+      </Button>
       <SheetContent side="right">
         <div className="flex flex-col gap-4 p-2">
           <SheetHeader>
