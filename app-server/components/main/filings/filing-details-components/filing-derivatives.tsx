@@ -11,7 +11,7 @@ import { buildFieldContent } from '@/components/main/filings/filing-details-comp
  */
 export default function FilingDerivatives({ filingData }: { filingData: OwnershipFiling }) {
   if (
-    // check if there is no data (holdings or transactions) for non-derivative instruments
+    // check if there is no data (holdings or transactions) for derivative instruments
     !filingData.formData?.derivativeTable ||
     ((!filingData.formData?.derivativeTable.derivativeHolding ||
       filingData.formData?.derivativeTable.derivativeHolding.length === 0) &&
@@ -38,7 +38,7 @@ export default function FilingDerivatives({ filingData }: { filingData: Ownershi
         {(filingData.formType == '4' || filingData.formType == '5') && transactions.length > 0 && (
           <div>
             <h2 className="text-md font-medium text-gray-800 text-center mb-2">
-              Non-Derivative Transactions
+              Derivative Transactions
             </h2>
             <div className="overflow-x-auto rounded-md">
               <table className="min-w-full text-xs">
@@ -134,7 +134,7 @@ export default function FilingDerivatives({ filingData }: { filingData: Ownershi
         {holdings.length > 0 && (
           <div>
             <h2 className="text-sm font-medium text-gray-800 text-center mb-2">
-              Non-Derivative Holdings
+              Derivative Holdings
             </h2>
             <div className="overflow-x-auto rounded-md">
               <table className="min-w-full text-xs">
