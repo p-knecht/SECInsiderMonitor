@@ -36,11 +36,14 @@ async function runFetcherScript(currentAttempt: number = 0): Promise<void> {
   } catch (error) {
     logger.error(`Error fetching SEC forms with fetcher.js: ${error}`);
     logger.info(`Retrying in ${RETRY_INTERVAL} minutes...`);
-    setTimeout(() => {
-      // retry fetching after a defined interval asynchronously
-      logger.info('Starting retry attempt...');
-      runFetcherScript(currentAttempt + 1);
-    }, RETRY_INTERVAL);
+    setTimeout(
+      () => {
+        // retry fetching after a defined interval asynchronously
+        logger.info('Starting retry attempt...');
+        runFetcherScript(currentAttempt + 1);
+      },
+      RETRY_INTERVAL * 60 * 1000,
+    );
   }
 }
 
