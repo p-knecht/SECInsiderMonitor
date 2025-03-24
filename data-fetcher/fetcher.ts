@@ -500,7 +500,7 @@ async function handleNotificationSubscriptionsOfUser(
       `Found matching filings for notification subscriptions of user ${user.email}. Sending email...`,
     );
     // add email header
-    emailContent = `<h3>SECInsiderMonitor: Neue SEC-Einreichungen gefunden</h3><p style='font-size: 14px'>Für die definierten Benachrichtigungsabonnements wurden folgende neuen Einreichungen wurden gefunden:</p>${emailContent}`;
+    emailContent = `<h3>SECInsiderMonitor: Neue SEC-Einreichungen gefunden</h3><p style='font-size: 14px'>Für die definierten Benachrichtigungsabonnements wurden folgende neuen Einreichungen gefunden:</p>${emailContent}`;
     // send email
     await transporter.sendMail({
       from: `${process.env.SMTP_FROM_NAME} <${process.env.SMTP_FROM_ADDRESS}>`,
