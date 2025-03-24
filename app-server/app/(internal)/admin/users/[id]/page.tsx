@@ -41,7 +41,7 @@ export default async function EditUserPage(props: { params: Promise<{ id: string
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
             <UserInfoCard user={user} />
             {!(requestingUser?.id === userId) ? (
-              <EditUserContent userId={userId} displayType="single" />
+              <EditUserContent userId={userId} displayType="multiple" />
             ) : (
               <FormError message="Der eigene Benutzer muss über den Menüpunkt 'Konto verwalten' bearbeitet werden." />
             )}
