@@ -28,7 +28,11 @@ export const requestPasswortResetMail = async (data: z.infer<typeof ForgotPasswo
   } else {
     // generate and send verification token
     const tokenObject = await generatePasswordResetToken(validatedData.data.email);
-    sendPasswordResetMail(validatedData.data.email, tokenObject);
+    sendPasswordResetMail(
+      validatedData.data.email,
+      tokenObject,
+      validatedData.data.requestTimeZone,
+    );
     return { success: successMessage };
   }
 };

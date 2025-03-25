@@ -38,6 +38,7 @@ export const RegisterForm = () => {
       email: '',
       password: '',
       confirmPassword: '',
+      requestTimeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     },
   });
   const password = form.watch('password'); // watch the password field to display the password strength bar

@@ -60,20 +60,24 @@ export const sendGenericMail = async (options: SendMailOptions): Promise<SentMes
  *
  * @param {string} email - email address to send the verification mail to
  * @param {EmailVerificationToken} tokenObject - token object to include in the mail
+ * @param {string | undefined} requestTimeZone - the time zone of the user requesting the password reset (to display the correct expiration time)
  * @returns {Promise<SentMessageInfo>} - The result of the email sending operation.
  */
 export const sendTokenVerificationMail = async (
   email: string,
   tokenObject: EmailVerificationToken,
+  requestTimeZone: string | undefined,
 ): Promise<SentMessageInfo> => {
   const link = `https://${process.env.SERVER_FQDN}/auth/verify?token=${tokenObject.token}`;
+  const tzAwareExpireDate = calculateTzAwareExpireDate(tokenObject.expires, requestTimeZone);
+
   return sendGenericMail({
     to: email,
-    subject: 'Verifikation des SECInsiderMonitor-Kontos',
-    html: `<h2>Verifiziere dein SECInsiderMonitor-Konto</h2>
-    <p>Um dein Konto zu verifizieren, klicke bitte auf den folgenden Link:</p>
+    subject: '[SIM] Verifikation des SECInsiderMonitor-Kontos',
+    html: `<h2>Verifikation des SECInsiderMonitor-Kontos</h2>
+    <p>Um das SIM-Konto ${email} zu verifizieren, klicke bitte auf den folgenden Link:</p>
     <p><a href="${link}">${link}</a></p>   
-    <p>(Der Link ist bis ${new Date(tokenObject.expires).toLocaleString('de-CH')} gültig.)</p>`,
+    <p>(Der Link ist bis ${tzAwareExpireDate} gültig.)</p>`,
   });
 };
 
@@ -82,20 +86,47 @@ export const sendTokenVerificationMail = async (
  *
  * @param {string} email - email address to send the password reset mail to
  * @param {EmailVerificationToken} tokenObject - token object to include in the mail
+ * @param {string | undefined} requestTimeZone - the time zone of the user requesting the password reset (to display the correct expiration time)
  * @returns {Promise<SentMessageInfo>} - The result of the email sending operation.
  */
 export const sendPasswordResetMail = async (
   email: string,
   tokenObject: EmailVerificationToken,
+  requestTimeZone: string | undefined,
 ): Promise<SentMessageInfo> => {
   const link = `https://${process.env.SERVER_FQDN}/auth/reset-password?token=${tokenObject.token}`;
+  const tzAwareExpireDate = calculateTzAwareExpireDate(tokenObject.expires, requestTimeZone);
+
   return sendGenericMail({
     to: email,
-    subject: 'Passwort-Reset für SECInsiderMonitor-Konto',
-    html: `<h2>Passwort-Reset für dein SECInsiderMonitor-Konto</h2>
-    <p>Für dein Konto wurde ein Passwort-Reset angefragt. Klicke auf den folgenden Link um das Passwort zurückzusetzen:</p>
+    subject: '[SIM] Passwort-Reset für SECInsiderMonitor-Konto',
+    html: `<h2>Passwort-Reset für SECInsiderMonitor-Konto</h2>
+    <p>Für das SIM-Konto ${email} wurde ein Passwort-Reset angefragt. Klicke auf den folgenden Link um das Passwort zurückzusetzen:</p>
     <p><a href="${link}">${link}</a></p>   
-    <p>(Der Link ist bis ${new Date(tokenObject.expires).toLocaleString('de-CH')} gültig.)</p>
+    <p>(Der Link ist bis ${tzAwareExpireDate} gültig.)</p>
     <p>Falls du den Passwort-Reset nicht angefragt hast, kannst du diese Nachricht ignorieren.</p>`,
   });
 };
+
+/**
+ * Auxiliary function to calculate the expiration date of a token in the correct time zone (tz of the user requesting the token).
+ *
+ * @param {Date} expires - the expiration date of the token
+ * @param {string | undefined} requestTimeZone - the time zone of the user requesting the token (if provided - otherwise use UTC and add a label)
+ * @returns {string} - the formatted expiration date string
+ */
+function calculateTzAwareExpireDate(expires: Date, requestTimeZone: string | undefined) {
+  // calulate the expiration time in the correct time zone
+  const expiresFormatted = new Date(expires).toLocaleString('de-CH', {
+    timeZone: requestTimeZone || 'UTC',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  // add the UTC label if the user did not provide a time zone (to avoid confusion)
+  const timezoneLabel = requestTimeZone ? '' : ' (UTC)';
+  return `${expiresFormatted}${timezoneLabel}`;
+}

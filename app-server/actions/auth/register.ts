@@ -65,7 +65,11 @@ export const register = async (data: z.infer<typeof RegisterFormSchema>) => {
 
   // generate and send verification token to user
   const tokenObject = await generateVerificationToken(validatedData.data.email);
-  sendTokenVerificationMail(validatedData.data.email, tokenObject);
+  sendTokenVerificationMail(
+    validatedData.data.email,
+    tokenObject,
+    validatedData.data.requestTimeZone,
+  );
 
   return { success: 'Verifikationsmail wurde versendet.' };
 };

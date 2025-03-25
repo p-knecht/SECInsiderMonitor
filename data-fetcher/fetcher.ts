@@ -484,7 +484,7 @@ async function handleNotificationSubscriptionsOfUser(
           ?.map((owner) => owner.reportingOwnerId?.rptOwnerName)
           .filter(Boolean)
           .join('<br />'); // one line per owner
-        emailContent += `<tr style="border-bottom: 1px solid #ddd; text-align: center;"><td>${filing.filingId}</td><td>${filing.formType}</td><td>${issuer}</td><td>${owner}</td><td>${filing.dateFiled.toLocaleDateString()}</td><td><a href="https://${process.env.SERVER_FQDN}/filings/${filing.filingId}" target="_blank">SIM Link</a></td></tr>`;
+        emailContent += `<tr style="border-bottom: 1px solid #ddd; text-align: center;"><td>${filing.filingId}</td><td>${filing.formType}</td><td>${issuer}</td><td>${owner}</td><td>${filing.dateFiled.toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td><td><a href="https://${process.env.SERVER_FQDN}/filings/${filing.filingId}" target="_blank">SIM Link</a></td></tr>`;
       }
       emailContent += '</tbody></table>';
 

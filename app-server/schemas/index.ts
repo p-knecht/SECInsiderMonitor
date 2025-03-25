@@ -20,6 +20,7 @@ export const ForgotPasswordSchema = z.object({
     .string()
     .email('Bitte E-Mail Adresse eingeben')
     .transform((email) => email.toLowerCase()),
+  requestTimeZone: z.string().optional(),
 });
 
 /**
@@ -103,6 +104,7 @@ export const RegisterFormSchema = z
       .transform((email) => email.toLowerCase()),
     password: z.string().min(8, 'Passwort muss mindestens 8 Zeichen lang sein'),
     confirmPassword: z.string(),
+    requestTimeZone: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Die Passwörter stimmen nicht überein',

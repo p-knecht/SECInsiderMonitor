@@ -32,7 +32,7 @@ export const ForgotPasswordForm = () => {
 
   const form = useForm<z.infer<typeof ForgotPasswordSchema>>({
     resolver: zodResolver(ForgotPasswordSchema),
-    defaultValues: { email: '' },
+    defaultValues: { email: '', requestTimeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
   });
 
   /**
