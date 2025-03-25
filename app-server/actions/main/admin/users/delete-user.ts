@@ -51,8 +51,5 @@ export const deleteUser = async (data: z.infer<typeof DeleteUserSchema>) => {
   // delete user from database
   await dbconnector.user.delete({ where: { id: user.id } });
 
-  // delete notification subscriptions of user
-  await dbconnector.notificationSubscription.deleteMany({ where: { subscriber: user.id } });
-
   return { success: 'Das Benutzerkonto wurde gelöscht' };
 };

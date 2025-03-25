@@ -297,7 +297,7 @@ model NotificationSubscription {
   createdAt     DateTime        @default(now())
 
   // Relations
-  user          User            @relation(fields: [subscriber], references: [id])
+  user          User            @relation(fields: [subscriber], references: [id], onDelete: Cascade)
 }
 
 enum UserRole {
@@ -312,7 +312,7 @@ model EmailVerificationToken {
   expires          DateTime
 
   // Relations
-  user             User   @relation(fields: [email], references: [email])
+  user             User   @relation(fields: [email], references: [email], onDelete: Cascade)
 }
 
 model PasswordResetToken {
@@ -322,5 +322,5 @@ model PasswordResetToken {
   expires          DateTime
 
   // Relations
-  user             User   @relation(fields: [email], references: [email])
+  user             User   @relation(fields: [email], references: [email], onDelete: Cascade)
 }
