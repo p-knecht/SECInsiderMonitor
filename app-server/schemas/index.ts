@@ -91,6 +91,7 @@ export const LoginFormSchema = z.object({
     .email('Bitte E-Mail Adresse eingeben')
     .transform((email) => email.toLowerCase()),
   password: z.string().min(1, 'Bitte Passwort eingeben'),
+  requestTimeZone: z.string().optional(),
 });
 
 /**

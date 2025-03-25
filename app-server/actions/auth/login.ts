@@ -27,7 +27,7 @@ export const login = async (data: z.infer<typeof LoginFormSchema>) => {
   if (existingUser && !existingUser.emailVerified) {
     // send a new verification token to the user (as the old one might have been lost or expired)
     const token = await generateVerificationToken(validatedData.data.email);
-    sendTokenVerificationMail(validatedData.data.email, token);
+    sendTokenVerificationMail(validatedData.data.email, token, validatedData.data.requestTimeZone);
     return {
       error: 'Konto noch nicht verifiziert! Ein neuer Verifizierungscode wurde versendet...',
     };

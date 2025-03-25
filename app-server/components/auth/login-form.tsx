@@ -37,6 +37,7 @@ export const LoginForm = () => {
     defaultValues: {
       email: '',
       password: '',
+      requestTimeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     },
   });
 
