@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/accordion';
 import { Card, CardContent } from '@/components/ui/card';
 import { loadLogfile } from '@/actions/main/admin/datafetcher/load-logfile';
-import { Logfile } from '@/app/(internal)/admin/datafetcher/page';
+import { Logfile } from '@/app/(main)/admin/datafetcher/page';
 import {
   AlertTriangleIcon,
   CalendarClockIcon,
