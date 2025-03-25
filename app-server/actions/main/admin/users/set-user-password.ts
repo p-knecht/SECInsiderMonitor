@@ -5,8 +5,7 @@ import bcryptjs from 'bcryptjs';
 import { dbconnector } from '@/lib/dbconnector';
 import { auth } from '@/auth';
 import { SetUserPasswordSchema } from '@/schemas';
-import { User, UserRole } from '@prisma/client';
-import { getAuthObjectByKey } from '@/data/auth-object';
+import { UserRole } from '@prisma/client';
 
 /**
  * Set a new password for a user (only admins are allowed to change passwords of other users)
@@ -28,7 +27,9 @@ export const setUserPassword = async (data: z.infer<typeof SetUserPasswordSchema
   }
 
   // get requesting user object
-  const requestingUser = (await getAuthObjectByKey('user', session.user.id)) as User;
+  const requestingUser = await dbconnector.user.findUnique({
+    where: { id: session.user.id },
+  });
   if (!requestingUser) {
     return { error: 'Anfragender Benutzer existiert nicht' };
   }
@@ -44,7 +45,7 @@ export const setUserPassword = async (data: z.infer<typeof SetUserPasswordSchema
   }
 
   // get user by id
-  const user = (await getAuthObjectByKey('user', validatedData.data.userId)) as User;
+  const user = await dbconnector.user.findUnique({ where: { id: validatedData.data.userId } });
   if (!user) {
     return { error: 'Benutzer existiert nicht' };
   }

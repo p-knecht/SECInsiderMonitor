@@ -5,8 +5,6 @@ import bcryptjs from 'bcryptjs';
 import { dbconnector } from '@/lib/dbconnector';
 import { auth } from '@/auth';
 import { ChangePasswordSchema } from '@/schemas';
-import { getAuthObjectByKey } from '@/data/auth-object';
-import { User } from '@prisma/client';
 
 /**
  * Function to change the password of the current user
@@ -28,7 +26,9 @@ export const changePassword = async (data: z.infer<typeof ChangePasswordSchema>)
   }
 
   // get user by id
-  const user = (await getAuthObjectByKey('user', session.user.id)) as User;
+  const user = await dbconnector.user.findUnique({
+    where: { id: session.user.id },
+  });
   if (!user) {
     return { error: 'Benutzer existiert nicht' };
   }

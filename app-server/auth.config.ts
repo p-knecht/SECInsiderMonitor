@@ -1,11 +1,8 @@
 import type { NextAuthConfig } from 'next-auth';
 import bcryptjs from 'bcryptjs';
 import Credentials from 'next-auth/providers/credentials';
-
 import { LoginFormSchema } from '@/schemas';
 import { dbconnector } from '@/lib/dbconnector';
-import { getAuthObjectByEmail } from '@/data/auth-object';
-import { User } from '@prisma/client';
 
 /**
  * The configuration object for the NextAuth provider.
@@ -28,7 +25,9 @@ export default {
         if (!validatedData.success) return null;
 
         // get the user object from the database
-        const user = (await getAuthObjectByEmail('user', validatedData.data.email)) as User;
+        const user = await dbconnector.user.findUnique({
+          where: { email: validatedData.data.email },
+        });
 
         // fail if the user does not exist or the password is not set in database
         if (!user || !user.password) return null;

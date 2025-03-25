@@ -2,9 +2,6 @@
 
 import { dbconnector } from '@/lib/dbconnector';
 import { z } from 'zod';
-import { getAuthObjectByEmail, getAuthObjectByKey } from '@/data/auth-object';
-import { EmailVerificationToken, User } from '@prisma/client';
-
 /**
  * Verifies the email of a user using a provided verification token
  *
@@ -19,10 +16,10 @@ export const verifyToken = async (token: string) => {
   }
 
   // check if token exists
-  const tokenObject = (await getAuthObjectByKey(
-    'emailVerificationToken',
-    validatedData.data,
-  )) as EmailVerificationToken;
+
+  const tokenObject = await dbconnector.emailVerificationToken.findFirst({
+    where: { token: validatedData.data },
+  });
   if (!tokenObject) return { error: 'Verifizierungscode ist ungültig' };
 
   // check if token is expired
@@ -32,7 +29,9 @@ export const verifyToken = async (token: string) => {
   }
 
   // check if user exists
-  const user = (await getAuthObjectByEmail('user', tokenObject.email)) as User;
+  const user = await dbconnector.user.findUnique({
+    where: { email: tokenObject.email },
+  });
   if (!user) {
     await dbconnector.emailVerificationToken.delete({ where: { id: tokenObject.id } });
     return { error: 'Verknüpfter Benutzer existiert nicht' };

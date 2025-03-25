@@ -4,8 +4,8 @@ import EditUserContent from '@/components/main/admin/users/edit-user-content';
 import { AppMainContent } from '@/components/main/app-maincontent';
 import { User, UserRole } from '@prisma/client';
 import UserInfoCard from '@/components/main/admin/users/user-info-card';
-import { getAuthObjectByKey } from '@/data/auth-object';
 import { auth } from '@/auth';
+import { dbconnector } from '@/lib/dbconnector';
 
 /**
  * Renders the main content of the user details page.
@@ -21,7 +21,7 @@ export default async function EditUserPage(props: { params: Promise<{ id: string
 
   // only query user if requesting user is admin; other users are blocked by <RoleGate>
   if (requestingUser?.role === UserRole.admin) {
-    user = (await getAuthObjectByKey('user', userId)) as User;
+    user = await dbconnector.user.findUnique({ where: { id: userId } });
   }
 
   return (

@@ -4,8 +4,7 @@ import * as z from 'zod';
 import { dbconnector } from '@/lib/dbconnector';
 import { auth } from '@/auth';
 import { SetUserRoleSchema } from '@/schemas';
-import { User, UserRole } from '@prisma/client';
-import { getAuthObjectByKey } from '@/data/auth-object';
+import { UserRole } from '@prisma/client';
 /**
  * Set a new role for a user (only admins are allowed to change user roles)
  *
@@ -26,7 +25,9 @@ export const setUserRole = async (data: z.infer<typeof SetUserRoleSchema>) => {
   }
 
   // get requesting user object
-  const requestingUser = (await getAuthObjectByKey('user', session.user.id)) as User;
+  const requestingUser = await dbconnector.user.findUnique({
+    where: { id: session.user.id },
+  });
   if (!requestingUser) {
     return { error: 'Anfragender Benutzer existiert nicht' };
   }
@@ -42,7 +43,7 @@ export const setUserRole = async (data: z.infer<typeof SetUserRoleSchema>) => {
   }
 
   // get user by id
-  const user = (await getAuthObjectByKey('user', validatedData.data.userId)) as User;
+  const user = await dbconnector.user.findUnique({ where: { id: validatedData.data.userId } });
   if (!user) {
     return { error: 'Benutzer existiert nicht' };
   }

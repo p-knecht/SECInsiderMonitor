@@ -1,7 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
 import { dbconnector } from '@/lib/dbconnector';
-import { getAuthObjectByEmail } from '@/data/auth-object';
-import { EmailVerificationToken, PasswordResetToken } from '@prisma/client';
 
 /**
  * Generates a password reset token for the given email address and adds it to database. If there is already a token for this email, it will be removed.
@@ -12,10 +10,7 @@ import { EmailVerificationToken, PasswordResetToken } from '@prisma/client';
  */
 export const generatePasswordResetToken = async (email: string) => {
   // Check if there is already a token for this email and remove it (as there should be only one valid token per email at a time)
-  const existingToken = (await getAuthObjectByEmail(
-    'passwordResetToken',
-    email,
-  )) as PasswordResetToken;
+  const existingToken = await dbconnector.passwordResetToken.findFirst({ where: { email } });
   if (existingToken)
     await dbconnector.passwordResetToken.delete({ where: { id: existingToken.id } });
 
@@ -40,10 +35,7 @@ export const generatePasswordResetToken = async (email: string) => {
  */
 export const generateVerificationToken = async (email: string) => {
   // Check if there is already a token for this email and remove it (as there should be only one valid token per email at a time)
-  const existingToken = (await getAuthObjectByEmail(
-    'emailVerificationToken',
-    email,
-  )) as EmailVerificationToken;
+  const existingToken = await dbconnector.emailVerificationToken.findFirst({ where: { email } });
   if (existingToken)
     await dbconnector.emailVerificationToken.delete({ where: { id: existingToken.id } });
 

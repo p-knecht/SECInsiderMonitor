@@ -5,8 +5,6 @@ import bcryptjs from 'bcryptjs';
 import { dbconnector } from '@/lib/dbconnector';
 import { auth } from '@/auth';
 import { DeleteAccountSchema } from '@/schemas';
-import { getAuthObjectByKey } from '@/data/auth-object';
-import { User } from '@prisma/client';
 
 /**
  * Function to delete the account of the current user
@@ -28,7 +26,9 @@ export const deleteAccount = async (data: z.infer<typeof DeleteAccountSchema>) =
   }
 
   // get user by id
-  const user = (await getAuthObjectByKey('user', session.user.id)) as User;
+  const user = await dbconnector.user.findUnique({
+    where: { id: session.user.id },
+  });
   if (!user) {
     return { error: 'Benutzer existiert nicht' };
   }

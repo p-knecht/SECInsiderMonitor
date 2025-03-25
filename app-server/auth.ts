@@ -1,10 +1,8 @@
 import NextAuth, { type DefaultSession } from 'next-auth';
 import { PrismaAdapter } from '@auth/prisma-adapter';
-import { User, UserRole } from '@prisma/client';
-
+import { UserRole } from '@prisma/client';
 import authConfig from '@/auth.config';
 import { dbconnector } from '@/lib/dbconnector';
-import { getAuthObjectByKey } from '@/data/auth-object';
 
 /**
  * Extends the default session object to include the user role.
@@ -32,7 +30,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
      */
     async signIn({ user }) {
       if (!user.id) return false; // fail if user id is not set
-      if (!((await getAuthObjectByKey('user', user.id)) as User).emailVerified) return false; // fail if account was not verified
+      if (!(await dbconnector.user.findUnique({ where: { id: user.id } }))?.emailVerified)
+        return false; // fail if account does not exist or was not verified
       return true;
     },
 
@@ -64,7 +63,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (!token.sub) return token;
 
       // get the user by id
-      const user = (await getAuthObjectByKey('user', token.sub)) as User;
+      const user = await dbconnector.user.findUnique({
+        where: { id: token.sub },
+      });
 
       // if no user is found, return the token as is
       if (!user) return token;

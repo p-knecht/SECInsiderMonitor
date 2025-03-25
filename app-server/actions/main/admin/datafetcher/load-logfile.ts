@@ -1,9 +1,9 @@
 'use server';
 
 import { auth } from '@/auth';
-import { getAuthObjectByKey } from '@/data/auth-object';
+import { dbconnector } from '@/lib/dbconnector';
 import { LogfileSchema } from '@/schemas';
-import { User, UserRole } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
 
@@ -25,7 +25,9 @@ export async function loadLogfile(logfile: string): Promise<string> {
   if (!session?.user.id) return 'Ungültige Sitzung';
 
   // get requesting user object
-  const requestingUser = (await getAuthObjectByKey('user', session.user.id)) as User;
+  const requestingUser = await dbconnector.user.findUnique({
+    where: { id: session.user.id },
+  });
   if (!requestingUser) return 'Benutzer existiert nicht';
 
   // check if user has permission to read logfiles (only admins are allowed)

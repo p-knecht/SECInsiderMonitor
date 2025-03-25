@@ -4,8 +4,7 @@ import * as z from 'zod';
 import { dbconnector } from '@/lib/dbconnector';
 import { auth } from '@/auth';
 import { DeleteUserSchema } from '@/schemas';
-import { User, UserRole } from '@prisma/client';
-import { getAuthObjectByKey } from '@/data/auth-object';
+import { UserRole } from '@prisma/client';
 
 /**
  * Deletes a user account from the database (only admins are allowed to delete accounts of other users)
@@ -27,7 +26,9 @@ export const deleteUser = async (data: z.infer<typeof DeleteUserSchema>) => {
   }
 
   // get requesting user object
-  const requestingUser = (await getAuthObjectByKey('user', session.user.id)) as User;
+  const requestingUser = await dbconnector.user.findUnique({
+    where: { id: session.user.id },
+  });
   if (!requestingUser) {
     return { error: 'Anfragender Benutzer existiert nicht' };
   }
@@ -43,7 +44,7 @@ export const deleteUser = async (data: z.infer<typeof DeleteUserSchema>) => {
   }
 
   // get user by id
-  const user = (await getAuthObjectByKey('user', validatedData.data.userId)) as User;
+  const user = await dbconnector.user.findUnique({ where: { id: validatedData.data.userId } });
   if (!user) {
     return { error: 'Benutzer existiert nicht' };
   }

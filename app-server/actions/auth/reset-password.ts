@@ -4,8 +4,6 @@ import * as z from 'zod';
 import bcryptjs from 'bcryptjs';
 import { dbconnector } from '@/lib/dbconnector';
 import { ResetPasswordSchema } from '@/schemas';
-import { PasswordResetToken, User } from '@prisma/client';
-import { getAuthObjectByEmail, getAuthObjectByKey } from '@/data/auth-object';
 
 /**
  * Resets the password of a user using a password reset token
@@ -21,10 +19,9 @@ export const resetPassword = async (data: z.infer<typeof ResetPasswordSchema>) =
   }
 
   // check if token exists
-  const tokenObject = (await getAuthObjectByKey(
-    'passwordResetToken',
-    validatedData.data.token,
-  )) as PasswordResetToken;
+  const tokenObject = await dbconnector.passwordResetToken.findFirst({
+    where: { token: validatedData.data.token },
+  });
   if (!tokenObject) return { error: 'Passwort-Reset-Token existiert nicht' };
 
   // check if token is expired
@@ -34,7 +31,10 @@ export const resetPassword = async (data: z.infer<typeof ResetPasswordSchema>) =
   }
 
   // check if user exists
-  const user = (await getAuthObjectByEmail('user', tokenObject.email)) as User;
+  const user = await dbconnector.user.findUnique({
+    where: { email: tokenObject.email },
+  });
+
   if (!user) {
     await dbconnector.passwordResetToken.delete({ where: { id: tokenObject.id } });
     return { error: 'Verknüpfter Benutzer existiert nicht' };

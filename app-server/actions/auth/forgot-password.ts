@@ -4,8 +4,7 @@ import * as z from 'zod';
 import { ForgotPasswordSchema } from '@/schemas';
 import { generatePasswordResetToken } from '@/lib/tokens';
 import { sendPasswordResetMail } from '@/lib/mailer';
-import { getAuthObjectByEmail } from '@/data/auth-object';
-import { User } from '@prisma/client';
+import { dbconnector } from '@/lib/dbconnector';
 
 /**
  *  Sends a password reset token to the user if the email address exists in the database
@@ -20,7 +19,9 @@ export const requestPasswortResetMail = async (data: z.infer<typeof ForgotPasswo
     return { error: 'Ungültige Daten' };
   }
 
-  const user = (await getAuthObjectByEmail('user', validatedData.data.email)) as User;
+  const user = await dbconnector.user.findUnique({
+    where: { email: validatedData.data.email },
+  });
   const successMessage = 'Passwort-Reset-Link wurde versendet (falls Benutzer existiert)';
   if (!user) {
     // note: we don't want to expose existence of a user so we just return success even if the user does not exist

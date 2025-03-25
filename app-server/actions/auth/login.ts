@@ -6,8 +6,7 @@ import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import { generateVerificationToken } from '@/lib/tokens';
 import { sendTokenVerificationMail } from '@/lib/mailer';
-import { getAuthObjectByEmail } from '@/data/auth-object';
-import { User } from '@prisma/client';
+import { dbconnector } from '@/lib/dbconnector';
 
 /**
  * Attempts to sign in a user with the provided email and password
@@ -23,7 +22,9 @@ export const login = async (data: z.infer<typeof LoginFormSchema>) => {
   }
 
   // check if user exists but is not verified
-  const existingUser = (await getAuthObjectByEmail('user', validatedData.data.email)) as User;
+  const existingUser = await dbconnector.user.findUnique({
+    where: { email: validatedData.data.email },
+  });
   if (existingUser && !existingUser.emailVerified) {
     // send a new verification token to the user (as the old one might have been lost or expired)
     const token = await generateVerificationToken(validatedData.data.email);
