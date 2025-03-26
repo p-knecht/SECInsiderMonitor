@@ -59,9 +59,9 @@ if [ -f "$LOCK_FILE" ]; then
     echo "Database schema checks and updates skipped after being locked during $MAX_ATTEMPTS attempts."
 fi
 
-echo "Running initialize auth token (check if already existing and create if not)..."
-if ! node initialize-auth-token.js; then
-    echo "Failed to initialize auth token! Exiting..."
+echo "Running initialize auth config..."
+if ! node initialize-auth-config.js; then
+    echo "Failed to initialize auth config! Exiting..."
     exit 4
 fi
 

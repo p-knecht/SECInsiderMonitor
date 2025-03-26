@@ -17,7 +17,7 @@ async function initializeAuthToken() {
   }
 
   // read contents of ENV_FILE and parse into an object, if it exists otherwise create a new empty object
-  console.log(`Trying to reading environment variables from '${ENV_FILE}'...`);
+  console.log(`Reading environment variables from '${ENV_FILE}'...`);
   const envVars = existsSync(ENV_FILE)
     ? Object.fromEntries(
         readFileSync(ENV_FILE, 'utf8')
@@ -28,13 +28,31 @@ async function initializeAuthToken() {
       )
     : {};
 
+  let updatedVars = false;
+
+  // check if AUTH_SECRET is set, if not generate a new secret
   if (!envVars['AUTH_SECRET']) {
     console.log(`'AUTH_SECRET' is not set. Generating a new secret...`);
-
     // generate a new random secret
     envVars['AUTH_SECRET'] = randomBytes(32).toString('hex');
 
-    // write all envVars (inclusive AUTH_SECRET) to ENV_FILE file
+    updatedVars = true;
+  } else {
+    console.log(`'AUTH_SECRET' is already set in ${ENV_FILE} file.`);
+  }
+
+  // check if AUTH_TRUST_HOST is set, if not add it
+  if (!envVars['AUTH_TRUST_HOST']) {
+    console.log(`'AUTH_TRUST_HOST' is not set. Adding it...`);
+    envVars['AUTH_TRUST_HOST'] = 'true';
+
+    updatedVars = true;
+  } else {
+    console.log(`'AUTH_TRUST_HOST' is already set in ${ENV_FILE} file.`);
+  }
+
+  if (updatedVars) {
+    // write all envVars to ENV_FILE file
     writeFileSync(
       ENV_FILE,
       Object.entries(envVars)
@@ -42,9 +60,7 @@ async function initializeAuthToken() {
         .join('\n') + '\n',
       'utf8',
     );
-    console.log(`'AUTH_SECRET' has been written to ${ENV_FILE} file.`);
-  } else {
-    console.log(`'AUTH_SECRET' is already set in ${ENV_FILE} file.`);
+    console.log(`Updated '${ENV_FILE}' with missing environment variables.`);
   }
 }
 

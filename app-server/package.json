@@ -16,7 +16,7 @@
     "dev": "next dev --turbopack",
     "start": "next start",
     "build:appserver": "next build",
-    "build:initialize-scripts": "tsc --skipLibCheck initialize-auth-token.ts",
+    "build:initialize-scripts": "tsc --skipLibCheck initialize-auth-config.ts",
     "prisma:generate": "prisma generate --schema=../db-schema/schema.prisma",
     "prisma:push": "prisma db push --skip-generate --schema=../db-schema/schema.prisma",
     "prisma:studio": "prisma studio --schema=../db-schema/schema.prisma"

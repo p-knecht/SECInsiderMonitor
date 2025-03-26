@@ -34,7 +34,7 @@ COPY --from=build /usr/src/app/app-server/.next ./.next
 COPY --from=build /usr/src/app/app-server/public ./public
 COPY --from=build /usr/src/app/app-server/package*.json ./
 COPY --from=build /usr/src/app/db-schema ../db-schema
-COPY --from=build /usr/src/app/app-server/initialize-auth-token.js ./initialize-auth-token.js
+COPY --from=build /usr/src/app/app-server/initialize-auth-config.js ./initialize-auth-config.js
 
 # copy the entrypoint script and make it executable
 COPY app-server/docker-entrypoint.sh .
