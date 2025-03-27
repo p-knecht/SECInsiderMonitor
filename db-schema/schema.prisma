@@ -21,6 +21,7 @@ model OwnershipFiling {
   embeddedDocuments           EmbeddedDocument[]
   formData                    OwnershipFilingFormData?
 
+  // Indexes
   @@index([dateFiled])
   @@index([formType])
   @@index([formData.periodOfReport])
@@ -29,6 +30,13 @@ model OwnershipFiling {
   @@index([formData.issuer.issuerTradingSymbol])
   @@index([formData.reportingOwner.reportingOwnerId.rptOwnerCik])
   @@index([formData.reportingOwner.reportingOwnerId.rptOwnerName])
+
+  // Additional compound indexes to improve performance of sorting in filing overview (always using filingId as secondary sort column)
+  @@index([formType, filingId])
+  @@index([formData.periodOfReport, filingId])
+  @@index([formData.issuer.issuerTradingSymbol, filingId])
+  @@index([formData.reportingOwner.reportingOwnerId.rptOwnerName, filingId])
+  @@index([dateFiled, filingId])
 }
 
 // Embedded Document Types/Enums

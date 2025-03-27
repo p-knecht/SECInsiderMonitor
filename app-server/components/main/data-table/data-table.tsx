@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -146,14 +146,6 @@ export function DataTable<TData, TValue>({
           <Button
             variant="outline"
             className="h-8 w-8 p-0 m-0.5"
-            onClick={() => handlePageChange(1)}
-            disabled={currentPage <= 1}
-          >
-            <ChevronsLeft />
-          </Button>
-          <Button
-            variant="outline"
-            className="h-8 w-8 p-0 m-0.5"
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage <= 1}
           >
@@ -169,14 +161,6 @@ export function DataTable<TData, TValue>({
             disabled={currentPage >= totalPages}
           >
             <ChevronRight />
-          </Button>
-          <Button
-            variant="outline"
-            className="h-8 w-8 p-0 m-0.5"
-            onClick={() => handlePageChange(totalPages)}
-            disabled={currentPage >= totalPages}
-          >
-            <ChevronsRight />
           </Button>
         </div>
       </div>
