@@ -76,6 +76,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   adapter: PrismaAdapter(dbconnector),
-  session: { strategy: 'jwt' },
+  session: {
+    strategy: 'jwt',
+    maxAge: 1 * 60 * 60, // jwt token expires after 1 hour
+    updateAge: 15 * 60, // token is updated on page access every 15 minutes
+  },
   ...authConfig,
 });
