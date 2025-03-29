@@ -135,10 +135,7 @@ function showInfoBox(
     });
     if (addNetworkAnalysisButton) {
       document.getElementById('open-analysis')?.addEventListener('click', () => {
-        router.push(
-          `/network-analysis?cik=${originalObject.cik}&from=${data.queryParams?.from}&to=${data.queryParams?.to}&depth=${data.queryParams?.depth}`,
-        );
-        window.location.reload(); // fully reload the page to reset the graph and avoid rerendering issues
+        window.location.href = `?cik=${originalObject.cik}&from=${data.queryParams?.from}&to=${data.queryParams?.to}&depth=${data.queryParams?.depth}`; // set and fully reload the page to reset the graph and avoid rerendering issues (note: router.push() followed by window.location.reload() may not work reliably in some browsers (e.g., Edge) due to async history handling)
       });
     }
   } else {
@@ -235,8 +232,7 @@ export default function NetworkGraph({ data }: { data: NetworkAnalysisData }) {
                 params.set('from', data.queryParams?.from!);
                 params.set('to', data.queryParams?.to!);
                 params.set('depth', data.queryParams?.depth?.toString()!);
-                router.push(`?${params.toString()}`);
-                window.location.reload(); // fully reload the page to reset the graph and avoid rerendering issues
+                window.location.href = `?${params.toString()}`; // set and fully reload the page to reset the graph and avoid rerendering issues (note: router.push() followed by window.location.reload() may not work reliably in some browsers (e.g., Edge) due to async history handling)
               }
             } else {
               // update last tap timestamp
