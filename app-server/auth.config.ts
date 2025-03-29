@@ -8,6 +8,13 @@ import { dbconnector } from '@/lib/dbconnector';
  * The configuration object for the NextAuth provider.
  */
 export default {
+  session: {
+    strategy: 'jwt',
+    maxAge: 1 * 60 * 60, // jwt token expires after 1 hour
+  },
+  jwt: {
+    maxAge: 1 * 60 * 60, // jwt token expires after 1 hour
+  },
   providers: [
     Credentials({
       /**
