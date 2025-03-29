@@ -138,7 +138,7 @@ const buildNodeTree = async (
             dateFiled: 1,
             reportingOwnerCik: '$formData.reportingOwner.reportingOwnerId.rptOwnerCik',
             relationInformation: '$formData.reportingOwner.reportingOwnerRelationship',
-            retired: '$formData.notSubjectToSection16',
+            retiredRelation: '$formData.notSubjectToSection16',
           },
         },
       ],
