@@ -62,16 +62,16 @@ function showInfoBox(
     tableData['Noch aktiv?'] = originalObject.retiredRelation ? 'Nein' : 'Ja';
 
     // lookup the node information for the owner node
-    const ownerNode = data.nodes?.find((node) => node.cik === originalObject.issuerCik);
+    const ownerNode = data.nodes?.find((node) => node.cik === originalObject.ownerCik);
     tableData['Reporting Owner (CIK)'] = originalObject.ownerCik;
     tableData['Reporting Owner (Name)'] = ownerNode?.cikInfo.cikName || 'Nicht gefunden';
     tableData['Reporting Owner (Ticker)'] = ownerNode?.cikInfo.cikTicker || '';
 
     // lookup the node information for the issuer node
-    const issuerNode = data.nodes?.find((node) => node.cik === originalObject.ownerCik);
-    tableData['Owner (CIK)'] = originalObject.issuerCik;
-    tableData['Owner (Name)'] = issuerNode?.cikInfo.cikName || 'Nicht gefunden';
-    tableData['Owner (Ticker)'] = issuerNode?.cikInfo.cikTicker || '';
+    const issuerNode = data.nodes?.find((node) => node.cik === originalObject.issuerCik);
+    tableData['Issuer (CIK)'] = originalObject.issuerCik;
+    tableData['Issuer (Name)'] = issuerNode?.cikInfo.cikName || 'Nicht gefunden';
+    tableData['Issuer (Ticker)'] = issuerNode?.cikInfo.cikTicker || '';
   }
 
   // build table rows based on defined data
