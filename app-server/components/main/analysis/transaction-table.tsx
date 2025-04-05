@@ -152,6 +152,34 @@ export function TransactionTable({
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const rowRefs = useRef<Map<number, HTMLTableRowElement>>(new Map());
   const [disableScroll, setDisableScroll] = useState(false);
+  const [tableHeight, setTableHeight] = useState<number | null>(null);
+
+  // set the height of the table to the available space
+  useEffect(() => {
+    const element = tableContainerRef.current;
+    if (!element) return;
+
+    /**
+     * Auxiliary function to update the max height of the table based on the available space.
+     *
+     * @return {void} - No return value
+     */
+    const updateMaxHeight = () => {
+      setTableHeight(window.innerHeight - element.getBoundingClientRect().top - 40);
+    };
+
+    const observer = new ResizeObserver(updateMaxHeight);
+    observer.observe(document.body); // observe the body for changes in size to update if max height if required
+
+    window.addEventListener('resize', updateMaxHeight);
+    updateMaxHeight(); // initial call to set the max height
+
+    return () => {
+      // cleanup function after unmounting
+      observer.disconnect();
+      window.removeEventListener('resize', updateMaxHeight);
+    };
+  }, []);
 
   // scroll to the active row when the active date changes
   useEffect(() => {
@@ -172,13 +200,17 @@ export function TransactionTable({
 
   return (
     <TooltipProvider>
-      <div ref={tableContainerRef} className="relative flex flex-col h-96 overflow-y-auto border">
+      <div
+        ref={tableContainerRef}
+        className="relative flex flex-col min-h-48 overflow-y-auto border"
+        style={{ height: `${tableHeight ?? 192}px` }}
+      >
         <Table className="text-center w-full">
           <TableHeader className="sticky top-0 bg-white shadow-md z-20">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="text-center p-2 bg-white whitespace-nowrap">
+                  <TableHead key={header.id} className="text-center p-2 bg-white whitespace-normal">
                     {flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
@@ -213,7 +245,7 @@ export function TransactionTable({
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
                         key={cell.id}
-                        className="p-2 text-sm break-words whitespace-nowrap"
+                        className="p-2 text-sm break-words whitespace-normal"
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
