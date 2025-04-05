@@ -1,6 +1,6 @@
 {
   "name": "sim-datafetcher",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "data fetcher component for SECInsiderMonitor",
   "homepage": "https://github.com/p-knecht/SECInsiderMonitor#readme",
   "bugs": {
