@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import ShowFilingContentTabGeneral from '@/components/main/filings/filing-content-general';
 import ShowFilingContentTabEmbeddedDocuments from '@/components/main/filings/filing-content-embeddeddocuments';
 import ShowFilingContentDetails from '@/components/main/filings/filing-content-details';
+import { FormError } from '@/components/form-error';
 
 /**
  * Renders a component showing the information about a filing wrapping several sub components (general, embedded documents, details)
@@ -33,6 +34,7 @@ export default function FilingContent({
     async function fetchFiling() {
       try {
         const data = await getFiling({ filingId });
+        console.log('Filing data:', data);
         setFilingData(data);
       } catch (error) {
         console.error('Fehler beim Abrufen des Filings:', error);
@@ -48,6 +50,10 @@ export default function FilingContent({
       <Skeleton className="h-24 w-full" />
       <Skeleton className="h-24 w-full" />
       <Skeleton className="h-10 w-full" />
+    </div>
+  ) : !filingData ? (
+    <div className="flex justify-center">
+      <FormError message={`Keine gültige Einreichung mit der ID ${filingId} gefunden`} />
     </div>
   ) : (
     <>

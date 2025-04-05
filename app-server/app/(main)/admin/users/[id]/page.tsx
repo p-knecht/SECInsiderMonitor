@@ -21,7 +21,9 @@ export default async function EditUserPage(props: { params: Promise<{ id: string
 
   // only query user if requesting user is admin; other users are blocked by <RoleGate>
   if (requestingUser?.role === UserRole.admin) {
-    user = await dbconnector.user.findUnique({ where: { id: userId } });
+    user = !/^[0-9a-fA-F]{24}$/.test(userId) // check if userId is a valid ObjectId (24 hex characters) to prevent Prisma error
+      ? null
+      : await dbconnector.user.findUnique({ where: { id: userId } });
   }
 
   return (
@@ -36,7 +38,9 @@ export default async function EditUserPage(props: { params: Promise<{ id: string
         <h2 className="text-2xl font-semibold mb-4">Benutzer bearbeiten</h2>
 
         {user === null ? (
-          <FormError message="Benutzer nicht gefunden" />
+          <div className="flex justify-center">
+            <FormError message={`Kein gültiger Benutzer mit der ID ${userId} gefunden`} />
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
             <UserInfoCard user={user} />
