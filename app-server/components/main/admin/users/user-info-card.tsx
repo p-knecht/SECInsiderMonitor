@@ -1,3 +1,5 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { User } from '@prisma/client';
@@ -23,11 +25,11 @@ export default function UserInfoCard({ user }: { user: User }) {
         </Badge>
       ),
     },
-    { label: 'Erstellt am:', value: new Date(user.createdAt).toLocaleString() },
-    { label: 'Aktualisiert am:', value: new Date(user.updatedAt).toLocaleString() },
+    { label: 'Erstellt am:', value: user.createdAt.toLocaleString() },
+    { label: 'Aktualisiert am:', value: user.updatedAt.toLocaleString() },
     {
       label: 'Letztes Login am:',
-      value: user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'noch nie',
+      value: user.lastLogin ? user.lastLogin.toLocaleString() : 'noch nie',
     },
   ];
 
