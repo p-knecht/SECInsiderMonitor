@@ -1,6 +1,6 @@
 {
   "name": "sim-appserver",
-  "version": "0.2.12",
+  "version": "0.2.13",
   "description": "application server component for SECInsiderMonitor",
   "homepage": "https://github.com/p-knecht/SECInsiderMonitor#readme",
   "bugs": {
