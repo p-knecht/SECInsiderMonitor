@@ -16,9 +16,8 @@ log4js.configure({
       type: 'dateFile',
       filename: 'logs/datafetcher.log',
       pattern: 'yyyy-MM-dd',
-      alwaysIncludePattern: true, // make sure the pattern is always included in the log file name, even on the first day
       keepFileExt: true, // make sure the log file extension is kept
-      fileNameSep: '-',
+      fileNameSep: '_',
       numBackups: 30, // keep 30 days of logs
       layout: {
         type: 'pattern',

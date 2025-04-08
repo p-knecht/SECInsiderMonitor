@@ -63,7 +63,7 @@ export default function LogfileList({ logfiles }: { logfiles: Logfile[] }) {
           {serverTimezone ? `(${serverTimezone})` : ''}
         </span>
       </div>
-      <Accordion type="multiple" className="w-full">
+      <Accordion type="single" className="w-full">
         {logfiles.map((logfile) => (
           <AccordionItem key={logfile.filename} value={logfile.filename}>
             <AccordionTrigger onClick={() => handleLoadLog(logfile.filename)}>
@@ -77,7 +77,7 @@ export default function LogfileList({ logfiles }: { logfiles: Logfile[] }) {
                 ) : (
                   <FileQuestionIcon className="text-gray-500 h-5 w-5" />
                 )}
-                {logfile.filename}
+                {logfile.filename} {logfile.filename === 'datafetcher.log' && '(aktuell)'}
               </div>
             </AccordionTrigger>
             <AccordionContent>

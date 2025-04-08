@@ -239,7 +239,7 @@ export const GetEmbeddedDocumentContentSchema = z.object({
 export const LogfileSchema = z
   .string()
   .trim()
-  .regex(/^datafetcher-\d{4}-\d{2}-\d{2}\.log$/, 'Ungültiges Logfile-Format');
+  .regex(/^datafetcher(_\d{4}-\d{2}-\d{2})?\.log$/, 'Ungültiges Logfile-Format');
 
 /**
  * Schema used to validate request when creating a new notification subscription
