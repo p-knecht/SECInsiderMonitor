@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 /**
  * The properties for the custom DataTableColumnHeaderFilterText component containing the column id to filter.
@@ -30,6 +30,7 @@ export const DataTableColumnHeaderFilterText = ({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [textFilter, setTextFilter] = useState('');
+  const searchField = useRef<HTMLInputElement>(null);
 
   // get all unique filter values for this column
   const currentFilter = Array.from(new Set(searchParams.getAll(`filter[${columnId}]`)));
@@ -48,6 +49,9 @@ export const DataTableColumnHeaderFilterText = ({
       .filter((item) => item !== value)
       .forEach((f) => params.append(`filter[${columnId}]`, f));
     router.push(`?${params.toString()}`); // update URL
+    setTimeout(() => {
+      searchField.current?.focus();
+    }, 0);
   };
 
   /**
@@ -61,10 +65,20 @@ export const DataTableColumnHeaderFilterText = ({
     // add new text filter entry
     if (!currentFilter.includes(value)) params.append(`filter[${columnId}]`, value);
     router.push(`?${params.toString()}`);
+    setTimeout(() => {
+      searchField.current?.focus();
+    }, 0);
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu
+      onOpenChange={(open) => {
+        if (open)
+          setTimeout(() => {
+            searchField.current?.focus();
+          }, 0);
+      }}
+    >
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -79,6 +93,7 @@ export const DataTableColumnHeaderFilterText = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-64">
         <Input
+          ref={searchField}
           type="text"
           placeholder="Suche..."
           value={textFilter}

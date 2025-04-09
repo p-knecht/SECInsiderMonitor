@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { searchCiks } from '@/actions/main/filings/search-ciks';
 import { CikObject } from '@/data/cik';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -37,6 +37,7 @@ export const DataTableColumnHeaderFilterCik = ({
   const [isLoading, setIsLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<CikObject[]>([]);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
+  const searchField = useRef<HTMLInputElement>(null);
 
   // get all unique filter values for this column
   const currentFilter = Array.from(new Set(searchParams.getAll(`filter[${columnId}]`)));
@@ -100,6 +101,9 @@ export const DataTableColumnHeaderFilterCik = ({
       .filter((item) => item !== value)
       .forEach((f) => params.append(`filter[${columnId}]`, f));
     router.push(`?${params.toString()}`);
+    setTimeout(() => {
+      searchField.current?.focus();
+    }, 0);
   };
 
   /**
@@ -112,6 +116,9 @@ export const DataTableColumnHeaderFilterCik = ({
     const params = new URLSearchParams(window.location.search);
     if (!currentFilter.includes(value)) params.append(`filter[${columnId}]`, value);
     router.push(`?${params.toString()}`);
+    setTimeout(() => {
+      searchField.current?.focus();
+    }, 0);
   };
 
   /**
@@ -136,7 +143,14 @@ export const DataTableColumnHeaderFilterCik = ({
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu
+      onOpenChange={(open) => {
+        if (open)
+          setTimeout(() => {
+            searchField.current?.focus();
+          }, 0);
+      }}
+    >
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -151,6 +165,7 @@ export const DataTableColumnHeaderFilterCik = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent className="min-w-64 max-w-lg">
         <Input
+          ref={searchField}
           type="text"
           placeholder="Suche..."
           value={textFilter}

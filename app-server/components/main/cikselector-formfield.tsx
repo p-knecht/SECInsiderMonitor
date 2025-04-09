@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { searchCiks } from '@/actions/main/filings/search-ciks';
 import { CikObject } from '@/data/cik';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -47,6 +47,7 @@ export const CIKSelectorFormField = ({
       ? [field.value]
       : [];
   const [open, setOpen] = useState(false);
+  const searchField = useRef<HTMLInputElement>(null);
 
   // start search on cik filter change (after debounce)
   useEffect(() => {
@@ -89,13 +90,17 @@ export const CIKSelectorFormField = ({
     if (value.match(/^\d{10}$/)) {
       setTextFilter('');
       setSearchResults([]);
-      setOpen(false);
       if (Array.isArray(field.value)) {
-        // if multiple CIKs are allowed, add to array of selected CIKs otherwise set the single CIK
-        field.onChange([...selectedCiks, value]);
+        if (!selectedCiks.includes(value)) {
+          field.onChange([...selectedCiks, value]);
+        }
       } else {
         field.onChange(value);
       }
+      setTimeout(() => {
+        (document.activeElement as HTMLElement)?.blur();
+        setOpen(false);
+      }, 0);
     }
   };
 
@@ -122,7 +127,16 @@ export const CIKSelectorFormField = ({
   return (
     <FormItem>
       <FormLabel>{label}</FormLabel>
-      <FormControl>
+      <FormControl
+        onClick={() => {
+          if (Array.isArray(field.value) || (!Array.isArray(field.value) && !field.value)) {
+            setOpen(true);
+            setTimeout(() => {
+              searchField.current?.focus();
+            }, 0);
+          }
+        }}
+      >
         <div className="flex flex-wrap gap-1 w-full border p-2 rounded-md">
           {selectedCiks.map((cik) => (
             <CikBadge key={cik} cik={cik} tooltipLocation="top">
@@ -138,16 +152,27 @@ export const CIKSelectorFormField = ({
               </button>
             </CikBadge>
           ))}
-          <DropdownMenu open={open} onOpenChange={setOpen}>
-            {(Array.isArray(field.value) || (!Array.isArray(field.value) && !field.value)) && (
-              <DropdownMenuTrigger asChild>
+          <DropdownMenu
+            open={open}
+            onOpenChange={(open) => {
+              setOpen(open);
+              if (open) {
+                setTimeout(() => {
+                  searchField.current?.focus();
+                }, 0);
+              }
+            }}
+          >
+            <DropdownMenuTrigger asChild>
+              {(Array.isArray(field.value) || (!Array.isArray(field.value) && !field.value)) && (
                 <Button variant="ghost" className="h-5 w-5" disabled={disabled}>
                   <SearchIcon />
                 </Button>
-              </DropdownMenuTrigger>
-            )}
+              )}
+            </DropdownMenuTrigger>
             <DropdownMenuContent className="w-64">
               <Input
+                ref={searchField}
                 type="text"
                 value={textFilter}
                 onChange={(e) => setTextFilter(e.target.value)}

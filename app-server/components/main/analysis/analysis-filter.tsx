@@ -140,7 +140,7 @@ export function AnalysisFilter({ type }: { type: 'network' | 'company' }): React
 
           {type == 'network' && (
             <div className="text-right min-h-[40px]">
-              <Button type="submit" variant="outline">
+              <Button type="submit" variant="outline" className="w-full">
                 Analyse starten
               </Button>
             </div>
