@@ -14,6 +14,7 @@ import { searchCiks } from '@/actions/main/filings/search-ciks';
 import { CikObject } from '@/data/cik';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { CikBadge } from '@/components/main/cik-badge';
+import { highlightMatch } from '@/components/component-utils';
 
 /**
  * The properties for the custom DataTableColumnHeaderFilterCik component containing the column id to filter.
@@ -121,27 +122,6 @@ export const DataTableColumnHeaderFilterCik = ({
     }, 0);
   };
 
-  /**
-   * Highlights the matched text in the search results (to allow user to see what part of the result matched the query).
-   *
-   * @param {string} text - The text to highlight.
-   * @returns {JSX.Element[]} - The text with highlighted matches.
-   */
-  const highlightMatch = (text: string) => {
-    if (!textFilter) return text;
-    const escapedQuery = textFilter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // escape regex special characters to prevent side effects
-    const regex = new RegExp(`(${escapedQuery.trim()})`, 'gi');
-    return text.split(regex).map((part, index) =>
-      regex.test(part) ? (
-        <span className="font-bold" key={index}>
-          {part}
-        </span>
-      ) : (
-        part
-      ),
-    );
-  };
-
   return (
     <DropdownMenu
       onOpenChange={(open) => {
@@ -195,13 +175,16 @@ export const DataTableColumnHeaderFilterCik = ({
                     }}
                   >
                     {highlightMatch(
+                      textFilter,
                       result.cikTicker && result.cikTicker.toLocaleLowerCase() !== 'none'
                         ? `${result.cikTicker} (${result.cikName})`
                         : `${result.cikName}`,
                     )}
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="right">CIK: {highlightMatch(result.cik)}</TooltipContent>
+                <TooltipContent side="right">
+                  CIK: {highlightMatch(textFilter, result.cik)}
+                </TooltipContent>
               </Tooltip>
             ))}
           </div>

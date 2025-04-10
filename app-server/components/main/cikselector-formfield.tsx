@@ -13,6 +13,7 @@ import { CikObject } from '@/data/cik';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { CikBadge } from '@/components/main/cik-badge';
 import { FormControl, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { highlightMatch } from '@/components/component-utils';
 
 /**
  * Renders a custom form field type for selecting one or multiple CIKs with live search to support the user.
@@ -104,26 +105,6 @@ export const CIKSelectorFormField = ({
     }
   };
 
-  /**
-   * Highlights the matched text in the search results (to allow user to see what part of the result matched the query).
-   *
-   * @param {string} text - The text to highlight.
-   * @returns {JSX.Element[]} - The text with highlighted matches.
-   */
-  const highlightMatch = (text: string) => {
-    if (!textFilter) return text;
-    const regex = new RegExp(`(${textFilter.trim()})`, 'gi');
-    return text.split(regex).map((part, index) =>
-      regex.test(part) ? (
-        <span className="font-bold" key={index}>
-          {part}
-        </span>
-      ) : (
-        part
-      ),
-    );
-  };
-
   return (
     <FormItem>
       <FormLabel>{label}</FormLabel>
@@ -195,6 +176,7 @@ export const CIKSelectorFormField = ({
                           onClick={() => addCik(result.cik)}
                         >
                           {highlightMatch(
+                            textFilter,
                             result.cikTicker && result.cikTicker.toLowerCase() !== 'none'
                               ? `${result.cikTicker} (${result.cikName})`
                               : `${result.cikName}`,
@@ -202,7 +184,7 @@ export const CIKSelectorFormField = ({
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="right">
-                        CIK: {highlightMatch(result.cik)}
+                        CIK: {highlightMatch(textFilter, result.cik)}
                       </TooltipContent>
                     </Tooltip>
                   ))}
