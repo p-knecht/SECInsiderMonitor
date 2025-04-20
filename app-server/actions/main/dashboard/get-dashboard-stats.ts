@@ -4,8 +4,8 @@ import { auth } from '@/auth';
 import { aggregateRawOwnershipFilingsWithDecode } from '@/lib/dbconnector';
 
 /**
- * Fetches the filing counts for the last day, week, month and year
- * @returns {Promise<Record<string, any> | null>} - A promise that resolves to the filing counts for the last day, week, month and year or null if an error occurred
+ * Fetches the filing counts for the last 1, 7, 30, 365 day(s) and total
+ * @returns {Promise<Record<string, any> | null>} - A promise that resolves to the filing counts for the last 1, 7, 30, 365 day(s) and total or null if an error occurred
  */
 export const getFilingCounts = async () => {
   // check if user is authenticated
@@ -14,12 +14,11 @@ export const getFilingCounts = async () => {
 
   /**
    * reusable time filter for aggregation pipeline below --> always go back to the beginning of the day (00:00) to ensure consistent results
-   * @param {string} name - The name of the field to create
    * @param {number} days - The number of days to go back
    * @returns {Record<string, any>} - The time filter
    */
-  const createTimeFilter = (name: string, days: number) => ({
-    [name]: {
+  const createTimeFilter = (days: number) => ({
+    [days.toString() + 'd']: {
       $sum: {
         $cond: [
           {
@@ -63,10 +62,10 @@ export const getFilingCounts = async () => {
           $group: {
             _id: { $ifNull: ['$formType', 'Unknown'] },
             total: { $sum: 1 },
-            ...createTimeFilter('lastDay', 1),
-            ...createTimeFilter('lastWeek', 7),
-            ...createTimeFilter('lastMonth', 30),
-            ...createTimeFilter('lastYear', 365),
+            ...createTimeFilter(1),
+            ...createTimeFilter(7),
+            ...createTimeFilter(30),
+            ...createTimeFilter(365),
           },
         },
       ],
@@ -79,17 +78,55 @@ export const getFilingCounts = async () => {
 };
 
 /**
- * Gets the filing trend for the last 30 days
+ * Fetches the earliest and latest "dateFiled" timestamp across all available filings.
  *
- * @returns {Promise<Record<string, any> | null>} - A promise that resolves to the filing trend for the last 30 days or null if an error occurred
+ * @returns {Promise<{ earliest: Date; latest: Date } | null>} - A promise that resolves to the range or null if an error occurred.
  */
-export const getFilingTrend = async () => {
+export const getDateFiledRange = async () => {
+  const session = await auth();
+  if (!session?.user.id) return null;
+
+  try {
+    const result = await aggregateRawOwnershipFilingsWithDecode({
+      pipeline: [
+        {
+          $group: {
+            _id: null,
+            earliest: { $min: '$dateFiled' },
+            latest: { $max: '$dateFiled' },
+          },
+        },
+      ],
+    });
+    if (!result || result.length === 0) return null;
+    const raw = result[0] as {
+      earliest: { $date: string };
+      latest: { $date: string };
+    };
+
+    return {
+      earliest: new Date(raw.earliest.$date),
+      latest: new Date(raw.latest.$date),
+    };
+  } catch (error) {
+    console.error(`Error fetching dateFiled range: ${error}`);
+    return null;
+  }
+};
+
+/**
+ * Returns the number of filings per day and form type for the last N days based on periodOfReport.
+ *
+ * @param {number} days - The number of days to look back for the filing trend
+ * @returns {Promise<Record<string, any> | null>} - A promise that resolves to the filing trend for the requested number of days or null if an error occurred
+ */
+export const getFilingTrend = async (days: number) => {
   // check if user is authenticated
   const session = await auth();
   if (!session?.user.id) return null;
 
   try {
-    // query database to get filing trend for the last 30 days
+    // query database to get filing trend for the defined number of days
     const result = await aggregateRawOwnershipFilingsWithDecode({
       pipeline: [
         {
@@ -98,7 +135,7 @@ export const getFilingTrend = async () => {
             $expr: {
               $gte: [
                 { $toDate: '$formData.periodOfReport' },
-                { $dateSubtract: { startDate: '$$NOW', unit: 'day', amount: 30 } }, // consider filings from the last 30 days
+                { $dateSubtract: { startDate: '$$NOW', unit: 'day', amount: days } }, // consider filings from the defined lookback period
               ],
             },
           },
@@ -132,30 +169,31 @@ export const getFilingTrend = async () => {
 };
 
 /**
- * Gets the top 10 issuers by number of filings in the last 30 days
+ * Gets the top 10 issuers of form 4 filings by number of filings for the given number of days
  *
+ * @param {number} days - The number of days to look back for the top issuers of form 4 filings
  * @returns {Promise<Record<string, any> | null>} - A promise that resolves to the top 10 issuers or null if an error occurred
  */
-export const getTopIssuer = async () => {
+export const getTopIssuer = async (days: number) => {
   // check if user is authenticated
   const session = await auth();
   if (!session?.user.id) return null;
 
-  const LOOKBACK_DAYS = 30; // look back 30 days
   const TOP_ISSUER_COUNT = 10; // show top 10 issuers
 
   try {
-    // query database to get top issuers by number of filings in the last 30 days
+    // query database to get top issuers of form 4 filings by number of filings in the given number of days
     const result = await aggregateRawOwnershipFilingsWithDecode({
       pipeline: [
         // consider filings from the defined lookback period
         {
           $match: {
+            formType: '4', // only consider form 4 filings
             'formData.periodOfReport': { $exists: true, $ne: null }, // filter out filings without periodOfReport
             $expr: {
               $gte: [
                 { $toDate: '$formData.periodOfReport' },
-                { $dateSubtract: { startDate: '$$NOW', unit: 'day', amount: LOOKBACK_DAYS } }, // consider filings from defined lookback period
+                { $dateSubtract: { startDate: '$$NOW', unit: 'day', amount: days } }, // consider filings from defined lookback period
               ],
             },
           },
@@ -187,30 +225,31 @@ export const getTopIssuer = async () => {
 };
 
 /**
- * Gets the top 10 reporting owners by number of filings in the last 30 days
+ * Gets the top 10 reporting owners in form 4 filings by number of filings for the given number of days
  *
+ * @param {number} days - The number of days to look back for the top reporting owners in form 4 filings
  * @returns {Promise<Record<string, any> | null>} - A promise that resolves to the top 10 reporting owners or null if an error occurred
  */
-export const getTopReportingOwner = async () => {
+export const getTopReportingOwner = async (days: number) => {
   // check if user is authenticated
   const session = await auth();
   if (!session?.user.id) return null;
 
-  const LOOKBACK_DAYS = 30; // look back 30 days
   const TOP_REPORTING_OWNER_COUNT = 10; // show top 10 reporting owners
 
   try {
-    // query database to get top reporting owners by number of filings in the last 30 days
+    // query database to get top reporting owners in form 4 filings by number of filings in the given number of days
     const result = await aggregateRawOwnershipFilingsWithDecode({
       pipeline: [
         // consider filings from the defined lookback period
         {
           $match: {
+            formType: '4', // only consider form 4 filings
             'formData.periodOfReport': { $exists: true, $ne: null }, // filter out filings without periodOfReport
             $expr: {
               $gte: [
                 { $toDate: '$formData.periodOfReport' },
-                { $dateSubtract: { startDate: '$$NOW', unit: 'day', amount: LOOKBACK_DAYS } }, // consider filings from defined lookback period
+                { $dateSubtract: { startDate: '$$NOW', unit: 'day', amount: days } }, // consider filings from defined lookback period
               ],
             },
           },

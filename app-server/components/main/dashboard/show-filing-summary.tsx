@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getFilingCounts } from '@/actions/main/dashboard/get-dashboard-stats';
+import { getFilingCounts, getDateFiledRange } from '@/actions/main/dashboard/get-dashboard-stats';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
@@ -10,20 +10,17 @@ import { FormtypeBadge } from '@/components/main/formtype-badge';
 /**
  * Renders a card containing a table showing the number of filings for each form type and given time frames.
  *
- * @returns {JSX.Element} - The renderer FilingSummary component.
+ * @returns {JSX.Element} - The rendered FilingSummary component.
  */
 export const FilingSummary = () => {
   const [stats, setStats] = useState<{ [key: string]: { [key: string]: number } }>({});
+  const [dateFiledRange, setDateFiledRange] = useState<{ earliest: Date; latest: Date } | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
 
   // definition of time frames and their corresponding days
-  const timeFrames = ['lastDay', 'lastWeek', 'lastMonth', 'lastYear', 'total'];
-  const timeFrameDays: { [key: string]: number } = {
-    lastDay: 1,
-    lastWeek: 7,
-    lastMonth: 30,
-    lastYear: 365,
-  };
+  const timeFrames = ['1d', '7d', '30d', '365d', 'total'];
 
   useEffect(() => {
     /**
@@ -32,10 +29,15 @@ export const FilingSummary = () => {
      * @returns {Promise<void>} - The promise which resolves when the data is fetched.
      */
     async function fetchStats() {
-      const data = await getFilingCounts();
+      const [counts, range] = await Promise.all([getFilingCounts(), getDateFiledRange()]);
+
+      // if a date range is available, set it and display it in the card
+      if (range && range.earliest && range.latest) {
+        setDateFiledRange(range);
+      }
 
       // if no data is available, stop loading
-      if (!data || !Array.isArray(data)) {
+      if (!counts || !Array.isArray(counts)) {
         setLoading(false);
         return;
       }
@@ -43,7 +45,7 @@ export const FilingSummary = () => {
       const tableStats: { [key: string]: { [key: string]: number } } = {};
 
       // prepare stats for each form type
-      data.forEach((stat) => {
+      counts.forEach((stat) => {
         tableStats[stat._id] = timeFrames.reduce(
           (acc, timeFrame) => ({ ...acc, [timeFrame]: stat[timeFrame] ?? 0 }),
           {},
@@ -54,7 +56,7 @@ export const FilingSummary = () => {
       tableStats['all'] = timeFrames.reduce(
         (acc, timeFrame) => ({
           ...acc,
-          [timeFrame]: data.reduce((sum, stat) => sum + (stat[timeFrame] ?? 0), 0),
+          [timeFrame]: counts.reduce((sum, stat) => sum + (stat[timeFrame] ?? 0), 0),
         }),
         {},
       );
@@ -72,7 +74,7 @@ export const FilingSummary = () => {
     if (timeFrame !== 'total') {
       // filter by time frame
       const date = new Date();
-      date.setDate(date.getDate() - timeFrameDays[timeFrame]);
+      date.setDate(date.getDate() - parseInt(timeFrame.match(/\d+/)?.[0] || '0', 10));
       query['filter[periodOfReport][from]'] = date.toISOString().split('T')[0];
     }
     return { pathname: '/filings', query };
@@ -81,9 +83,14 @@ export const FilingSummary = () => {
   return (
     <Card className="shadow-md h-full">
       <CardHeader>
-        <CardTitle>Anzahl Einreichungen pro Typ und Berichtszeitpunkt</CardTitle>
+        <div>
+          <CardTitle>Anzahl bezogner Einreichungen pro Typ und Zeitraum</CardTitle>
+          <p className="text-xs text-muted-foreground mt-1">
+            Basierend auf dem Berichtszeitpunkt (Period of Report)
+          </p>
+        </div>
       </CardHeader>
-      <CardContent className="flex justify-center items-center flex-grow min-h-[300px]">
+      <CardContent className="flex flex-col justify-center items-center flex-grow min-h-[250px]">
         {loading ? (
           <Skeleton className="w-full h-full max-w-6xl" />
         ) : (
@@ -91,12 +98,12 @@ export const FilingSummary = () => {
             <table className="w-full h-full border-collapse border border-blue-600 text-sm">
               <thead>
                 <tr className="bg-gray-200 text-gray-600">
-                  <th className="border p-2"></th>
-                  <th className="border p-2 text-center">Letzter Tag</th>
-                  <th className="border p-2 text-center">Letzte Woche</th>
-                  <th className="border p-2 text-center">Letzter Monat</th>
-                  <th className="border p-2 text-center">Letztes Jahr</th>
-                  <th className="border p-2 text-center">Gesamt</th>
+                  <th className="border p-1"></th>
+                  <th className="border p-1 text-center font-normal">Letzter Tag</th>
+                  <th className="border p-1 text-center font-normal">Letzte 7 Tage</th>
+                  <th className="border p-1 text-center font-normal">Letzte 30 Tage</th>
+                  <th className="border p-1 text-center font-normal">Letzte 365 Tage</th>
+                  <th className="border p-1 text-center font-normal">Gesamthaft</th>
                 </tr>
               </thead>
               <tbody>
@@ -133,6 +140,19 @@ export const FilingSummary = () => {
               </tbody>
             </table>
           </div>
+        )}
+        {dateFiledRange && (
+          <p className="mt-4 text-sm text-muted-foreground text-center">
+            Die Datenbank der SIM-Anwendung umfasst{' '}
+            {stats['all']?.['total'] && (
+              <span className="font-semibold">{stats['all']?.['total']} </span>
+            )}
+            Einreichungen, die bei der SEC zwischen dem{' '}
+            <span className="font-semibold">{dateFiledRange.earliest.toLocaleDateString()}</span>{' '}
+            und dem{' '}
+            <span className=" font-semibold">{dateFiledRange.latest.toLocaleDateString()}</span>{' '}
+            eingereicht wurden.
+          </p>
         )}
       </CardContent>
     </Card>

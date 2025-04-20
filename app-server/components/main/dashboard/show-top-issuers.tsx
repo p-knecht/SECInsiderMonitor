@@ -7,32 +7,35 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, YAxis } from 'recharts';
 import { calculateCikBadgeStyle } from '@/components/main/cik-badge';
 import { useRouter } from 'next/navigation';
+import { DateRangeSelector } from '@/components/main/dashboard/date-range-selector';
+import { FormtypeBadge } from '@/components/main/formtype-badge';
 
 /**
- * Renders a card with a bar chart showing the top 10 issuers of the last 30 days.
+ * Renders a card with a bar chart showing the top 10 issuers of form 4 of a chosen time range.
  *
- * @returns {JSX.Element} - The renderer TopIssuers component.
+ * @returns {JSX.Element} - The rendered TopIssuers component.
  */
 export const TopIssuers = () => {
   const [stats, setStats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [days, setDays] = useState(30);
   const router = useRouter();
 
   useEffect(() => {
     /**
-     * Sends a request to the server to get the top issuer data for the last 30 days.
+     * Sends a request to the server to get the filing trend data for the given number of days.
      *
      * @returns {Promise<void>} - The promise which resolves when the data is fetched.
      */
     async function fetchStats() {
-      const data = await getTopIssuer();
+      const data = await getTopIssuer(days);
       if (data && Array.isArray(data)) {
         setStats(data);
       }
       setLoading(false);
     }
     fetchStats();
-  }, []);
+  }, [days]);
 
   /**
    * Handles the click on the chart to navigate to the filings page.
@@ -43,15 +46,26 @@ export const TopIssuers = () => {
   const handleChartClick = (event: any) => {
     if (event && event.activePayload?.[0]?.payload) {
       const { cik } = event.activePayload[0].payload;
-      const pastDate = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]; // 30 days ago
-      router.push(`/filings?filter[issuer]=${cik}&filter[periodOfReport][from]=${pastDate}`); // navigate to filings page
+      const pastDate = new Date(Date.now() - days * 86400000).toISOString().split('T')[0]; // defined number of days ago
+      router.push(
+        `/filings?filter[formType]=4&filter[issuer]=${cik}&filter[periodOfReport][from]=${pastDate}`,
+      ); // navigate to filings page
     }
   };
 
   return (
     <Card className="shadow-md">
-      <CardHeader>
-        <CardTitle>Top 10 Issuer des letzten Monats</CardTitle>
+      <CardHeader className="flex flex-row items-start justify-between">
+        <div>
+          <CardTitle>
+            Top 10 Issuer von <FormtypeBadge formtype="4" />
+            -Einreichungen
+          </CardTitle>
+          <p className="text-xs text-muted-foreground mt-1">
+            Basierend auf dem Berichtszeitpunkt (Period of Report)
+          </p>
+        </div>
+        <DateRangeSelector value={days} onChange={setDays} />
       </CardHeader>
       <CardContent>
         {loading ? (
