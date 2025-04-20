@@ -265,3 +265,17 @@ export const NotificationSubscriptionSchema = z
 export const DeleteNotificationSubscriptionSchema = z.object({
   subscriptionId: z.string(),
 });
+
+/**
+ * Schema used to validate selected timeframe for the dashboard
+ * (number of days to look back for the filing analysis)
+ */
+export const DashboardTimeframeFilterSchema = z
+  .number()
+  .int()
+  .min(1, {
+    message: 'Die Anzahl der Tage muss mindestens 1 betragen.',
+  })
+  .max(365, {
+    message: 'Die Anzahl der Tage darf maximal 365 betragen.',
+  });

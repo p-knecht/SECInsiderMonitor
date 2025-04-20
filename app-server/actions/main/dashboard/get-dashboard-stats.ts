@@ -2,6 +2,7 @@
 
 import { auth } from '@/auth';
 import { aggregateRawOwnershipFilingsWithDecode } from '@/lib/dbconnector';
+import { DashboardTimeframeFilterSchema } from '@/schemas/index';
 
 /**
  * Fetches the filing counts for the last 1, 7, 30, 365 day(s) and total
@@ -117,13 +118,20 @@ export const getDateFiledRange = async () => {
 /**
  * Returns the number of filings per day and form type for the last N days based on periodOfReport.
  *
- * @param {number} days - The number of days to look back for the filing trend
+ * @param {number} days - The number of days to look back for the filing trend (1-365)
  * @returns {Promise<Record<string, any> | null>} - A promise that resolves to the filing trend for the requested number of days or null if an error occurred
  */
 export const getFilingTrend = async (days: number) => {
   // check if user is authenticated
   const session = await auth();
   if (!session?.user.id) return null;
+
+  // check if days is valid
+  const validationResult = DashboardTimeframeFilterSchema.safeParse(days);
+  if (!validationResult.success) {
+    console.error(`Invalid number of days: ${days}.`, validationResult.error.issues);
+    return null;
+  }
 
   try {
     // query database to get filing trend for the defined number of days
@@ -171,13 +179,20 @@ export const getFilingTrend = async (days: number) => {
 /**
  * Gets the top 10 issuers of form 4 filings by number of filings for the given number of days
  *
- * @param {number} days - The number of days to look back for the top issuers of form 4 filings
+ * @param {number} days - The number of days to look back for the top issuers of form 4 filings (1-365)
  * @returns {Promise<Record<string, any> | null>} - A promise that resolves to the top 10 issuers or null if an error occurred
  */
 export const getTopIssuer = async (days: number) => {
   // check if user is authenticated
   const session = await auth();
   if (!session?.user.id) return null;
+
+  // check if days is valid
+  const validationResult = DashboardTimeframeFilterSchema.safeParse(days);
+  if (!validationResult.success) {
+    console.error(`Invalid number of days: ${days}.`, validationResult.error.issues);
+    return null;
+  }
 
   const TOP_ISSUER_COUNT = 10; // show top 10 issuers
 
@@ -227,13 +242,20 @@ export const getTopIssuer = async (days: number) => {
 /**
  * Gets the top 10 reporting owners in form 4 filings by number of filings for the given number of days
  *
- * @param {number} days - The number of days to look back for the top reporting owners in form 4 filings
+ * @param {number} days - The number of days to look back for the top reporting owners in form 4 filings (1-365)
  * @returns {Promise<Record<string, any> | null>} - A promise that resolves to the top 10 reporting owners or null if an error occurred
  */
 export const getTopReportingOwner = async (days: number) => {
   // check if user is authenticated
   const session = await auth();
   if (!session?.user.id) return null;
+
+  // check if days is valid
+  const validationResult = DashboardTimeframeFilterSchema.safeParse(days);
+  if (!validationResult.success) {
+    console.error(`Invalid number of days: ${days}.`, validationResult.error.issues);
+    return null;
+  }
 
   const TOP_REPORTING_OWNER_COUNT = 10; // show top 10 reporting owners
 
