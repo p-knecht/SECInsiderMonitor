@@ -84,7 +84,7 @@ export const FilingSummary = () => {
     <Card className="shadow-md h-full">
       <CardHeader>
         <div>
-          <CardTitle>Anzahl bezogner Einreichungen pro Typ und Zeitraum</CardTitle>
+          <CardTitle>Anzahl bezogener Einreichungen pro Typ und Zeitraum</CardTitle>
           <p className="text-xs text-muted-foreground mt-1">
             Basierend auf dem Berichtszeitpunkt (Period of Report)
           </p>
