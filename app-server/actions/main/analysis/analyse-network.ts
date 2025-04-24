@@ -74,7 +74,9 @@ const buildNodeTree = async (
     cikInfo: {
       cikName: nodeInfo.cikName,
       cikTicker:
-        nodeInfo.cikTicker && nodeInfo.cikTicker.toUpperCase() !== 'NONE'
+        nodeInfo.cikTicker &&
+        nodeInfo.cikTicker.toUpperCase() !== 'NONE' &&
+        nodeInfo.cikTicker.toUpperCase() !== 'N/A'
           ? nodeInfo.cikTicker
           : undefined,
     },

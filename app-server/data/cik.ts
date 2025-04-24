@@ -18,7 +18,10 @@ export const parseIssuer = (filing: any): CikObject | null => {
     return null;
   }
 
-  if (filing.formData.issuer.issuerTradingSymbol.toLocaleLowerCase() === 'none')
+  if (
+    filing.formData.issuer.issuerTradingSymbol.toLowerCase() === 'none' ||
+    filing.formData.issuer.issuerTradingSymbol.toLowerCase() === 'n/a'
+  )
     filing.formData.issuer.issuerTradingSymbol = undefined;
 
   return {

@@ -62,7 +62,9 @@ export async function authenticateAndHandleInputs(
     queryCikInfo: {
       cikName: cikInfo.cikName,
       cikTicker:
-        cikInfo.cikTicker && cikInfo.cikTicker.toUpperCase() !== 'NONE'
+        cikInfo.cikTicker &&
+        cikInfo.cikTicker.toUpperCase() !== 'NONE' &&
+        cikInfo.cikTicker.toUpperCase() !== 'N/A'
           ? cikInfo.cikTicker
           : undefined,
     },

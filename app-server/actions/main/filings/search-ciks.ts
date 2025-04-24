@@ -40,11 +40,22 @@ export const searchCiks = async (data: z.infer<typeof SearchCiksSchema>) => {
                   { 'formData.issuer.issuerName': { $regex: searchString, $options: 'i' } },
                   {
                     $and: [
-                      // search for issuer ticker only if it is not 'NONE' to avoid false positives
+                      // search for issuer ticker only if it is not 'NONE' oder 'N/A' to avoid false positives
                       {
-                        'formData.issuer.issuerTradingSymbol': {
-                          $ne: 'NONE',
-                        },
+                        $nor: [
+                          {
+                            'formData.issuer.issuerTradingSymbol': {
+                              $regex: '^none$',
+                              $options: 'i',
+                            },
+                          },
+                          {
+                            'formData.issuer.issuerTradingSymbol': {
+                              $regex: '^n/a$',
+                              $options: 'i',
+                            },
+                          },
+                        ],
                       },
                       {
                         'formData.issuer.issuerTradingSymbol': {

@@ -177,7 +177,9 @@ export const CIKSelectorFormField = ({
                         >
                           {highlightMatch(
                             textFilter,
-                            result.cikTicker && result.cikTicker.toLowerCase() !== 'none'
+                            result.cikTicker &&
+                              result.cikTicker.toLowerCase() !== 'none' &&
+                              result.cikTicker.toLowerCase() !== 'n/a'
                               ? `${result.cikTicker} (${result.cikName})`
                               : `${result.cikName}`,
                           )}
