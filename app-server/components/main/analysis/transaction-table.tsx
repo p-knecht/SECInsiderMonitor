@@ -14,7 +14,8 @@ import { buildFieldContent } from '../filings/filing-details-components/filing-t
 import { CikBadge } from '@/components/main/cik-badge';
 import { TooltipProvider } from '@radix-ui/react-tooltip';
 import ShowFilingButton from '../filings/show-filing-button';
-import { CheckIcon, XIcon } from 'lucide-react';
+import { CheckIcon, CircleHelpIcon, XIcon } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 /**
  * The properties for the TransactionTable component.
@@ -50,7 +51,28 @@ const columns: ColumnDef<Transaction>[] = [
   },
   {
     accessorKey: 'aff10b5One',
-    header: 'Trading Plan',
+    header: ({ column }) => (
+      <div className="flex items-center justify-center m-1 gap-1">
+        Trading Plan
+        <div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <CircleHelpIcon className="w-4 h-4 text-gray-400 mt-0.5" />
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              <p className="m-1">
+                Kennzeichnet Transaktionen, die im Rahmen eines sogenannten
+                <strong> Trading Plans gemäss SEC Rule 10b5-1</strong> durchgeführt wurden.
+              </p>
+              <p className="m-1">
+                Solche Pläne ermöglichen es Insidern, Wertpapiergeschäfte vorab festzulegen und sich
+                dadurch gegen potenzielle Vorwürfe des Insiderhandels abzusichern.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </div>
+    ),
     cell: ({ row }) => (
       <div className="flex items-center justify-center">
         {row.original.aff10b5One ? (

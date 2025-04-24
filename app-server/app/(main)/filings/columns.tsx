@@ -59,7 +59,30 @@ export const columns: ColumnDef<OwnershipFilingColumn>[] = [
   {
     accessorKey: 'issuer',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Issuer" filterType="cik" />
+      <DataTableColumnHeader
+        column={column}
+        title="Issuer"
+        filterType="cik"
+        infoText={
+          <div className="m-1">
+            <div className="font-bold mb-2 text-md">
+              Darstellung der Issuer-Informationen in den Badges:
+            </div>
+            <div className="mb-2">
+              Falls für den Issuer ein <code className="font-semibold">SEC Trading Symbol</code>{' '}
+              <br /> bzw. <code className="font-semibold">SEC Ticker</code> definiert ist:
+              <br /> → <code>Issuer Trading Symbol (Issuer Name)</code>
+            </div>
+            <div className="mb-2">
+              Andernfalls:
+              <br /> → <code>Issuer Name</code>
+            </div>
+            <div>
+              (Der <code>Issuer CIK</code> wird jeweils als Tooltip angezeigt.)
+            </div>
+          </div>
+        }
+      />
     ),
     cell: ({ row }) => <CikBadge {...row.original.issuer} />,
   },
